@@ -43,102 +43,211 @@
         }
       ]
     },
-    "tabs": [
+    "languages": [
       {
-        "tab": "Documentation",
-        "pages": [
+        "language": "en",
+        "tabs": [
           {
-            "group": "Get Started",
+            "tab": "Documentation",
             "pages": [
-              "docs/getting-started/intro",
-              "docs/getting-started/quickstart"
-            ]
-          },
-          {
-            "group": "About ATH",
-            "pages": [
-              "docs/learn/architecture",
-              "docs/learn/identity",
-              "docs/learn/discovery",
-              "docs/learn/trusted-handshake",
-              "docs/learn/scope-intersection",
-              "docs/learn/adoption-levels",
-              "docs/learn/versioning"
-            ]
-          },
-          {
-            "group": "Develop with ATH",
-            "pages": [
-              "docs/develop/build-gateway",
-              "docs/develop/build-agent",
-              "docs/develop/sdk",
               {
-                "group": "Security",
+                "group": "Get Started",
                 "pages": [
-                  "docs/tutorials/security/best-practices",
-                  "docs/tutorials/security/audit-logging"
+                  "docs/getting-started/intro",
+                  "docs/getting-started/quickstart"
+                ]
+              },
+              {
+                "group": "About ATH",
+                "pages": [
+                  "docs/learn/architecture",
+                  "docs/learn/identity",
+                  "docs/learn/discovery",
+                  "docs/learn/trusted-handshake",
+                  "docs/learn/scope-intersection",
+                  "docs/learn/adoption-levels",
+                  "docs/learn/versioning"
+                ]
+              },
+              {
+                "group": "Develop with ATH",
+                "pages": [
+                  "docs/develop/build-gateway",
+                  "docs/develop/build-agent",
+                  "docs/develop/sdk",
+                  {
+                    "group": "Security",
+                    "pages": [
+                      "docs/tutorials/security/best-practices",
+                      "docs/tutorials/security/audit-logging"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Examples",
+                "pages": [
+                  "docs/examples/scenario"
                 ]
               }
             ]
           },
           {
-            "group": "Examples",
+            "tab": "Specification",
             "pages": [
-              "docs/examples/scenario"
+              "specification/0.1/index",
+              "specification/0.1/changelog",
+              {
+                "group": "Protocol",
+                "pages": [
+                  "specification/0.1/basic/overview",
+                  "specification/0.1/basic/identity",
+                  "specification/0.1/basic/discovery",
+                  "specification/0.1/basic/handshake-flow",
+                  "specification/0.1/basic/scope-intersection"
+                ]
+              },
+              {
+                "group": "API Endpoints",
+                "pages": [
+                  "specification/0.1/server/registration",
+                  "specification/0.1/server/authorization",
+                  "specification/0.1/server/token",
+                  "specification/0.1/server/proxy",
+                  "specification/0.1/server/revocation"
+                ]
+              },
+              {
+                "group": "Security",
+                "pages": [
+                  "specification/0.1/basic/security"
+                ]
+              },
+              "specification/0.1/schema",
+              "specification/0.1/openapi"
+            ]
+          },
+          {
+            "tab": "Community",
+            "pages": [
+              {
+                "group": "Get Involved",
+                "pages": [
+                  "community/contributing",
+                  "community/roadmap"
+                ]
+              },
+              {
+                "group": "About",
+                "pages": [
+                  "community/comparison",
+                  "community/glossary"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "Specification",
-        "pages": [
-          "specification/0.1/index",
-          "specification/0.1/changelog",
+        "language": "zh",
+        "tabs": [
           {
-            "group": "Protocol",
+            "tab": "文档",
             "pages": [
-              "specification/0.1/basic/overview",
-              "specification/0.1/basic/identity",
-              "specification/0.1/basic/discovery",
-              "specification/0.1/basic/handshake-flow",
-              "specification/0.1/basic/scope-intersection"
+              {
+                "group": "快速开始",
+                "pages": [
+                  "zh/docs/getting-started/intro",
+                  "zh/docs/getting-started/quickstart"
+                ]
+              },
+              {
+                "group": "关于 ATH",
+                "pages": [
+                  "zh/docs/learn/architecture",
+                  "zh/docs/learn/identity",
+                  "zh/docs/learn/discovery",
+                  "zh/docs/learn/trusted-handshake",
+                  "zh/docs/learn/scope-intersection",
+                  "zh/docs/learn/adoption-levels",
+                  "zh/docs/learn/versioning"
+                ]
+              },
+              {
+                "group": "使用 ATH 开发",
+                "pages": [
+                  "zh/docs/develop/build-gateway",
+                  "zh/docs/develop/build-agent",
+                  "zh/docs/develop/sdk",
+                  {
+                    "group": "安全",
+                    "pages": [
+                      "zh/docs/tutorials/security/best-practices",
+                      "zh/docs/tutorials/security/audit-logging"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "示例",
+                "pages": [
+                  "zh/docs/examples/scenario"
+                ]
+              }
             ]
           },
           {
-            "group": "API Endpoints",
+            "tab": "规范",
             "pages": [
-              "specification/0.1/server/registration",
-              "specification/0.1/server/authorization",
-              "specification/0.1/server/token",
-              "specification/0.1/server/proxy",
-              "specification/0.1/server/revocation"
+              "zh/specification/0.1/index",
+              "zh/specification/0.1/changelog",
+              {
+                "group": "协议",
+                "pages": [
+                  "zh/specification/0.1/basic/overview",
+                  "zh/specification/0.1/basic/identity",
+                  "zh/specification/0.1/basic/discovery",
+                  "zh/specification/0.1/basic/handshake-flow",
+                  "zh/specification/0.1/basic/scope-intersection"
+                ]
+              },
+              {
+                "group": "API 端点",
+                "pages": [
+                  "zh/specification/0.1/server/registration",
+                  "zh/specification/0.1/server/authorization",
+                  "zh/specification/0.1/server/token",
+                  "zh/specification/0.1/server/proxy",
+                  "zh/specification/0.1/server/revocation"
+                ]
+              },
+              {
+                "group": "安全",
+                "pages": [
+                  "zh/specification/0.1/basic/security"
+                ]
+              },
+              "zh/specification/0.1/schema",
+              "zh/specification/0.1/openapi"
             ]
           },
           {
-            "group": "Security",
+            "tab": "社区",
             "pages": [
-              "specification/0.1/basic/security"
-            ]
-          },
-          "specification/0.1/schema",
-          "specification/0.1/openapi"
-        ]
-      },
-      {
-        "tab": "Community",
-        "pages": [
-          {
-            "group": "Get Involved",
-            "pages": [
-              "community/contributing",
-              "community/roadmap"
-            ]
-          },
-          {
-            "group": "About",
-            "pages": [
-              "community/comparison",
-              "community/glossary"
+              {
+                "group": "参与贡献",
+                "pages": [
+                  "zh/community/contributing",
+                  "zh/community/roadmap"
+                ]
+              },
+              {
+                "group": "关于",
+                "pages": [
+                  "zh/community/comparison",
+                  "zh/community/glossary"
+                ]
+              }
             ]
           }
         ]
