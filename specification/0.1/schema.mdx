@@ -247,7 +247,14 @@ All error responses follow this structure:
 | `AGENT_UNAPPROVED` | 403 | Agent registration was denied |
 | `PROVIDER_NOT_APPROVED` | 403 | Agent not approved for this provider |
 | `SCOPE_NOT_APPROVED` | 403 | Agent not approved for requested scopes |
-| `SESSION_NOT_FOUND` | 400 | OAuth session expired or invalid |
+| `SESSION_NOT_FOUND` | 400 | OAuth session not found |
+| `SESSION_EXPIRED` | 400 | OAuth session has expired |
 | `STATE_MISMATCH` | 400 | OAuth state parameter mismatch |
-| `TOKEN_INVALID` | 401 | ATH access token invalid or expired |
+| `TOKEN_INVALID` | 401 | ATH access token is invalid |
+| `TOKEN_EXPIRED` | 401 | ATH access token has expired |
+| `TOKEN_REVOKED` | 401 | ATH access token has been revoked |
+| `AGENT_IDENTITY_MISMATCH` | 403 | Agent ID in request does not match token binding |
+| `PROVIDER_MISMATCH` | 403 | Provider in request does not match token binding |
+| `USER_DENIED` | 403 | User denied the OAuth consent |
+| `OAUTH_ERROR` | 502 | Upstream OAuth provider returned an error |
 | `INTERNAL_ERROR` | 500 | Internal server error |

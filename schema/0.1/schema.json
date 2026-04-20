@@ -537,9 +537,15 @@
         "PROVIDER_NOT_APPROVED",
         "SCOPE_NOT_APPROVED",
         "SESSION_NOT_FOUND",
+        "SESSION_EXPIRED",
         "STATE_MISMATCH",
         "TOKEN_INVALID",
         "TOKEN_EXPIRED",
+        "TOKEN_REVOKED",
+        "AGENT_IDENTITY_MISMATCH",
+        "PROVIDER_MISMATCH",
+        "USER_DENIED",
+        "OAUTH_ERROR",
         "INTERNAL_ERROR"
       ]
     }

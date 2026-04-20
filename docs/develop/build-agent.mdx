@@ -103,7 +103,12 @@ Common error codes:
 | `AGENT_UNAPPROVED` | Agent registration was denied |
 | `PROVIDER_NOT_APPROVED` | Agent not approved for this provider |
 | `SCOPE_NOT_APPROVED` | Agent not approved for requested scopes |
-| `SESSION_NOT_FOUND` | OAuth session expired or invalid |
+| `SESSION_NOT_FOUND` | OAuth session not found |
+| `SESSION_EXPIRED` | OAuth session has expired |
+| `TOKEN_REVOKED` | ATH access token has been revoked |
+| `AGENT_IDENTITY_MISMATCH` | Agent ID doesn't match token binding |
+| `USER_DENIED` | User denied OAuth consent |
+| `OAUTH_ERROR` | Upstream OAuth provider error |
 
 ## Next Steps
 
