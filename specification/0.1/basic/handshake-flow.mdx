@@ -1,0 +1,92 @@
+---
+title: "Trusted Handshake Flow"
+sidebarTitle: "Handshake Flow"
+description: "The two-phase trusted handshake protocol specification."
+---
+
+<div id="enable-section-numbers" />
+
+The protocol has two distinct phases. Phase A is a **one-time setup**. Phase B happens **per user at runtime**.
+
+## Phase A: App-Side Authorization
+
+```
+Agent Developer                    ATH Implementor
+      │                            (Gateway or Service)
+      │                                    │
+      │  1. Register agent                 │
+      │  (agent_id, attestation,           │
+      │   requested capabilities)          │
+      ├───────────────────────────────────►│
+      │                                    │
+      │                          2. Verify agent identity
+      │                             Review capabilities
+      │                             Approve/reject
+      │                                    │
+      │  3. Registration response          │
+      │  (client_id, approved_scopes,      │
+      │   approval_expiry)                 │
+      │◄───────────────────────────────────┤
+```
+
+**Result**: Agent is in the approved registry with specific capability limits. This persists until revoked.
+
+## Phase B: User-Side Authorization
+
+```
+User         Agent        ATH Implementor      Service
+ │             │                  │                │
+ │  "Do X"    │                  │                │
+ ├────────────►│                  │                │
+ │             │                  │                │
+ │             │  4. Request      │                │
+ │             │  access          │                │
+ │             ├─────────────────►│                │
+ │             │                  │                │
+ │             │        5. Verify agent identity   │
+ │             │           Check approval status   │
+ │             │                  │                │
+ │             │        6. Initiate OAuth flow     │
+ │             │                  ├───────────────►│
+ │             │                  │                │
+ │  7. OAuth consent page         │                │
+ │◄──────────────────────────────────────────────┤
+ │                                │                │
+ │  8. User approves              │                │
+ ├──────────────────────────────────────────────►│
+ │             │                  │                │
+ │             │                  │  9. OAuth token│
+ │             │                  │◄───────────────┤
+ │             │                  │                │
+ │             │  10. Scope intersection           │
+ │             │      & token binding              │
+ │             │                  │                │
+ │             │  11. ATH access token             │
+ │             │◄─────────────────┤                │
+ │             │                  │                │
+ │             │  12. API call (ATH token)         │
+ │             ├─────────────────►│                │
+ │             │                  │  13. Proxy/    │
+ │             │                  │  serve          │
+ │             │                  ├───────────────►│
+ │             │                  │  14. Response  │
+ │             │                  │◄───────────────┤
+ │             │  15. Result      │                │
+ │             │◄─────────────────┤                │
+ │  16. Answer │                  │                │
+ │◄────────────┤                  │                │
+```
+
+<Note>
+In Gateway Mode, "ATH Implementor" is the gateway and "Service" is the upstream provider. In Native Mode, "ATH Implementor" and "Service" are the same entity.
+</Note>
+
+## Scope Intersection (Step 10)
+
+The effective scope of any access token is the **intersection** of three sets:
+
+```
+Effective Scope = Agent Approved Scopes ∩ User Consented Scopes ∩ Requested Scopes
+```
+
+See [Scope Intersection](/specification/0.1/basic/scope-intersection) for details.

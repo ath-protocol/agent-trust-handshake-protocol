@@ -1,0 +1,60 @@
+---
+title: "Scope Intersection"
+description: "How ATH computes effective permissions from agent approvals, user consent, and agent requests."
+---
+
+Scope intersection is the enforcement mechanism of the trusted handshake. It ensures that the effective permissions of any access token are the **minimum** of what all parties have approved.
+
+## The Formula
+
+```
+Effective Scope = Agent Approved Scopes ∩ User Consented Scopes ∩ Requested Scopes
+```
+
+Three sets are intersected:
+
+1. **Agent Approved Scopes** — What the service operator approved for this agent (Phase A)
+2. **User Consented Scopes** — What the user agreed to in the OAuth consent flow (Phase B)
+3. **Requested Scopes** — What the agent actually asked for in this particular request
+
+## Example
+
+```
+Agent approved scopes:    mail:read, mail:send
+User consented scopes:    mail:read, mail:send, mail:delete
+Agent requested scopes:   mail:read
+────────────────────────────────────────────────
+Effective scope:          mail:read
+```
+
+Even though the user consented to `mail:delete`, the agent cannot get that scope because the service never approved it for this agent. And even though the agent is approved for `mail:send`, it only gets `mail:read` because that's all it requested.
+
+## Token Response
+
+ATH token responses MUST include the full `scope_intersection` breakdown:
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+This transparency lets agents understand exactly what permissions they have and why certain scopes may have been excluded.
+
+## Why Scope Intersection Matters
+
+| Scenario | Without ATH | With ATH |
+|----------|-------------|----------|
+| User consents to `mail:delete` but service hasn't approved agent for it | Agent gets `mail:delete` | Agent does NOT get `mail:delete` |
+| Agent is approved for `mail:send` but user denies it | N/A (no app-side check) | Agent does NOT get `mail:send` |
+| Agent requests more scopes than approved | Agent gets everything user consents to | Agent only gets intersection |
+
+Scope intersection enforces the **principle of least privilege** across all authorization boundaries.

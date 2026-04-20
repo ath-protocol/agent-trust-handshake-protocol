@@ -1,0 +1,87 @@
+---
+title: "Adoption Levels"
+description: "ATH supports incremental adoption — from zero-change gateway mode to full native implementation."
+---
+
+ATH is designed for incremental adoption. Services and agent platforms can adopt at three levels, with the trusted handshake preserved at every level.
+
+## Level 1: Gateway Mode (Zero Service Changes)
+
+```
+Agent → ATH Gateway → OAuth Bridge → Service Provider
+```
+
+| Aspect | Detail |
+|--------|--------|
+| **App-side authorization** | ATH Gateway checks agent against its registry |
+| **User-side authorization** | Standard OAuth via the gateway's OAuth bridge |
+| **Service provider effort** | None |
+| **Best for** | Immediate deployment, proof of concept |
+
+The OAuth bridge is an implementation choice. Implementations MAY use any OAuth 2.0 client library or multi-provider integration platform.
+
+## Level 2: Agent-Aware OAuth (Minimal Service Changes)
+
+Services extend their existing OAuth client registration to include ATH agent metadata:
+
+```json
+{
+  "client_name": "TravelBot",
+  "grant_types": ["authorization_code"],
+  "ath_agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "ath_agent_type": "autonomous",
+  "ath_capabilities_requested": ["mail:read"]
+}
+```
+
+| Aspect | Detail |
+|--------|--------|
+| **App-side authorization** | Service reviews agents via existing developer console + agent metadata |
+| **User-side authorization** | Standard OAuth with agent context shown on consent page |
+| **Service provider effort** | Add `ath_*` fields to client registration, update consent page |
+| **Best for** | Popular services that want tighter control over agent access |
+
+## Level 3: Native ATH (Full Implementation)
+
+Services implement ATH endpoints directly:
+
+- `.well-known/ath-app.json` discovery
+- Agent registration with capability-level approval
+- Scope intersection enforcement
+- Agent-aware consent pages showing trusted handshake status
+
+```
+Consent Page:
+┌─────────────────────────────────────────┐
+│  TravelBot wants to access your Mail    │
+│                                         │
+│  ✅ Read emails                         │
+│     (approved by service for this agent)│
+│                                         │
+│  ⚠️  Send emails                        │
+│     (not approved for this agent)       │
+│                                         │
+│  [Allow Selected]    [Deny All]         │
+└─────────────────────────────────────────┘
+```
+
+| Aspect | Detail |
+|--------|--------|
+| **App-side authorization** | Full per-agent, per-capability approval with scope intersection |
+| **User-side authorization** | Enhanced consent page showing which capabilities the service has approved |
+| **Service provider effort** | Full ATH implementation |
+| **Best for** | Long-term goal for major platforms |
+
+## Choosing Your Level
+
+<CardGroup cols={3}>
+  <Card title="Level 1" icon="rocket">
+    Start here. Deploy a gateway, protect existing services immediately.
+  </Card>
+  <Card title="Level 2" icon="sliders">
+    Upgrade when you want service-side visibility into agent registrations.
+  </Card>
+  <Card title="Level 3" icon="shield-check">
+    Full native support for maximum security and user transparency.
+  </Card>
+</CardGroup>

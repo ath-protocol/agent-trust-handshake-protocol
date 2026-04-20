@@ -1,0 +1,119 @@
+---
+title: "Architecture Overview"
+sidebarTitle: "Architecture"
+description: "Overview of ATH deployment models and system architecture."
+---
+
+ATH supports two deployment models. Both enforce the same trusted handshake — the difference is where the enforcement logic lives.
+
+## Design Principles
+
+1. **Trusted Handshake**: Both app-side and user-side authorization are mandatory. Neither can be bypassed.
+2. **Decentralized**: Any agent can connect to any service without a central authority.
+3. **Open**: Not bound to a single platform, vendor, or technology stack.
+4. **Lightweight**: Focuses solely on trust handshake and authorization.
+5. **Incrementally Adoptable**: Services can adopt ATH in phases, from zero-change gateway mode to full native implementation.
+
+## Gateway Mode
+
+An ATH-compliant gateway sits between agents and services. Service providers need **zero changes** — the gateway enforces the trusted handshake on their behalf.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Agent                                           │
+│  (e.g., travel planner, coding assistant)        │
+└──────────────────┬───────────────────────────────┘
+                   │  ATH Client
+┌──────────────────▼───────────────────────────────┐
+│  ATH Gateway                                     │
+│                                                  │
+│  ┌─────────────────────────────────────────────┐ │
+│  │ Agent Registry                              │ │
+│  │ - Agent identity verification               │ │
+│  │ - Per-agent capability policies             │ │
+│  │ - App-side authorization decisions          │ │
+│  └─────────────────────────────────────────────┘ │
+│                                                  │
+│  ┌─────────────────────────────────────────────┐ │
+│  │ Authorization Engine                        │ │
+│  │ - Scope intersection enforcement            │ │
+│  │ - Token-to-agent binding                    │ │
+│  │ - Audit logging                             │ │
+│  └─────────────────────────────────────────────┘ │
+│                                                  │
+│  ┌─────────────────────────────────────────────┐ │
+│  │ OAuth Bridge                                │ │
+│  │ - OAuth flow delegation                     │ │
+│  │ - Token management & refresh                │ │
+│  │ - API proxy                                 │ │
+│  └─────────────────────────────────────────────┘ │
+└──────────────────┬───────────────────────────────┘
+                   │  Standard OAuth 2.0 / HTTPS
+┌──────────────────▼───────────────────────────────┐
+│  Service Provider                                │
+│  (no changes required)                           │
+└──────────────────────────────────────────────────┘
+```
+
+The OAuth Bridge is an implementation detail. Implementations MAY use any OAuth 2.0 client library or custom integration. The bridge MUST support:
+
+- **Authorization Code Grant** ([RFC 6749 §4.1](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)) with form-encoded token requests
+- **PKCE** ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) with S256 challenge method
+- **Resource Indicators** ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) — OPTIONAL, pass-through when present
+
+Each provider connected to the gateway requires its own OAuth 2.0 client registration (authorize endpoint, token endpoint, client credentials).
+
+**Best for**: Immediate deployment, proof of concept, protecting existing services without modification.
+
+## Native Mode
+
+Services implement ATH endpoints directly, performing both app-side authorization and user-side authorization within their own infrastructure.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Agent                                           │
+└──────────────────┬───────────────────────────────┘
+                   │  ATH Client
+┌──────────────────▼───────────────────────────────┐
+│  Service Provider (ATH-native)                   │
+│                                                  │
+│  ┌─────────────────────────────────────────────┐ │
+│  │ Agent Registry + Authorization Engine       │ │
+│  │ - Agent identity verification               │ │
+│  │ - Trusted handshake enforcement             │ │
+│  │ - Scope intersection                        │ │
+│  └─────────────────────────────────────────────┘ │
+│                                                  │
+│  ┌─────────────────────────────────────────────┐ │
+│  │ Service Business Logic                      │ │
+│  └─────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────┘
+```
+
+**Best for**: Services that want full control over agent access, long-term production deployments.
+
+## Key Components
+
+### Agent Registry
+
+Stores registered agents and their approved capabilities. Handles:
+- Agent identity verification (validating attestation JWTs)
+- Per-agent capability policies (which scopes each agent is approved for)
+- App-side authorization decisions (approve/deny/partial)
+
+### Authorization Engine
+
+Orchestrates the OAuth flow and enforces scope intersection:
+- Initiates OAuth consent flows
+- Computes `Effective Scope = Agent Approved ∩ User Consented ∩ Requested`
+- Binds tokens to specific `(agent_id, user_id, provider_id, scopes)` tuples
+
+### OAuth Bridge (Gateway Mode)
+
+Handles the actual OAuth 2.0 communication with service providers. All OAuth flows use PKCE (RFC 7636) with S256 challenge method. The reference implementation supports:
+- **Direct OAuth** — Connect to any OAuth2 provider
+- **Mock** — Built-in mock for testing without external dependencies
+
+### API Proxy (Gateway Mode)
+
+Validates ATH tokens and forwards requests to upstream services, ensuring agents only access resources within their granted scopes.

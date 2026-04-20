@@ -1,0 +1,194 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Agent Trust Handshake Protocol",
+  "description": "ATH is an open protocol for establishing trusted connections between AI agents and external services, building on OAuth 2.0 with a trusted handshake.",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#60A5FA",
+    "dark": "#1E40AF"
+  },
+  "background": {
+    "color": {
+      "light": "#f8f9fc",
+      "dark": "#0f172a"
+    }
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "GitHub",
+      "href": "https://github.com/agenttrusthandshake"
+    },
+    "links": [
+      {
+        "label": "Specification",
+        "href": "/specification/0.1"
+      }
+    ]
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "TypeScript SDK",
+          "href": "https://github.com/agenttrusthandshake/typescript-sdk",
+          "icon": "square-js"
+        },
+        {
+          "anchor": "Reference Gateway",
+          "href": "https://github.com/agenttrusthandshake/gateway",
+          "icon": "server"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "pages": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "docs/getting-started/intro",
+              "docs/getting-started/quickstart"
+            ]
+          },
+          {
+            "group": "About ATH",
+            "pages": [
+              "docs/learn/architecture",
+              "docs/learn/identity",
+              "docs/learn/discovery",
+              "docs/learn/trusted-handshake",
+              "docs/learn/scope-intersection",
+              "docs/learn/adoption-levels",
+              "docs/learn/versioning"
+            ]
+          },
+          {
+            "group": "Develop with ATH",
+            "pages": [
+              "docs/develop/build-gateway",
+              "docs/develop/build-agent",
+              "docs/develop/sdk",
+              {
+                "group": "Security",
+                "pages": [
+                  "docs/tutorials/security/best-practices",
+                  "docs/tutorials/security/audit-logging"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "docs/examples/scenario"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Specification",
+        "pages": [
+          "specification/0.1/index",
+          "specification/0.1/changelog",
+          {
+            "group": "Protocol",
+            "pages": [
+              "specification/0.1/basic/overview",
+              "specification/0.1/basic/identity",
+              "specification/0.1/basic/discovery",
+              "specification/0.1/basic/handshake-flow",
+              "specification/0.1/basic/scope-intersection"
+            ]
+          },
+          {
+            "group": "API Endpoints",
+            "pages": [
+              "specification/0.1/server/registration",
+              "specification/0.1/server/authorization",
+              "specification/0.1/server/token",
+              "specification/0.1/server/proxy",
+              "specification/0.1/server/revocation"
+            ]
+          },
+          {
+            "group": "Security",
+            "pages": [
+              "specification/0.1/basic/security"
+            ]
+          },
+          "specification/0.1/schema",
+          "specification/0.1/openapi"
+        ]
+      },
+      {
+        "tab": "Community",
+        "pages": [
+          {
+            "group": "Get Involved",
+            "pages": [
+              "community/contributing",
+              "community/roadmap"
+            ]
+          },
+          {
+            "group": "About",
+            "pages": [
+              "community/comparison",
+              "community/glossary"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "seo": {
+    "metatags": {
+      "og:image": "https://raw.githubusercontent.com/agenttrusthandshake/agent-trust-handshake-protocol/main/images/og-image.png"
+    },
+    "indexing": "navigable"
+  },
+  "api": {
+    "playground": {
+      "proxy": false
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/agenttrusthandshake"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view"
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/introduction",
+      "destination": "/docs/getting-started/intro"
+    },
+    {
+      "source": "/quickstart",
+      "destination": "/docs/getting-started/quickstart"
+    },
+    {
+      "source": "/specification/latest",
+      "destination": "/specification/0.1",
+      "permanent": false
+    },
+    {
+      "source": "/specification/latest/:slug*",
+      "destination": "/specification/0.1/:slug*",
+      "permanent": false
+    }
+  ]
+}

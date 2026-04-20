@@ -1,0 +1,47 @@
+---
+title: "SDKs"
+description: "Official SDKs for building with the Agent Trust Handshake Protocol."
+---
+
+Build ATH agents and gateways using our official SDKs. The ATH protocol is language-agnostic — any HTTP client that can sign JWTs can implement an ATH client.
+
+## Available SDKs
+
+| SDK | Repository | Status |
+| :--- | :--- | ---: |
+| <Icon icon="square-js" size={24} /> &nbsp; TypeScript | [agenttrusthandshake/typescript-sdk](https://github.com/agenttrusthandshake/typescript-sdk) | <Badge color="blue" shape="pill">Official</Badge> |
+
+{/* TODO: Add rows as more SDKs are published under the org */}
+
+## Getting Started
+
+Each SDK provides the agent lifecycle methods that implement the ATH trusted handshake:
+
+- `discover()` — Learn what providers are available
+- `register()` — Register your agent, get approved for specific scopes
+- `authorize()` — Get a URL for the user to approve OAuth access
+- `exchangeToken()` — After user approves, get an ATH token with scope intersection
+- `proxy()` — Call the service API through the ATH gateway
+
+Visit the SDK repository for your chosen language to find installation instructions, API documentation, and examples.
+
+## Building Your Own SDK
+
+Want to build an SDK for a new language? You need to implement:
+
+1. **JWT signing** — ES256 agent attestation tokens
+2. **HTTP client** — Calls to the [ATH API endpoints](/specification/0.1/server/registration)
+3. **PKCE support** — The gateway handles PKCE server-side, but your SDK should handle the authorization flow
+
+See the [API Specification](/specification/0.1/server/registration) for the complete endpoint reference.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Build an Agent" icon="robot" href="/docs/develop/build-agent">
+    Use the ATH Client SDK to connect your agent
+  </Card>
+  <Card title="Deploy a Gateway" icon="server" href="/docs/develop/build-gateway">
+    Set up an ATH Gateway for your services
+  </Card>
+</CardGroup>

@@ -1,0 +1,51 @@
+---
+title: "API Proxy"
+sidebarTitle: "Proxy"
+description: "ANY /ath/proxy/{provider_id}/{path} — Proxied API calls through the gateway."
+---
+
+## API Proxy (Runtime, Gateway Mode only)
+
+**`ANY /ath/proxy/{provider_id}/{path}`**
+
+Proxies API calls to the upstream service provider. Available in Gateway Mode only.
+
+## Request
+
+```
+GET /ath/proxy/example-mail/v1/messages
+Authorization: Bearer ath_tk_xxxxxxxx
+X-ATH-Agent-ID: https://travel-agent.example.com/.well-known/agent.json
+```
+
+### Headers
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <ath_access_token>` |
+| `X-ATH-Agent-ID` | Yes | The agent's canonical URI |
+
+### Path Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `provider_id` | The provider to proxy the request to |
+| `path` | The API path on the upstream service |
+
+## Behavior
+
+The implementor:
+
+1. **Validates** the ATH access token
+2. **Verifies** the agent identity matches the token binding
+3. **Checks** the requested operation is within the granted scopes
+4. **Proxies** the request to the actual service using the stored OAuth token
+5. **Returns** the service's response to the agent
+
+## Response
+
+The response is passed through from the upstream service provider. The gateway does not modify the response body.
+
+<Note>
+In Native Mode, the service handles the request directly instead of proxying. The proxy endpoint is specific to Gateway Mode deployments.
+</Note>

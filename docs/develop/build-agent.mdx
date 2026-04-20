@@ -1,0 +1,117 @@
+---
+title: "Build an ATH Agent"
+sidebarTitle: "Build an Agent"
+description: "Use the ATH Client SDK to connect your AI agent to services through the trusted handshake."
+---
+
+The ATH Client SDK provides a library for agents to interact with ATH gateways and services. This guide walks through the agent lifecycle.
+
+## Install the SDK
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```bash
+    npm install ath-client-sdk
+    ```
+    {/* TODO: Update package name once published to npm */}
+
+    Source: [agenttrusthandshake/typescript-sdk](https://github.com/agenttrusthandshake/typescript-sdk)
+  </Tab>
+</Tabs>
+
+## Agent Lifecycle
+
+Your agent follows a five-step lifecycle:
+
+```
+1. discover()      → Learn what providers are available
+2. register()      → Register your agent, get approved for specific scopes
+3. authorize()     → Get a URL for the user to approve OAuth access
+4. exchangeToken() → After user approves, get an ATH token
+5. proxy()         → Call the service API through the ATH gateway
+```
+
+## Complete Example
+
+```typescript
+import { ATHClient } from "ath-client-sdk";
+import { generateKeyPair } from "jose";
+
+const { privateKey } = await generateKeyPair("ES256");
+
+const client = new ATHClient({
+  gatewayUrl: "http://localhost:3000",
+  agentId: "https://my-agent.example.com/.well-known/agent.json",
+  privateKey,
+});
+
+// 1. Discover available providers
+const discovery = await client.discover();
+console.log("Available providers:", discovery.supported_providers);
+
+// 2. Register your agent (one-time, Phase A)
+const reg = await client.register({
+  developer: { name: "My Company", id: "dev-001" },
+  providers: [{ provider_id: "github", scopes: ["repo", "read:user"] }],
+  purpose: "Code review assistant",
+});
+console.log("Registered:", reg.client_id);
+console.log("Approved scopes:", reg.approved_providers);
+
+// 3. Start authorization (per-user, Phase B)
+const auth = await client.authorize("github", ["repo", "read:user"]);
+console.log("User should visit:", auth.authorization_url);
+
+// 4. After user approves, exchange for ATH token
+const token = await client.exchangeToken(code, auth.ath_session_id);
+console.log("Effective scopes:", token.effective_scopes);
+console.log("Scope intersection:", token.scope_intersection);
+
+// 5. Call APIs through the ATH proxy
+const user = await client.proxy("github", "GET", "/user");
+console.log("GitHub user:", user);
+```
+
+## Key Difference from Direct OAuth
+
+Your agent must be **registered and approved** before it can initiate any OAuth flow. This is the "app-side authorization" — the gateway ensures only known, vetted agents can access services.
+
+Together with the user's OAuth consent, this completes the ATH **trusted handshake**.
+
+## Error Handling
+
+The SDK throws `ATHClientError` for all error cases:
+
+```typescript
+import { ATHClient, ATHClientError } from "ath-client-sdk";
+
+try {
+  const reg = await client.register({ /* ... */ });
+} catch (err) {
+  if (err instanceof ATHClientError) {
+    console.error(`ATH Error [${err.code}]: ${err.message}`);
+  }
+}
+```
+
+Common error codes:
+
+| Code | Meaning |
+|------|---------|
+| `INVALID_ATTESTATION` | Agent identity verification failed |
+| `AGENT_NOT_REGISTERED` | Agent must register before authorizing |
+| `AGENT_UNAPPROVED` | Agent registration was denied |
+| `PROVIDER_NOT_APPROVED` | Agent not approved for this provider |
+| `SCOPE_NOT_APPROVED` | Agent not approved for requested scopes |
+| `SESSION_NOT_FOUND` | OAuth session expired or invalid |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Reference" icon="book" href="/docs/develop/sdk">
+    See all available SDKs
+  </Card>
+  <Card title="Deploy a Gateway" icon="server" href="/docs/develop/build-gateway">
+    Set up a gateway for your agent to connect to
+  </Card>
+</CardGroup>

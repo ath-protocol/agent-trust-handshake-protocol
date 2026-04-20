@@ -1,0 +1,48 @@
+---
+title: "Roadmap"
+description: "The ATH protocol development roadmap."
+---
+
+ATH is designed for incremental development. Each version builds on the previous one while maintaining backward compatibility.
+
+## v0.1 — Current Release
+
+Protocol specification + reference implementation (Level 1 Gateway Mode)
+
+- Agent registration & identity verification
+- OAuth-based trusted handshake flow
+- PKCE ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) and Resource Indicators ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707))
+- Dynamic provider configuration via admin API / dashboard
+- Scope intersection enforcement
+- Audit logging
+- TypeScript reference gateway + client SDK
+- E2E test suite
+
+## v0.2 — Planned
+
+Agent-aware OAuth extensions (Level 2)
+
+- ATH metadata in OAuth Dynamic Client Registration ([RFC 7591](https://www.rfc-editor.org/rfc/rfc7591))
+- Agent-aware consent page guidelines
+- Trusted agent registry federation
+- Additional language SDKs
+
+## v1.0 — Future
+
+Full ATH specification (Level 3 Native Mode)
+
+- Native `.well-known` discovery
+- Per-capability approval workflows
+- Cross-ecosystem agent identity federation
+- mTLS support for high-security environments
+- Formal conformance test suite
+
+## Standardization
+
+Collaboration with standards bodies to establish ATH as a formal standard for agent trust in AI ecosystems.
+
+## How to Influence the Roadmap
+
+- Share your use cases in [GitHub Discussions](https://github.com/agenttrusthandshake/agent-trust-handshake-protocol/discussions)
+- Propose specific changes via pull requests
+- Build integrations and share feedback

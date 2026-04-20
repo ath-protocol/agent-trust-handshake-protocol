@@ -1,0 +1,49 @@
+# Agent Trust Handshake Protocol
+
+## Docs
+
+- [What is ATH?](https://athprotocol.dev/docs/getting-started/intro.md): An open protocol for establishing trusted connections between AI agents and external services
+- [Quickstart](https://athprotocol.dev/docs/getting-started/quickstart.md): Get up and running with ATH in 5 minutes
+- [Architecture](https://athprotocol.dev/docs/learn/architecture.md): Overview of ATH deployment models and system architecture
+- [Agent Identity](https://athprotocol.dev/docs/learn/identity.md): How ATH identifies and verifies AI agents
+- [Discovery](https://athprotocol.dev/docs/learn/discovery.md): How agents discover ATH-compatible services and gateways
+- [Trusted Handshake](https://athprotocol.dev/docs/learn/trusted-handshake.md): The core security mechanism requiring both app-side and user-side authorization
+- [Scope Intersection](https://athprotocol.dev/docs/learn/scope-intersection.md): How ATH computes effective permissions
+- [Adoption Levels](https://athprotocol.dev/docs/learn/adoption-levels.md): Incremental adoption from gateway mode to native implementation
+- [Versioning](https://athprotocol.dev/docs/learn/versioning.md): How ATH protocol versions work
+- [Deploy a Gateway](https://athprotocol.dev/docs/develop/build-gateway.md): Set up an ATH Gateway to protect services
+- [Build an Agent](https://athprotocol.dev/docs/develop/build-agent.md): Use the ATH Client SDK to connect your agent
+- [SDKs](https://athprotocol.dev/docs/develop/sdk.md): Official SDKs for building with ATH
+- [Security Best Practices](https://athprotocol.dev/docs/tutorials/security/best-practices.md): Security considerations for ATH implementations
+- [Audit Logging](https://athprotocol.dev/docs/tutorials/security/audit-logging.md): How to implement audit logging
+- [Example: Travel Agent](https://athprotocol.dev/docs/examples/scenario.md): Complete walkthrough of the trusted handshake
+
+## Specification
+
+- [Specification v0.1](https://athprotocol.dev/specification/0.1/index.md): ATH Protocol Specification v0.1
+- [Changelog](https://athprotocol.dev/specification/0.1/changelog.md): Changes in ATH Protocol Specification v0.1
+- [Protocol Overview](https://athprotocol.dev/specification/0.1/basic/overview.md): Design principles and architecture
+- [Identity Model](https://athprotocol.dev/specification/0.1/basic/identity.md): Agent and service identity specification
+- [Discovery](https://athprotocol.dev/specification/0.1/basic/discovery.md): Service and gateway discovery specification
+- [Handshake Flow](https://athprotocol.dev/specification/0.1/basic/handshake-flow.md): The two-phase trusted handshake protocol
+- [Scope Intersection](https://athprotocol.dev/specification/0.1/basic/scope-intersection.md): Formal scope intersection specification
+- [Security](https://athprotocol.dev/specification/0.1/basic/security.md): Security requirements and considerations
+- [Agent Registration](https://athprotocol.dev/specification/0.1/server/registration.md): POST /ath/agents/register
+- [Authorization](https://athprotocol.dev/specification/0.1/server/authorization.md): POST /ath/authorize
+- [Token Exchange](https://athprotocol.dev/specification/0.1/server/token.md): POST /ath/token
+- [API Proxy](https://athprotocol.dev/specification/0.1/server/proxy.md): ANY /ath/proxy/{provider_id}/{path}
+- [Token Revocation](https://athprotocol.dev/specification/0.1/server/revocation.md): POST /ath/revoke
+- [Schema Reference](https://athprotocol.dev/specification/0.1/schema.md): Type definitions for ATH protocol objects
+- [OpenAPI Spec](https://athprotocol.dev/specification/0.1/openapi.md): OpenAPI 3.1 specification
+
+## Community
+
+- [Contributing](https://athprotocol.dev/community/contributing.md): How to contribute to ATH
+- [Roadmap](https://athprotocol.dev/community/roadmap.md): The ATH protocol development roadmap
+- [Comparison](https://athprotocol.dev/community/comparison.md): How ATH relates to OAuth, MCP, and A2A
+- [Glossary](https://athprotocol.dev/community/glossary.md): Key terms used in the ATH protocol
+
+## Optional
+
+- [TypeScript SDK](https://github.com/agenttrusthandshake/typescript-sdk)
+- [Reference Gateway](https://github.com/agenttrusthandshake/gateway)

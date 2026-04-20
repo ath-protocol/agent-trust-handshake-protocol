@@ -1,0 +1,12 @@
+{
+  "name": "agent-trust-handshake",
+  "private": true,
+  "description": "Documentation site for the Agent Trust Handshake (ATH) Protocol",
+  "scripts": {
+    "dev": "mintlify dev",
+    "broken": "mintlify broken-links"
+  },
+  "devDependencies": {
+    "mintlify": "latest"
+  }
+}

@@ -1,0 +1,86 @@
+---
+title: "Discovery"
+description: "How agents discover ATH-compatible services and gateways."
+---
+
+ATH supports three discovery modes, from simplest to most sophisticated. Implementations MUST support at least one.
+
+## Mode 1: Manual Configuration
+
+The agent is directly configured with service endpoints. No discovery protocol needed.
+
+```json
+{
+  "provider": "example-service",
+  "api_base": "https://api.example.com/v1",
+  "oauth": {
+    "authorization_url": "https://example.com/oauth/authorize",
+    "token_url": "https://example.com/oauth/token"
+  }
+}
+```
+
+**Use case**: Development, testing, internal tools, or when using an OAuth bridge that already has provider configurations.
+
+## Mode 2: Gateway Catalog Discovery
+
+<Note>
+This is the recommended discovery mode for Gateway Mode deployments.
+</Note>
+
+An ATH-compliant gateway MAY publish a provider catalog at a well-known endpoint:
+
+**Endpoint**: `GET https://<gateway>/.well-known/ath.json`
+
+```json
+{
+  "ath_version": "0.1",
+  "gateway_id": "ath-gateway.example.com",
+  "agent_registration_endpoint": "https://ath-gateway.example.com/ath/agents/register",
+  "supported_providers": [
+    {
+      "provider_id": "example-mail",
+      "display_name": "Example Mail",
+      "categories": ["email", "productivity"],
+      "available_scopes": ["mail:read", "mail:send", "mail:delete"],
+      "auth_mode": "OAUTH2",
+      "agent_approval_required": true
+    }
+  ]
+}
+```
+
+Implementations MAY auto-generate this catalog from their configured OAuth bridge.
+
+## Mode 3: Service-Side Discovery
+
+Services publish ATH metadata at a well-known endpoint for direct agent-to-service discovery. This is the discovery mode for **Native Mode** deployments.
+
+**Endpoint**: `GET https://<service-domain>/.well-known/ath-app.json`
+
+```json
+{
+  "ath_version": "0.1",
+  "app_id": "com.example.mail",
+  "name": "Example Mail API",
+  "auth": {
+    "type": "oauth2",
+    "authorization_endpoint": "https://example.com/oauth/authorize",
+    "token_endpoint": "https://example.com/oauth/token",
+    "registration_endpoint": "https://example.com/developers",
+    "scopes_supported": ["mail:read", "mail:send"],
+    "agent_attestation_required": true
+  },
+  "api_base": "https://api.example.com/v1"
+}
+```
+
+**Use case**: Services that natively support ATH.
+
+## Choosing a Discovery Mode
+
+| Mode | When to use | Effort |
+|------|------------|--------|
+| **Manual** | Development, testing, single known provider | None |
+| **Gateway Catalog** | Gateway deployments with multiple providers | Low (automatic if using reference implementation) |
+| **Service-Side** | Native ATH implementations | Medium (service publishes `.well-known/ath-app.json`) |

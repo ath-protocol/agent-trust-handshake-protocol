@@ -1,0 +1,64 @@
+---
+title: "Authorization Request"
+sidebarTitle: "Authorization"
+description: "POST /ath/authorize — Initiate the user-side OAuth authorization flow."
+---
+
+## Authorization Request (Phase B)
+
+**`POST /ath/authorize`**
+
+Starts the user-side authorization flow. The implementor verifies the agent is registered and approved, then initiates an OAuth consent flow for the user.
+
+## Request
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "agent_attestation": "<signed JWT>",
+  "provider_id": "example-mail",
+  "scopes": ["mail:read"],
+  "user_redirect_uri": "https://travel-agent.example.com/callback",
+  "state": "<random-state-string>",
+  "resource": "https://api.example.com/v1"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `client_id` | string | Yes | The agent's client ID from registration |
+| `agent_attestation` | string | Yes | Fresh signed JWT proving agent identity |
+| `provider_id` | string | Yes | Which provider to authorize |
+| `scopes` | string[] | Yes | Scopes to request (must be within approved set) |
+| `user_redirect_uri` | string | No | Where to redirect after OAuth consent |
+| `state` | string | No | Opaque state for CSRF protection |
+| `resource` | string | No | Target resource server URI ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) |
+
+## Response
+
+```json
+{
+  "authorization_url": "https://example.com/oauth/authorize?client_id=...&scope=mail:read&code_challenge=...&code_challenge_method=S256&state=...",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authorization_url` | string | URL where the user should be directed for OAuth consent |
+| `ath_session_id` | string | Session identifier for the token exchange step |
+
+## Behavior
+
+- The implementor MUST verify the agent is registered and has `agent_status: "approved"`
+- The implementor MUST verify the attestation JWT is valid
+- The implementor MUST check that the agent is approved for the requested provider
+- Requested scopes MUST be within the agent's approved scopes for this provider
+- The `authorization_url` MUST include PKCE parameters ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) — `code_challenge` and `code_challenge_method=S256`
+- The corresponding `code_verifier` is stored server-side and sent during token exchange
+- The agent directs the user to the `authorization_url`
+- After consent, the OAuth callback is handled by the ATH implementor

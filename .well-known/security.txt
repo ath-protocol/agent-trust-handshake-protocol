@@ -1,0 +1,1 @@
+Contact: https://github.com/agenttrusthandshake/agent-trust-handshake-protocol/blob/main/SECURITY.md
