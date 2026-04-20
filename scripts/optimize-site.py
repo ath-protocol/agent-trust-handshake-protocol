@@ -16,8 +16,12 @@ Performs three optimizations on the exported _site/ directory:
    refresh — repeat visits require zero network round-trips.
 
 Also rewrites root-relative paths when BASE_PATH is set (for GitHub Pages
-subpath hosting, e.g. /my-repo/), including Next.js script and chunk URLs so
-the client bundle loads and interactive UI (search, theme, i18n) works.
+subpath hosting, e.g. /my-repo/).  This includes:
+  - HTML href/src/content attributes
+  - CSS url() references
+  - Webpack publicPath in JS chunks
+  - Next.js App Router basePath functions (hasBasePath / removeBasePath)
+  - RSC flight data (assetPrefix + canonicalUrlParts)
 
 Safe and idempotent: re-running is a no-op when markers are already present.
 """
@@ -32,7 +36,7 @@ SITE_DIR = Path(os.environ.get("SITE_DIR", "_site"))
 BASE_PATH = os.environ.get("BASE_PATH", "")  # e.g. "/agent-trust-handshake-protocol"
 MARKER = "<!-- optimize-site -->"
 
-SW_CACHE_VERSION = "ath-docs-v2"
+SW_CACHE_VERSION = "ath-docs-v3"
 
 
 # ---------------------------------------------------------------------------
@@ -41,20 +45,42 @@ SW_CACHE_VERSION = "ath-docs-v2"
 
 
 def rewrite_html_paths(html: str, base: str) -> str:
-    """Rewrite root-relative paths in HTML for subpath hosting."""
-    html = re.sub(r'(href|src|content)="/', rf'\1="{base}/', html)
-    html = re.sub(r'url\(/', f'url({base}/', html)
+    """Rewrite root-relative paths in HTML for subpath hosting.
 
-    for prefix in (
-        "_next/", "logo/", "favicons/", "favicon", "docs/", "specification/",
-        "community/", "schema/", "sitemap", ".well-known/", "llms", "style.css",
-        "zh/", "sw.js",
-    ):
-        html = html.replace(f'"{base}/{prefix}', f'"{base}/{prefix}')
-        html = html.replace(f'"/{prefix}', f'"{base}/{prefix}')
+    Script tag interiors are left alone so that inline RSC flight data
+    (self.__next_f.push) is not corrupted.  Only the <script src="...">
+    attribute and RSC resource-hint paths (HL/HS directives) are rewritten.
+    """
+    parts = re.split(r"(<script[^>]*>.*?</script>)", html, flags=re.DOTALL)
 
-    html = html.replace(f"{base}{base}", base)
-    return html
+    result_parts: list[str] = []
+    for part in parts:
+        if part.startswith("<script"):
+            part = re.sub(r'(<script[^>]*\s(?:src|href))="/', rf'\1="{base}/', part)
+            part = re.sub(
+                r'(<link[^>]*\s(?:href|src))="/',
+                rf'\1="{base}/',
+                part,
+            )
+            part = part.replace(':HL[\\"/', f':HL[\\"{base}/')
+            part = part.replace(':HS[\\"/', f':HS[\\"{base}/')
+            part = part.replace('\\"p\\":\\"\\",', f'\\"p\\":\\"{base}\\",')
+            part = part.replace(f"{base}{base}", base)
+            result_parts.append(part)
+        else:
+            part = re.sub(r'(href|src|content)="/', rf'\1="{base}/', part)
+            part = re.sub(r"url\(/", f"url({base}/", part)
+            for prefix in (
+                "_next/", "logo/", "favicons/", "favicon", "docs/",
+                "specification/", "community/", "schema/", "sitemap",
+                ".well-known/", "llms", "style.css", "zh/", "sw.js",
+            ):
+                part = part.replace(f'"{base}/{prefix}', f'"{base}/{prefix}')
+                part = part.replace(f'"/{prefix}', f'"{base}/{prefix}')
+            part = part.replace(f"{base}{base}", base)
+            result_parts.append(part)
+
+    return "".join(result_parts)
 
 
 def rewrite_js_paths(js: str, base: str) -> str:
@@ -69,6 +95,43 @@ def rewrite_js_paths(js: str, base: str) -> str:
     js = js.replace('href:"/', f'href:"{base}/')
 
     js = js.replace(f"{base}{base}", base)
+    return js
+
+
+def patch_nextjs_basepath(js: str, base: str) -> str:
+    """Patch the Next.js hasBasePath / removeBasePath / addBasePath modules.
+
+    Mintlify builds with basePath="" so the generated code is:
+      hasBasePath(e)    → pathHasPrefix(e, "")   (always true)
+      removeBasePath(e) → return e               (noop)
+      addBasePath(e)    → addPathPrefix(e, "")    (noop)
+
+    We rewrite these to use the actual base path so the App Router can
+    reconcile window.location with the RSC canonical URL.
+    """
+    esc = base.replace("/", "\\/")
+
+    js = re.sub(
+        r'(function \w+\(e\)\{return\(0,\w+\.pathHasPrefix\)\(e,)""\)',
+        rf'\1"{base}")',
+        js,
+    )
+
+    js = re.sub(
+        r'(\(0,\w+\.addPathPrefix\)\(e,)""\)',
+        rf'\1"{base}")',
+        js,
+    )
+
+    js = re.sub(
+        r'(function (\w+)\(e\)\{return e\})(Object\.defineProperty\(t,"__esModule".*?"removeBasePath",\{enumerable:!0,get:function\(\)\{return \2\}\})',
+        lambda m: m.group(0).replace(
+            m.group(1),
+            f'function {m.group(2)}(e){{return e.startsWith("{base}")?e.slice({len(base)})||"/":e}}',
+        ),
+        js,
+    )
+
     return js
 
 
@@ -92,6 +155,7 @@ def rewrite_paths(site_dir: Path, base: str) -> int:
     for js_path in (site_dir / "_next").rglob("*.js"):
         original = js_path.read_text(encoding="utf-8")
         rewritten = rewrite_js_paths(original, base)
+        rewritten = patch_nextjs_basepath(rewritten, base)
         if rewritten != original:
             js_path.write_text(rewritten, encoding="utf-8")
             count += 1
