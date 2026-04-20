@@ -16,7 +16,8 @@ Performs three optimizations on the exported _site/ directory:
    refresh — repeat visits require zero network round-trips.
 
 Also rewrites root-relative paths when BASE_PATH is set (for GitHub Pages
-subpath hosting, e.g. /my-repo/).
+subpath hosting, e.g. /my-repo/), including Next.js script and chunk URLs so
+the client bundle loads and interactive UI (search, theme, i18n) works.
 
 Safe and idempotent: re-running is a no-op when markers are already present.
 """
@@ -31,66 +32,12 @@ SITE_DIR = Path(os.environ.get("SITE_DIR", "_site"))
 BASE_PATH = os.environ.get("BASE_PATH", "")  # e.g. "/agent-trust-handshake-protocol"
 MARKER = "<!-- optimize-site -->"
 
-SW_CACHE_VERSION = "ath-docs-v1"
+SW_CACHE_VERSION = "ath-docs-v2"
 
 
 # ---------------------------------------------------------------------------
 # 1. Path rewriting for subpath hosting
 # ---------------------------------------------------------------------------
-
-MOBILE_NAV_CSS = """\
-<style>
-/* Mobile navigation fix for static GitHub Pages (no JS) */
-@media (max-width: 1023px) {
-  #sidebar {
-    display: block !important;
-    position: relative !important;
-    top: auto !important;
-    bottom: auto !important;
-    width: 100% !important;
-    height: auto !important;
-    max-height: 50vh;
-    overflow-y: auto;
-    border-bottom: 1px solid rgba(128,128,128,0.2);
-    padding: 0.5rem 1rem 1rem;
-  }
-  #sidebar #sidebar-content {
-    position: relative !important;
-    overflow: visible !important;
-  }
-  /* Hide the JS-dependent mobile breadcrumb row */
-  #navbar + div > button[type="button"],
-  .lg\\:hidden.items-center.h-14 { display: none !important; }
-}
-</style>"""
-
-
-def strip_nextjs_scripts(html: str) -> str:
-    """Remove Next.js runtime scripts to prevent hydration errors on subpath.
-
-    The exported HTML is fully server-rendered — removing the JS runtime means
-    the page displays as static HTML with full CSS styling.  This avoids the
-    'Error 500 - Error loading page' that Next.js shows when hydration fails
-    due to path mismatches on GitHub Pages subpath hosting.
-
-    Also injects CSS to make the sidebar visible on mobile screens, since the
-    JS-driven mobile hamburger menu no longer functions without React.
-    """
-    html = re.sub(r'<script src="[^"]*/_next/[^"]*"[^>]*></script>', '', html)
-    html = re.sub(r'<link rel="preload" as="script"[^>]*/_next/[^>]*>', '', html)
-    html = re.sub(r'<script>\(self\.__next_s.*?</script>', '', html, flags=re.DOTALL)
-    html = re.sub(r'<script>self\.__next.*?</script>', '', html, flags=re.DOTALL)
-    html = re.sub(r'<script>\(\(.*?colorScheme.*?</script>', '', html, flags=re.DOTALL)
-    html = re.sub(r'<script>document\.documentElement.*?</script>', '', html, flags=re.DOTALL)
-    html = re.sub(r'<script>\(function\(a,b\)\{try\{.*?</script>', '', html, flags=re.DOTALL)
-    html = re.sub(r'<script>\(\(a,b,c,d,e,f,g,h\).*?</script>', '', html, flags=re.DOTALL)
-    html = re.sub(r'<script noModule=""[^>]*></script>', '', html)
-
-    head_close = html.find("</head>")
-    if head_close != -1:
-        html = html[:head_close] + MOBILE_NAV_CSS + html[head_close:]
-
-    return html
 
 
 def rewrite_html_paths(html: str, base: str) -> str:
@@ -137,8 +84,7 @@ def rewrite_paths(site_dir: Path, base: str) -> int:
     count = 0
     for html_path in site_dir.rglob("*.html"):
         original = html_path.read_text(encoding="utf-8")
-        rewritten = strip_nextjs_scripts(original)
-        rewritten = rewrite_html_paths(rewritten, base)
+        rewritten = rewrite_html_paths(original, base)
         if rewritten != original:
             html_path.write_text(rewritten, encoding="utf-8")
             count += 1
