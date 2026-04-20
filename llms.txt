@@ -45,5 +45,5 @@
 
 ## Optional
 
-- [TypeScript SDK](https://github.com/agenttrusthandshake/typescript-sdk)
-- [Reference Gateway](https://github.com/agenttrusthandshake/gateway)
+- [TypeScript SDK](https://github.com/ath-protocol/typescript-sdk)
+- [Reference Gateway](https://github.com/ath-protocol/gateway)

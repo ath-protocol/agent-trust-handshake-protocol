@@ -19,7 +19,7 @@
     "primary": {
       "type": "button",
       "label": "GitHub",
-      "href": "https://github.com/agenttrusthandshake"
+      "href": "https://github.com/ath-protocol"
     },
     "links": [
       {
@@ -33,12 +33,12 @@
       "anchors": [
         {
           "anchor": "TypeScript SDK",
-          "href": "https://github.com/agenttrusthandshake/typescript-sdk",
+          "href": "https://github.com/ath-protocol/typescript-sdk",
           "icon": "square-js"
         },
         {
           "anchor": "Reference Gateway",
-          "href": "https://github.com/agenttrusthandshake/gateway",
+          "href": "https://github.com/ath-protocol/gateway",
           "icon": "server"
         }
       ]
@@ -151,7 +151,7 @@
   },
   "seo": {
     "metatags": {
-      "og:image": "https://raw.githubusercontent.com/agenttrusthandshake/agent-trust-handshake-protocol/main/images/og-image.png"
+      "og:image": "https://raw.githubusercontent.com/ath-protocol/agent-trust-handshake-protocol/main/images/og-image.png"
     },
     "indexing": "navigable"
   },
@@ -162,7 +162,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/agenttrusthandshake"
+      "github": "https://github.com/ath-protocol"
     }
   },
   "contextual": {

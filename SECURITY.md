@@ -6,7 +6,7 @@ If you discover a security vulnerability in the ATH protocol specification or do
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, please email the maintainers or use [GitHub's private vulnerability reporting](https://github.com/agenttrusthandshake/agent-trust-handshake-protocol/security/advisories/new).
+Instead, please email the maintainers or use [GitHub's private vulnerability reporting](https://github.com/ath-protocol/agent-trust-handshake-protocol/security/advisories/new).
 
 ## Scope
 

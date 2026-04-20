@@ -4,13 +4,13 @@ Thank you for your interest in contributing to the Agent Trust Handshake Protoco
 
 ## Repository Structure
 
-ATH spans multiple repositories in the [`agenttrusthandshake`](https://github.com/agenttrusthandshake) organization:
+ATH spans multiple repositories in the [`ath-protocol`](https://github.com/ath-protocol) organization:
 
 | Repository | Description |
 |-----------|-------------|
-| [agent-trust-handshake-protocol](https://github.com/agenttrusthandshake/agent-trust-handshake-protocol) | Documentation site and specification (this repo) |
-| [typescript-sdk](https://github.com/agenttrusthandshake/typescript-sdk) | TypeScript Client SDK |
-| [gateway](https://github.com/agenttrusthandshake/gateway) | Reference gateway implementation |
+| [agent-trust-handshake-protocol](https://github.com/ath-protocol/agent-trust-handshake-protocol) | Documentation site and specification (this repo) |
+| [typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript Client SDK |
+| [gateway](https://github.com/ath-protocol/gateway) | Reference gateway implementation |
 
 ## How to Contribute
 
@@ -26,13 +26,13 @@ ATH spans multiple repositories in the [`agenttrusthandshake`](https://github.co
 
 Protocol changes require careful review. Please:
 
-1. Open a [GitHub Discussion](https://github.com/agenttrusthandshake/agent-trust-handshake-protocol/discussions) first to discuss your proposal
+1. Open a [GitHub Discussion](https://github.com/ath-protocol/agent-trust-handshake-protocol/discussions) first to discuss your proposal
 2. If the community supports the idea, submit a PR with specification changes
 3. Protocol changes must maintain backward compatibility within a major version
 
 ### SDK & Gateway
 
-Contribute to the relevant repository under the [agenttrusthandshake](https://github.com/agenttrusthandshake) organization.
+Contribute to the relevant repository under the [ath-protocol](https://github.com/ath-protocol) organization.
 
 ### Building a New SDK
 

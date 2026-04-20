@@ -15,8 +15,8 @@ The documentation is built using [Mintlify](https://mintlify.com).
 
 | Repository | Description |
 |-----------|-------------|
-| [agenttrusthandshake/typescript-sdk](https://github.com/agenttrusthandshake/typescript-sdk) | TypeScript Client SDK |
-| [agenttrusthandshake/gateway](https://github.com/agenttrusthandshake/gateway) | Reference gateway implementation |
+| [ath-protocol/typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript Client SDK |
+| [ath-protocol/gateway](https://github.com/ath-protocol/gateway) | Reference gateway implementation |
 
 ## Development
 
