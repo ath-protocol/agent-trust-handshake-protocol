@@ -1,0 +1,21 @@
+---
+title: "术语表"
+description: "ATH 协议中使用的关键术语。"
+---
+
+| 术语 | 定义 |
+|---|---|
+| **Agent（代理）** | 一种 AI 驱动的应用程序，代表用户访问外部服务 |
+| **Agent_ID** | 代理的基于 URI 的唯一标识符（例如 `https://agent.example.com/.well-known/agent.json`） |
+| **Agent Attestation（代理身份证明）** | 一个签名的 JWT，用于证明代理的身份，通过代理发布的公钥进行验证 |
+| **App-side Authorization（应用侧授权）** | 服务（或网关）批准代理访问特定能力——可信握手的阶段 A |
+| **User-side Authorization（用户侧授权）** | 终端用户通过 OAuth 同意代理代表其行事——可信握手的阶段 B |
+| **Trusted Handshake（可信握手）** | ATH 的核心原则，要求在允许访问之前必须同时获得应用侧授权和用户侧授权 |
+| **Scope Intersection（权限范围交集）** | 计算为代理批准的权限、用户同意的权限和请求的权限之交集的有效权限集 |
+| **ATH Gateway（ATH 网关）** | 一种中间件，执行 ATH 可信握手并将 OAuth 流程委托给服务提供者（网关模式） |
+| **ATH Implementor（ATH 实现者）** | 实现 ATH 协议的任何实体（网关或服务） |
+| **OAuth Bridge（OAuth 桥接）** | 一个特定于实现的组件，处理与服务提供者之间的 OAuth 流程 |
+| **Provider（提供者）** | 代理想要访问的第三方服务（例如电子邮件服务、日历、数据库） |
+| **Gateway Mode（网关模式）** | 部署模型，ATH 网关位于代理和服务之间——服务提供者无需任何变更 |
+| **Native Mode（原生模式）** | 部署模型，服务直接实现 ATH 端点 |
+| **Discovery Document（发现文档）** | 在 `.well-known/ath.json`（网关）或 `.well-known/ath-app.json`（服务）发布的 JSON 元数据 |

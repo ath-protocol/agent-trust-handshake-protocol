@@ -1,0 +1,66 @@
+---
+title: "贡献指南"
+description: "如何为 Agent Trust Handshake Protocol 做出贡献。"
+---
+
+ATH 是一个开放协议，我们欢迎来自社区的贡献。
+
+## 仓库结构
+
+ATH 横跨 GitHub 上 [`ath-protocol`](https://github.com/ath-protocol) 组织中的多个仓库：
+
+| 仓库 | 描述 |
+|-----------|-------------|
+| [agent-trust-handshake-protocol](https://github.com/ath-protocol/agent-trust-handshake-protocol) | 文档站点（本仓库） |
+| [typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript 客户端 SDK |
+| [gateway](https://github.com/ath-protocol/gateway) | 参考网关实现 |
+
+{/* TODO: Update table as more repos are added to the org */}
+
+## 贡献方式
+
+### 报告问题
+
+发现规范或文档中的问题？请在相关仓库中[提交 Issue](https://github.com/ath-protocol/agent-trust-handshake-protocol/issues)。
+
+### 提议协议变更
+
+有改进协议的想法？
+
+1. 在 [GitHub Discussions](https://github.com/ath-protocol/agent-trust-handshake-protocol/discussions) 中分享你的用例和提案
+2. 如果社区支持该想法，请提交包含规范变更的 Pull Request
+3. 协议变更需要仔细审查以确保向后兼容性
+
+### 代码贡献
+
+- **SDK 增强** — 新功能、更好的错误处理、更多语言支持 → 贡献到 SDK 仓库
+- **网关改进** — 新的 OAuth 桥接模式、性能优化、存储后端 → 贡献到网关仓库
+- **文档** — 澄清说明、示例、教程 → 贡献到本仓库
+
+### 构建 SDK
+
+ATH 协议与编程语言无关。如果你想为新语言构建 SDK：
+
+1. 查阅 [API 规范](/specification/0.1/server/registration)
+2. 实现代理生命周期：discover → register → authorize → exchangeToken → proxy
+3. 包含正确的 JWT 签名用于代理身份证明（ES256）
+4. 提交 PR 或提供你的仓库链接
+
+## 贡献到本站点
+
+```bash
+git clone https://github.com/ath-protocol/agent-trust-handshake-protocol.git
+cd agent-trust-handshake-protocol
+npm install
+npx mintlify dev
+```
+
+站点将在 `http://localhost:3000` 上可用。
+
+## 行为准则
+
+请保持尊重、建设性和包容性。我们遵循标准的开源社区准则。
+
+## 许可证
+
+ATH 基于 MIT 许可证发布。

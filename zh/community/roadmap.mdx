@@ -1,0 +1,48 @@
+---
+title: "路线图"
+description: "ATH 协议开发路线图。"
+---
+
+ATH 专为增量开发而设计。每个版本都在前一版本的基础上构建，同时保持向后兼容性。
+
+## v0.1 — 当前版本
+
+协议规范 + 参考实现（Level 1 网关模式）
+
+- 代理注册与身份验证
+- 基于 OAuth 的可信握手流程
+- PKCE（[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)）和资源指示符（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)）
+- 通过管理 API / 仪表板进行动态提供者配置
+- 权限范围交集执行
+- 审计日志
+- TypeScript 参考网关 + 客户端 SDK
+- 端到端测试套件
+
+## v0.2 — 计划中
+
+代理感知的 OAuth 扩展（Level 2）
+
+- ATH 元数据集成到 OAuth 动态客户端注册（[RFC 7591](https://www.rfc-editor.org/rfc/rfc7591)）
+- 代理感知的授权同意页面指南
+- 可信代理注册表联合
+- 更多语言的 SDK
+
+## v1.0 — 未来
+
+完整 ATH 规范（Level 3 原生模式）
+
+- 原生 `.well-known` 发现
+- 按能力审批工作流
+- 跨生态系统代理身份联合
+- 用于高安全性环境的 mTLS 支持
+- 正式一致性测试套件
+
+## 标准化
+
+与标准化组织合作，将 ATH 确立为 AI 生态系统中代理信任的正式标准。
+
+## 如何影响路线图
+
+- 在 [GitHub Discussions](https://github.com/ath-protocol/agent-trust-handshake-protocol/discussions) 中分享你的用例
+- 通过 Pull Request 提出具体变更
+- 构建集成并分享反馈
