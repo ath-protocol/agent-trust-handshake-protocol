@@ -38,6 +38,26 @@ SW_CACHE_VERSION = "ath-docs-v1"
 # 1. Path rewriting for subpath hosting
 # ---------------------------------------------------------------------------
 
+def strip_nextjs_scripts(html: str) -> str:
+    """Remove Next.js runtime scripts to prevent hydration errors on subpath.
+
+    The exported HTML is fully server-rendered — removing the JS runtime means
+    the page displays as static HTML with full CSS styling.  This avoids the
+    'Error 500 - Error loading page' that Next.js shows when hydration fails
+    due to path mismatches on GitHub Pages subpath hosting.
+    """
+    html = re.sub(r'<script src="[^"]*/_next/[^"]*"[^>]*></script>', '', html)
+    html = re.sub(r'<link rel="preload" as="script"[^>]*/_next/[^>]*>', '', html)
+    html = re.sub(r'<script>\(self\.__next_s.*?</script>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<script>self\.__next.*?</script>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<script>\(\(.*?colorScheme.*?</script>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<script>document\.documentElement.*?</script>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<script>\(function\(a,b\)\{try\{.*?</script>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<script>\(\(a,b,c,d,e,f,g,h\).*?</script>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<script noModule=""[^>]*></script>', '', html)
+    return html
+
+
 def rewrite_html_paths(html: str, base: str) -> str:
     """Rewrite root-relative paths in HTML for subpath hosting."""
     html = re.sub(r'(href|src|content)="/', rf'\1="{base}/', html)
@@ -46,6 +66,7 @@ def rewrite_html_paths(html: str, base: str) -> str:
     for prefix in (
         "_next/", "logo/", "favicons/", "favicon", "docs/", "specification/",
         "community/", "schema/", "sitemap", ".well-known/", "llms", "style.css",
+        "zh/", "sw.js",
     ):
         html = html.replace(f'"{base}/{prefix}', f'"{base}/{prefix}')
         html = html.replace(f'"/{prefix}', f'"{base}/{prefix}')
@@ -61,7 +82,7 @@ def rewrite_js_paths(js: str, base: str) -> str:
     js = js.replace('"/_next/image"', f'"{base}/_next/image"')
     js = js.replace('"/_next/"', f'"{base}/_next/"')
 
-    for prefix in ("docs/", "specification/", "community/", "schema/"):
+    for prefix in ("docs/", "specification/", "community/", "schema/", "zh/"):
         js = js.replace(f'href:"/{prefix}', f'href:"{base}/{prefix}')
     js = js.replace('href:"/', f'href:"{base}/')
 
@@ -69,12 +90,20 @@ def rewrite_js_paths(js: str, base: str) -> str:
     return js
 
 
+def rewrite_css_paths(css: str, base: str) -> str:
+    """Rewrite root-relative url() references in CSS for subpath hosting."""
+    css = re.sub(r'url\(/_next/', f'url({base}/_next/', css)
+    css = css.replace(f"{base}{base}", base)
+    return css
+
+
 def rewrite_paths(site_dir: Path, base: str) -> int:
     """Rewrite all root-relative paths for subpath hosting. Returns count."""
     count = 0
     for html_path in site_dir.rglob("*.html"):
         original = html_path.read_text(encoding="utf-8")
-        rewritten = rewrite_html_paths(original, base)
+        rewritten = strip_nextjs_scripts(original)
+        rewritten = rewrite_html_paths(rewritten, base)
         if rewritten != original:
             html_path.write_text(rewritten, encoding="utf-8")
             count += 1
@@ -84,6 +113,13 @@ def rewrite_paths(site_dir: Path, base: str) -> int:
         rewritten = rewrite_js_paths(original, base)
         if rewritten != original:
             js_path.write_text(rewritten, encoding="utf-8")
+            count += 1
+
+    for css_path in (site_dir / "_next").rglob("*.css"):
+        original = css_path.read_text(encoding="utf-8")
+        rewritten = rewrite_css_paths(original, base)
+        if rewritten != original:
+            css_path.write_text(rewritten, encoding="utf-8")
             count += 1
     return count
 
