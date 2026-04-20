@@ -1,0 +1,51 @@
+---
+title: "API 代理转发"
+sidebarTitle: "代理转发"
+description: "ANY /ath/proxy/{provider_id}/{path} — 通过网关代理转发 API 调用。"
+---
+
+## API 代理转发（运行时，仅限网关模式）
+
+**`ANY /ath/proxy/{provider_id}/{path}`**
+
+将 API 调用代理转发到上游服务提供方。仅在网关模式下可用。
+
+## 请求
+
+```
+GET /ath/proxy/example-mail/v1/messages
+Authorization: Bearer ath_tk_xxxxxxxx
+X-ATH-Agent-ID: https://travel-agent.example.com/.well-known/agent.json
+```
+
+### 请求头
+
+| 请求头 | 必填 | 描述 |
+|--------|----------|-------------|
+| `Authorization` | 是 | `Bearer <ath_access_token>` |
+| `X-ATH-Agent-ID` | 是 | 代理的规范 URI |
+
+### 路径参数
+
+| 参数 | 描述 |
+|-----------|-------------|
+| `provider_id` | 要代理转发请求的服务提供方 |
+| `path` | 上游服务的 API 路径 |
+
+## 行为
+
+实现者：
+
+1. **验证** ATH 访问令牌
+2. **核实**代理身份与令牌绑定匹配
+3. **检查**请求的操作在已授予的范围内
+4. **转发**请求到实际服务，使用存储的 OAuth 令牌
+5. **返回**服务的响应给代理
+
+## 响应
+
+响应从上游服务提供方透传。网关不修改响应体。
+
+<Note>
+在原生模式中，服务直接处理请求而非代理转发。代理转发端点仅适用于网关模式部署。
+</Note>

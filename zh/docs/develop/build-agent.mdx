@@ -1,0 +1,122 @@
+---
+title: "构建 ATH 代理"
+sidebarTitle: "构建代理"
+description: "使用 ATH Client SDK 通过可信握手将你的 AI 代理连接到服务。"
+---
+
+ATH Client SDK 提供了一个库，使代理能够与 ATH 网关和服务进行交互。本指南将介绍代理的完整生命周期。
+
+## 安装 SDK
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```bash
+    npm install ath-client-sdk
+    ```
+    {/* TODO: 包名发布到 npm 后需更新 */}
+
+    源码：[ath-protocol/typescript-sdk](https://github.com/ath-protocol/typescript-sdk)
+  </Tab>
+</Tabs>
+
+## 代理生命周期
+
+你的代理遵循五步生命周期：
+
+```
+1. discover()      → 发现可用的服务提供者
+2. register()      → 注册你的代理，获得特定权限范围的批准
+3. authorize()     → 获取一个 URL 让用户授权 OAuth 访问
+4. exchangeToken() → 用户批准后，获取 ATH 令牌
+5. proxy()         → 通过 ATH 网关调用服务 API
+```
+
+## 完整示例
+
+```typescript
+import { ATHClient } from "ath-client-sdk";
+import { generateKeyPair } from "jose";
+
+const { privateKey } = await generateKeyPair("ES256");
+
+const client = new ATHClient({
+  gatewayUrl: "http://localhost:3000",
+  agentId: "https://my-agent.example.com/.well-known/agent.json",
+  privateKey,
+});
+
+// 1. 发现可用的服务提供者
+const discovery = await client.discover();
+console.log("Available providers:", discovery.supported_providers);
+
+// 2. 注册你的代理（一次性操作，阶段 A）
+const reg = await client.register({
+  developer: { name: "My Company", id: "dev-001" },
+  providers: [{ provider_id: "github", scopes: ["repo", "read:user"] }],
+  purpose: "Code review assistant",
+});
+console.log("Registered:", reg.client_id);
+console.log("Approved scopes:", reg.approved_providers);
+
+// 3. 发起授权（按用户进行，阶段 B）
+const auth = await client.authorize("github", ["repo", "read:user"]);
+console.log("User should visit:", auth.authorization_url);
+
+// 4. 用户批准后，兑换 ATH 令牌
+const token = await client.exchangeToken(code, auth.ath_session_id);
+console.log("Effective scopes:", token.effective_scopes);
+console.log("Scope intersection:", token.scope_intersection);
+
+// 5. 通过 ATH 代理调用 API
+const user = await client.proxy("github", "GET", "/user");
+console.log("GitHub user:", user);
+```
+
+## 与直接 OAuth 的关键区别
+
+你的代理必须在发起任何 OAuth 流程之前完成**注册并获得批准**。这就是"应用侧授权"——网关确保只有已知的、经过审核的代理才能访问服务。
+
+结合用户的 OAuth 同意，这就完成了 ATH **可信握手**。
+
+## 错误处理
+
+SDK 对所有错误情况抛出 `ATHClientError`：
+
+```typescript
+import { ATHClient, ATHClientError } from "ath-client-sdk";
+
+try {
+  const reg = await client.register({ /* ... */ });
+} catch (err) {
+  if (err instanceof ATHClientError) {
+    console.error(`ATH Error [${err.code}]: ${err.message}`);
+  }
+}
+```
+
+常见错误码：
+
+| 错误码 | 含义 |
+|------|---------|
+| `INVALID_ATTESTATION` | 代理身份验证失败 |
+| `AGENT_NOT_REGISTERED` | 代理必须先注册才能授权 |
+| `AGENT_UNAPPROVED` | 代理注册被拒绝 |
+| `PROVIDER_NOT_APPROVED` | 代理未获得该提供者的批准 |
+| `SCOPE_NOT_APPROVED` | 代理未获得所请求权限范围的批准 |
+| `SESSION_NOT_FOUND` | OAuth 会话未找到 |
+| `SESSION_EXPIRED` | OAuth 会话已过期 |
+| `TOKEN_REVOKED` | ATH 访问令牌已被撤销 |
+| `AGENT_IDENTITY_MISMATCH` | 代理 ID 与令牌绑定不匹配 |
+| `USER_DENIED` | 用户拒绝了 OAuth 同意 |
+| `OAUTH_ERROR` | 上游 OAuth 提供者错误 |
+
+## 后续步骤
+
+<CardGroup cols={2}>
+  <Card title="SDK 参考" icon="book" href="/docs/develop/sdk">
+    查看所有可用的 SDK
+  </Card>
+  <Card title="部署网关" icon="server" href="/docs/develop/build-gateway">
+    为你的代理搭建可连接的网关
+  </Card>
+</CardGroup>

@@ -1,0 +1,56 @@
+---
+title: "安全性考量"
+sidebarTitle: "安全性"
+description: "ATH 实现的安全要求和注意事项。"
+---
+
+<div id="enable-section-numbers" />
+
+## 代理证明验证
+
+- 代理证明 JWT 必须（MUST）通过代理在其 `agent_id` URI 上发布的公钥进行验证
+- JWT 必须（MUST）包含过期时间（`exp`）和受众（`aud`）
+- 实现者必须（MUST）拒绝已过期或受众不匹配的证明
+
+## 令牌绑定
+
+- ATH 访问令牌必须（MUST）绑定到特定的 `(agent_id, user_id, provider_id, scopes)` 元组
+- 一个代理获取的令牌禁止（MUST NOT）被另一个代理使用
+- 为一个用户获取的令牌禁止（MUST NOT）被另一个用户使用
+
+## OAuth 安全性
+
+- 所有 OAuth 授权请求必须（MUST）使用 PKCE（[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)）及 S256 挑战方法
+- 令牌交换请求必须（MUST）使用 `application/x-www-form-urlencoded` 内容类型，遵循 [RFC 6749 §4.1.3](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3)
+- 服务提供方的 OAuth 客户端密钥必须（MUST）安全存储，且绝不暴露给代理或用户
+- 从 OAuth 流程获取的服务提供方令牌（access_token、refresh_token）必须（MUST）存储在服务端，且绝不发送给代理
+
+## 传输安全
+
+- 所有 ATH 通信必须（MUST）使用 HTTPS（TLS 1.2+）
+- 实现者建议（SHOULD）验证上游服务的 TLS 证书
+- 在高安全性环境中，mTLS 是可选的（OPTIONAL）（v2 考虑事项）
+
+## 审计日志
+
+实现者建议（SHOULD）记录所有授权决策：
+
+```json
+{
+  "timestamp": "2026-04-10T12:00:00Z",
+  "event": "access_granted",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "user_id": "user-12345",
+  "provider_id": "example-mail",
+  "requested_scopes": ["mail:read", "mail:send"],
+  "effective_scopes": ["mail:read"],
+  "denied_scopes": ["mail:send"],
+  "denial_reason": "agent not approved for mail:send"
+}
+```
+
+## 速率限制与滥用防护
+
+- 实现者建议（SHOULD）执行每代理的速率限制
+- 具有异常请求模式的代理建议（SHOULD）被标记并可能被暂停
+- 代理注册表建议（SHOULD）支持对已泄露代理的吊销

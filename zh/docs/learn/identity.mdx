@@ -1,0 +1,91 @@
+---
+title: "代理身份模型"
+sidebarTitle: "代理身份"
+description: "ATH 如何使用基于 URI 的身份和签名证明来识别和验证 AI 代理。"
+---
+
+ATH 协议中的每个代理都有一个唯一的、可验证的身份。这是一个基础要求——没有经过验证的身份，应用侧授权将毫无意义。
+
+## 代理身份（Agent_ID）
+
+代理身份遵循基于 URI 的模式：
+
+```
+https://<agent-domain>/.well-known/agent.json
+```
+
+**示例：**
+```
+https://travel-agent.example.com/.well-known/agent.json
+https://coding-assistant.example.com/.well-known/agent.json
+```
+
+## 代理身份文档
+
+每个代理在其 `agent_id` URI 上发布一个 JSON 文档，包含其元数据和公钥：
+
+```json
+{
+  "ath_version": "0.1",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "name": "TravelBot",
+  "developer": {
+    "name": "Example Corp",
+    "id": "dev-example-12345",
+    "contact": "security@example.com"
+  },
+  "capabilities": ["flight-search", "hotel-booking", "itinerary-planning"],
+  "public_key": "<JWK or PEM for agent attestation verification>"
+}
+```
+
+该文档有两个用途：
+1. **发现** — 其他参与方可以了解代理的能力
+2. **验证** — 公钥用于验证代理证明 JWT
+
+## 代理证明
+
+代理使用签名的 JWT（代理证明令牌）来证明其身份：
+
+```json
+{
+  "header": {
+    "alg": "ES256",
+    "typ": "JWT",
+    "kid": "<key-id>"
+  },
+  "payload": {
+    "iss": "https://travel-agent.example.com",
+    "sub": "<agent_id>",
+    "aud": "<target-service-or-gateway>",
+    "iat": 1720000000,
+    "exp": 1720003600,
+    "capabilities": ["flight-search"]
+  }
+}
+```
+
+验证方（网关或服务）根据代理在 `agent_id` URI 上发布的公钥来验证此 JWT。
+
+<Note>
+证明 JWT 必须包含过期时间（`exp`）和受众（`aud`）。实现方必须拒绝过期或受众不匹配的证明。
+</Note>
+
+## 服务身份（App_ID）
+
+服务通过其现有标识符来标识：
+
+- **客户端应用**：包名（例如 `com.example.mail`）
+- **服务端服务**：URI（例如 `https://api.example.com`）
+
+服务无需新的身份基础设施。
+
+## 验证流程
+
+当代理与 ATH 实现方交互时：
+
+1. 代理使用其私钥签署证明 JWT
+2. 实现方从 `agent_id` URI 获取代理的身份文档
+3. 实现方从身份文档中提取公钥
+4. 实现方验证 JWT 签名、过期时间和受众
+5. 如果验证通过，代理的身份即被确认
