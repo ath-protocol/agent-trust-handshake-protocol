@@ -1,0 +1,106 @@
+---
+title: "快速入门"
+description: "使用参考实现，5 分钟内快速上手 ATH。"
+---
+
+本指南将引导你在本地运行 ATH 参考实现。你将启动一个网关，运行一个演示代理，并实际体验完整的可信握手流程。
+
+## 前置条件
+
+- [Node.js](https://nodejs.org/) 18+
+- [pnpm](https://pnpm.io/) 9+
+
+## 步骤 1：克隆并安装
+
+克隆参考网关仓库：
+
+```bash
+git clone https://github.com/ath-protocol/gateway.git
+cd gateway
+pnpm install
+```
+
+{/* TODO: 在网关仓库发布后更新克隆 URL */}
+
+## 步骤 2：启动网关
+
+以模拟模式启动 ATH 网关（无需外部 OAuth 提供商）：
+
+```bash
+pnpm dev
+```
+
+网关将在 `http://localhost:3000` 启动。打开 `http://localhost:3000/ui/dashboard` 查看 Web 仪表盘。
+
+<Note>
+模拟模式使用内置的 OAuth 服务器进行测试。无需外部账户或 API 密钥。
+</Note>
+
+## 步骤 3：运行演示代理
+
+在第二个终端中运行演示代理：
+
+```bash
+pnpm demo
+```
+
+这将演示完整的协议流程：
+
+1. **发现** — 代理查询 `/.well-known/ath.json` 以查找可用的提供商
+2. **注册** — 代理向网关注册（阶段 A：应用侧授权）
+3. **授权** — 代理为用户发起 OAuth 流程（阶段 B：用户侧授权）
+4. **令牌交换** — 用户同意后，代理接收带有范围交集的 ATH 令牌
+5. **API 调用** — 代理使用 ATH 令牌发起代理的 API 调用
+
+## 步骤 4：验证仪表盘
+
+返回 `http://localhost:3000/ui/dashboard`——你应该能看到已注册的代理及其批准的范围。
+
+## 刚才发生了什么？
+
+演示执行了 ATH 的**可信握手**：
+
+```
+Agent Developer                    ATH Gateway
+      │                                │
+      │  1. 注册代理                   │
+      ├───────────────────────────────►│
+      │                                │  验证身份
+      │                                │  评估策略
+      │  2. 已批准（client_id）        │
+      │◄───────────────────────────────┤
+      │                                │
+      │  3. 请求授权                   │
+      ├───────────────────────────────►│
+      │                                │  检查批准状态
+      │                                │  启动 OAuth 流程
+      │  4. 授权 URL                   │
+      │◄───────────────────────────────┤
+      │                                │
+      │  [用户通过 OAuth 同意]         │
+      │                                │
+      │  5. 交换 ATH 令牌              │
+      ├───────────────────────────────►│
+      │                                │  范围交集
+      │  6. ATH 令牌（已限定范围）     │
+      │◄───────────────────────────────┤
+```
+
+**服务方**（通过网关的批准策略）和**用户**（通过 OAuth 同意）都必须批准后，代理才能获得任何访问权限。
+
+## 后续步骤
+
+<CardGroup cols={2}>
+  <Card title="连接真实提供商" icon="github" href="/docs/develop/build-gateway">
+    使用 GitHub、Google 或任何 OAuth 提供商配置网关
+  </Card>
+  <Card title="构建你自己的代理" icon="robot" href="/docs/develop/build-agent">
+    在你自己的代理中使用 ATH 客户端 SDK
+  </Card>
+  <Card title="了解架构" icon="sitemap" href="/docs/learn/architecture">
+    了解网关模式与原生模式
+  </Card>
+  <Card title="阅读规范" icon="file-lines" href="/specification/0.1">
+    深入了解完整的协议规范
+  </Card>
+</CardGroup>
