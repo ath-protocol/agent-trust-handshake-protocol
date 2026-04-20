@@ -38,6 +38,33 @@ SW_CACHE_VERSION = "ath-docs-v1"
 # 1. Path rewriting for subpath hosting
 # ---------------------------------------------------------------------------
 
+MOBILE_NAV_CSS = """\
+<style>
+/* Mobile navigation fix for static GitHub Pages (no JS) */
+@media (max-width: 1023px) {
+  #sidebar {
+    display: block !important;
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 50vh;
+    overflow-y: auto;
+    border-bottom: 1px solid rgba(128,128,128,0.2);
+    padding: 0.5rem 1rem 1rem;
+  }
+  #sidebar #sidebar-content {
+    position: relative !important;
+    overflow: visible !important;
+  }
+  /* Hide the JS-dependent mobile breadcrumb row */
+  #navbar + div > button[type="button"],
+  .lg\\:hidden.items-center.h-14 { display: none !important; }
+}
+</style>"""
+
+
 def strip_nextjs_scripts(html: str) -> str:
     """Remove Next.js runtime scripts to prevent hydration errors on subpath.
 
@@ -45,6 +72,9 @@ def strip_nextjs_scripts(html: str) -> str:
     the page displays as static HTML with full CSS styling.  This avoids the
     'Error 500 - Error loading page' that Next.js shows when hydration fails
     due to path mismatches on GitHub Pages subpath hosting.
+
+    Also injects CSS to make the sidebar visible on mobile screens, since the
+    JS-driven mobile hamburger menu no longer functions without React.
     """
     html = re.sub(r'<script src="[^"]*/_next/[^"]*"[^>]*></script>', '', html)
     html = re.sub(r'<link rel="preload" as="script"[^>]*/_next/[^>]*>', '', html)
@@ -55,6 +85,11 @@ def strip_nextjs_scripts(html: str) -> str:
     html = re.sub(r'<script>\(function\(a,b\)\{try\{.*?</script>', '', html, flags=re.DOTALL)
     html = re.sub(r'<script>\(\(a,b,c,d,e,f,g,h\).*?</script>', '', html, flags=re.DOTALL)
     html = re.sub(r'<script noModule=""[^>]*></script>', '', html)
+
+    head_close = html.find("</head>")
+    if head_close != -1:
+        html = html[:head_close] + MOBILE_NAV_CSS + html[head_close:]
+
     return html
 
 
