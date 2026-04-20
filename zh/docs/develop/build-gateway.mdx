@@ -1,0 +1,70 @@
+---
+title: "部署 ATH 网关"
+sidebarTitle: "部署网关"
+description: "搭建 ATH 网关，通过可信握手保护你的服务。"
+---
+
+ATH 网关是为现有服务添加可信握手保护的最快方式。服务提供者**无需任何改动**——网关负责处理代理注册、OAuth 流程（含 PKCE）、权限范围交集计算以及 API 代理转发。
+
+## 网关的功能
+
+网关位于代理和服务提供者之间，执行可信握手：
+
+```
+代理 → ATH 网关 → 服务提供者（无需改动）
+```
+
+它负责处理：
+
+1. **代理注册表** — 验证代理身份，管理每个代理的能力策略
+2. **OAuth 桥接** — 编排 OAuth 2.0 授权流程，支持 PKCE（[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)）
+3. **权限范围交集** — 根据代理批准、用户同意和请求的权限范围计算有效权限
+4. **API 代理** — 验证 ATH 令牌并将请求转发到上游服务
+5. **审计日志** — 记录所有授权决策
+
+## 参考实现
+
+官方参考网关可在以下位置获取：
+
+<Card title="ATH 网关" icon="server" href="https://github.com/ath-protocol/gateway">
+  TypeScript 参考实现（Hono + Node.js）——包含搭建指南、配置参考和 Docker 部署。
+</Card>
+
+{/* TODO: 网关仓库发布后需更新 URL */}
+
+## OAuth 桥接模式
+
+参考网关支持两种 OAuth 桥接模式：
+
+| 模式 | 适用场景 |
+|------|-------------|
+| **直接 OAuth** | 连接任意 OAuth2 提供者（GitHub、Google 等） |
+| **模拟模式** | 内置模拟服务，用于无需外部依赖的测试 |
+
+<Note>
+在直接 OAuth 模式下，网关会自动生成 PKCE 对——`code_challenge`（S256）发送给授权服务器，`code_verifier` 存储在会话中并在令牌交换时发送。代理侧无需任何操作。
+</Note>
+
+请求体还支持可选的 `resource` 参数（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)），用于指示目标资源服务器。
+
+## 审批策略
+
+网关的审批策略控制哪些代理被批准使用哪些权限范围。在生产环境中，你应该：
+
+1. **审核代理注册** 后再批准
+2. **限制每个代理的权限范围**（例如，代理 X 可以读取邮件但不能发送）
+3. **监控审计日志** 以发现异常访问模式
+4. **撤销代理访问权限** 如果其行为不当
+
+有关配置详情和策略自定义，请参阅网关仓库。
+
+## 后续步骤
+
+<CardGroup cols={2}>
+  <Card title="构建代理" icon="robot" href="/docs/develop/build-agent">
+    使用 ATH Client SDK 将你的代理连接到网关
+  </Card>
+  <Card title="API 规范" icon="file-lines" href="/specification/0.1/server/registration">
+    查看完整的 API 端点规范
+  </Card>
+</CardGroup>
