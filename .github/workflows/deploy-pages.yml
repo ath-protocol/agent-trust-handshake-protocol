@@ -32,7 +32,7 @@ jobs:
         run: npm install -g mintlify
 
       - name: Export static site
-        run: mint export --output export.zip
+        run: mintlify export --output export.zip
 
       - name: Prepare static files
         run: |
