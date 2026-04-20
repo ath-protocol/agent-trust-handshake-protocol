@@ -289,6 +289,53 @@ def inject_into_html(html: str, prefetch: str, preload: str, sw_snippet: str) ->
 
 
 # ---------------------------------------------------------------------------
+# 6. Directory redirects for GitHub Pages
+# ---------------------------------------------------------------------------
+
+REDIRECT_TEMPLATE = """\
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="0; url={target}">
+<link rel="canonical" href="{target}">
+<title>Redirecting…</title>
+</head>
+<body><a href="{target}">Redirecting…</a></body>
+</html>
+"""
+
+
+def create_directory_redirects(site_dir: Path, base: str) -> int:
+    """Create index.html redirects for directories that lack one.
+
+    Mintlify exports pages like specification/0.1/index/index.html but the
+    tab link points to /specification/0.1 which resolves to the parent
+    directory. GitHub Pages returns 404 because there is no index.html there.
+    This creates a small redirect page in each such gap.
+    """
+    count = 0
+    for dirpath in sorted(site_dir.rglob("*")):
+        if not dirpath.is_dir():
+            continue
+        idx = dirpath / "index.html"
+        if idx.exists():
+            continue
+        subdirs_with_index = [
+            d for d in dirpath.iterdir()
+            if d.is_dir() and (d / "index.html").exists()
+        ]
+        if not subdirs_with_index:
+            continue
+        target_name = subdirs_with_index[0].name
+        target_url = base + "/" + str(dirpath.relative_to(site_dir).as_posix()) + "/" + target_name + "/"
+        target_url = target_url.replace("//", "/")
+        idx.write_text(REDIRECT_TEMPLATE.format(target=target_url), encoding="utf-8")
+        count += 1
+    return count
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -298,6 +345,10 @@ def main() -> int:
         return 1
 
     base = BASE_PATH.rstrip("/")
+
+    redirects = create_directory_redirects(SITE_DIR, base)
+    if redirects:
+        print(f"optimize-site: created {redirects} directory redirect(s)")
 
     if base:
         count = rewrite_paths(SITE_DIR, base)
