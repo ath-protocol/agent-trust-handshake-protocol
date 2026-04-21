@@ -1,4 +1,4 @@
-# Agent Trust Handshake (ATH) 可信代理握手协议
+# Agent Trust Handshake (ATH) 可信握手协议
 > 🛡️ 让AI之间的交互像人与人握手一样可信、安全、透明
 ## 📋 目录
 - [项目简介](#项目简介)
