@@ -1,0 +1,46 @@
+---
+title: "Audit Logging"
+sidebarTitle: "Audit Logging"
+description: "How to implement audit logging for ATH authorization decisions."
+---
+
+Audit logging provides visibility into all authorization decisions made by the ATH implementation. This is essential for security monitoring, compliance, and incident response.
+
+## Log Format
+
+Implementors SHOULD log all authorization decisions with the following structure:
+
+```json
+{
+  "timestamp": "2026-04-10T12:00:00Z",
+  "event": "access_granted",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "user_id": "user-12345",
+  "provider_id": "example-mail",
+  "requested_scopes": ["mail:read", "mail:send"],
+  "effective_scopes": ["mail:read"],
+  "denied_scopes": ["mail:send"],
+  "denial_reason": "agent not approved for mail:send"
+}
+```
+
+## Events to Log
+
+| Event | When |
+|-------|------|
+| `agent_registered` | An agent successfully registers |
+| `agent_registration_denied` | An agent registration is rejected |
+| `attestation_failed` | An agent attestation JWT fails verification |
+| `authorization_started` | An OAuth flow is initiated |
+| `access_granted` | A token is issued with effective scopes |
+| `access_denied` | A token request is denied |
+| `token_revoked` | A token is revoked |
+| `proxy_request` | An API call is made through the proxy |
+| `scope_violation` | An agent attempts to access a scope outside its token |
+
+## Monitoring Recommendations
+
+- Alert on repeated `attestation_failed` events from the same agent
+- Alert on unusual patterns in `proxy_request` events (rate, timing, scope usage)
+- Regularly review `agent_registered` events to catch unauthorized registration attempts
+- Track `scope_violation` events to detect potentially compromised agents

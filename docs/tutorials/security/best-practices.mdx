@@ -1,0 +1,71 @@
+---
+title: "Security Best Practices"
+sidebarTitle: "Best Practices"
+description: "Security considerations and best practices for ATH implementations."
+---
+
+This guide covers security considerations for implementing and deploying ATH.
+
+## Agent Attestation Verification
+
+- Agent attestation JWTs MUST be verified against the agent's published public key at their `agent_id` URI
+- JWTs MUST include an expiration time (`exp`) and audience (`aud`)
+- Implementors MUST reject expired or audience-mismatched attestations
+- Use short-lived attestation tokens (recommended: 1 hour or less)
+
+## Token Binding
+
+ATH access tokens MUST be bound to a specific tuple:
+
+```
+(agent_id, user_id, provider_id, scopes)
+```
+
+- A token obtained by one agent MUST NOT be usable by another agent
+- A token obtained for one user MUST NOT be usable for another user
+- A token for one provider MUST NOT be used to access another provider
+
+## OAuth Security
+
+- All OAuth authorization requests MUST use PKCE ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) with the S256 challenge method
+- Token exchange requests MUST use `application/x-www-form-urlencoded` content type per [RFC 6749 §4.1.3](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3)
+- Provider OAuth client secrets MUST be stored securely and never exposed to agents or users
+- Provider tokens obtained from OAuth flows MUST be stored server-side and never sent to agents
+
+## Transport Security
+
+- All ATH communications MUST use HTTPS (TLS 1.2+)
+- Implementors SHOULD validate TLS certificates of upstream services
+- mTLS is OPTIONAL for high-security environments (planned for v1.0)
+
+## Rate Limiting & Abuse Prevention
+
+- Implementors SHOULD enforce per-agent rate limits
+- Agents with abnormal request patterns SHOULD be flagged and potentially suspended
+- The agent registry SHOULD support revocation of compromised agents
+
+## Scope Management
+
+- Follow the **principle of least privilege**: agents should request only the scopes they need
+- Service operators should approve the minimum set of scopes for each agent
+- Regularly review and audit agent scope approvals
+- Set appropriate expiration times on agent approvals
+
+## Key Management
+
+- Agent private keys should be stored securely (hardware security modules, key vaults, or encrypted storage)
+- Rotate agent key pairs periodically
+- Publish key revocation information promptly if a key is compromised
+
+## Deployment Recommendations
+
+| Recommendation | Priority |
+|---------------|----------|
+| Enable HTTPS everywhere | **Required** |
+| Validate agent attestation JWTs | **Required** |
+| Enforce token binding | **Required** |
+| Enable audit logging | **Strongly recommended** |
+| Set up per-agent rate limits | **Strongly recommended** |
+| Review agent registrations manually | **Recommended for production** |
+| Use short-lived tokens | **Recommended** |
+| Enable mTLS for high-security | **Optional** |

@@ -1,0 +1,1 @@
+Contact: https://github.com/ath-protocol/agent-trust-handshake-protocol/blob/main/SECURITY.md

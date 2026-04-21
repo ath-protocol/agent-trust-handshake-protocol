@@ -1,0 +1,46 @@
+---
+title: "审计日志"
+sidebarTitle: "审计日志"
+description: "如何为 ATH 授权决策实现审计日志。"
+---
+
+审计日志提供了对 ATH 实现所做的所有授权决策的可见性。这对于安全监控、合规性和事件响应至关重要。
+
+## 日志格式
+
+实现者应当（SHOULD）使用以下结构记录所有授权决策：
+
+```json
+{
+  "timestamp": "2026-04-10T12:00:00Z",
+  "event": "access_granted",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "user_id": "user-12345",
+  "provider_id": "example-mail",
+  "requested_scopes": ["mail:read", "mail:send"],
+  "effective_scopes": ["mail:read"],
+  "denied_scopes": ["mail:send"],
+  "denial_reason": "agent not approved for mail:send"
+}
+```
+
+## 需要记录的事件
+
+| 事件 | 触发时机 |
+|-------|------|
+| `agent_registered` | 代理注册成功 |
+| `agent_registration_denied` | 代理注册被拒绝 |
+| `attestation_failed` | 代理证明 JWT 验证失败 |
+| `authorization_started` | OAuth 流程已发起 |
+| `access_granted` | 令牌已签发，包含有效权限范围 |
+| `access_denied` | 令牌请求被拒绝 |
+| `token_revoked` | 令牌已被撤销 |
+| `proxy_request` | 通过代理转发进行了 API 调用 |
+| `scope_violation` | 代理尝试访问其令牌范围之外的权限 |
+
+## 监控建议
+
+- 对同一代理反复出现的 `attestation_failed` 事件发出告警
+- 对 `proxy_request` 事件中的异常模式（频率、时间、权限使用）发出告警
+- 定期审查 `agent_registered` 事件，以发现未经授权的注册尝试
+- 跟踪 `scope_violation` 事件以检测可能被入侵的代理

@@ -1,0 +1,63 @@
+---
+title: "ATH 协议规范 v0.1"
+sidebarTitle: "规范"
+description: "ATH 协议规范 v0.1"
+---
+
+<div id="enable-section-numbers" />
+
+# ATH 协议规范 v0.1
+
+本文档定义了 ATH（Agent Trust Handshake，代理信任握手）协议规范。ATH 是一种轻量级、去中心化的应用层安全协议，用于在 AI 代理与外部服务之间建立可信连接。
+
+## 状态
+
+**版本**: 0.1（当前版本）
+
+这是 ATH 规范的首次发布，涵盖以下内容：
+
+- 代理身份模型（基于 URI 的 Agent_ID + 签名 JWT 证明）
+- 三种发现模式（手动配置、网关目录、服务端 `.well-known`）
+- 可信握手流程（阶段 A：代理注册，阶段 B：用户 OAuth 授权同意）
+- 范围交集执行机制
+- API 端点（注册、授权、令牌、代理转发、吊销）
+- 安全性考量
+- 三个采纳级别（网关 → 代理感知 OAuth → 原生 ATH）
+
+## 核心原则
+
+代理只有在**同时满足以下两个条件**时才能访问服务：
+
+| 授权类型 | 决策方 | 解决的问题 |
+|---|---|---|
+| **应用端** | 服务提供方 / 代理注册中心 | "该代理是否被允许使用此服务？" |
+| **用户端** | 终端用户 | "该用户是否允许该代理代表其执行操作？" |
+
+仅有其中一方的授权是不够的。
+
+## 规范章节
+
+<CardGroup cols={2}>
+  <Card title="协议概述" icon="book" href="/zh/specification/0.1/basic/overview">
+    设计原则、架构与部署模型
+  </Card>
+  <Card title="身份模型" icon="id-card" href="/zh/specification/0.1/basic/identity">
+    Agent_ID 格式、身份文档与证明 JWT
+  </Card>
+  <Card title="发现机制" icon="magnifying-glass" href="/zh/specification/0.1/basic/discovery">
+    三种用于查找 ATH 兼容服务的发现模式
+  </Card>
+  <Card title="握手流程" icon="handshake" href="/zh/specification/0.1/basic/handshake-flow">
+    两阶段可信握手协议
+  </Card>
+  <Card title="范围交集" icon="filter" href="/zh/specification/0.1/basic/scope-intersection">
+    有效权限的计算方式
+  </Card>
+  <Card title="API 端点" icon="server" href="/zh/specification/0.1/server/registration">
+    完整的 API 规范
+  </Card>
+</CardGroup>
+
+## 一致性
+
+本规范中的关键词 "MUST"（必须）、"MUST NOT"（禁止）、"REQUIRED"（要求）、"SHALL"（应当）、"SHALL NOT"（不应当）、"SHOULD"（建议）、"SHOULD NOT"（不建议）、"RECOMMENDED"（推荐）、"MAY"（可以）和 "OPTIONAL"（可选）应按照 [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) 中的描述进行解释。

@@ -1,0 +1,41 @@
+---
+title: "变更日志"
+sidebarTitle: "变更日志"
+description: "ATH 协议规范 v0.1 的变更记录。"
+---
+
+## v0.1 — 首次发布
+
+<Info>发布时间：2026 年 4 月</Info>
+
+这是 ATH 协议规范的首次发布。
+
+### 协议
+
+- 基于 URI 的 Agent_ID 和签名 JWT 证明（ES256）的代理身份模型
+- 三种发现模式：手动配置、网关目录（`/.well-known/ath.json`）、服务端（`/.well-known/ath-app.json`）
+- 两阶段可信握手流程：
+  - 阶段 A：应用端授权（代理注册与能力审批）
+  - 阶段 B：用户端授权（OAuth 2.0 授权同意流程）
+- 范围交集执行机制：`有效范围 = 代理已批准 ∩ 用户已同意 ∩ 已请求`
+
+### API 端点
+
+- `POST /ath/agents/register` — 代理注册
+- `POST /ath/authorize` — 授权请求（支持 PKCE）
+- `POST /ath/token` — 令牌交换
+- `ANY /ath/proxy/{provider_id}/{path}` — API 代理转发（网关模式）
+- `POST /ath/revoke` — 令牌吊销
+
+### 安全性
+
+- 强制使用 PKCE（[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)）及 S256 挑战方法
+- 可选的资源指示符（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)）
+- 令牌绑定到 `(agent_id, user_id, provider_id, scopes)` 元组
+- 令牌请求采用表单编码，遵循 [RFC 6749 §4.1.3](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3)
+- 所有通信必须使用 HTTPS（TLS 1.2+）
+
+### 部署
+
+- 两种部署模型：网关模式（无需更改服务）和原生模式
+- 三个采纳级别：网关 → 代理感知 OAuth → 原生 ATH

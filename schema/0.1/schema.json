@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athprotocol.dev/schema/0.1/schema.json",
+  "title": "ATH Protocol Schema v0.1",
+  "description": "JSON Schema definitions for the Agent Trust Handshake Protocol v0.1. These types define the request and response objects for all ATH API endpoints.",
+  "$defs": {
+    "DiscoveryDocument": {
+      "description": "Gateway discovery document returned by GET /.well-known/ath.json. Lists available providers and the agent registration endpoint.",
+      "type": "object",
+      "required": ["ath_version", "gateway_id", "agent_registration_endpoint", "supported_providers"],
+      "properties": {
+        "ath_version": {
+          "description": "Protocol version implemented by this gateway.",
+          "type": "string",
+          "examples": ["0.1"]
+        },
+        "gateway_id": {
+          "description": "Identifier for this gateway instance.",
+          "type": "string",
+          "examples": ["ath-gateway.example.com"]
+        },
+        "agent_registration_endpoint": {
+          "description": "URL where agents submit registration requests.",
+          "type": "string",
+          "format": "uri",
+          "examples": ["https://ath-gateway.example.com/ath/agents/register"]
+        },
+        "supported_providers": {
+          "description": "List of service providers available through this gateway.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProviderInfo"
+          }
+        }
+      }
+    },
+    "ServiceDiscoveryDocument": {
+      "description": "Service-side discovery document returned by GET /.well-known/ath-app.json. Published by services that natively support ATH (Native Mode).",
+      "type": "object",
+      "required": ["ath_version", "app_id", "name", "auth", "api_base"],
+      "properties": {
+        "ath_version": {
+          "description": "Protocol version supported by this service.",
+          "type": "string",
+          "examples": ["0.1"]
+        },
+        "app_id": {
+          "description": "Unique identifier for this service.",
+          "type": "string",
+          "examples": ["com.example.mail"]
+        },
+        "name": {
+          "description": "Human-readable name of the service.",
+          "type": "string",
+          "examples": ["Example Mail API"]
+        },
+        "auth": {
+          "$ref": "#/$defs/ServiceAuthConfig"
+        },
+        "api_base": {
+          "description": "Base URL for the service's API.",
+          "type": "string",
+          "format": "uri",
+          "examples": ["https://api.example.com/v1"]
+        }
+      }
+    },
+    "ServiceAuthConfig": {
+      "description": "Authentication configuration published by an ATH-native service.",
+      "type": "object",
+      "required": ["type", "authorization_endpoint", "token_endpoint", "scopes_supported"],
+      "properties": {
+        "type": {
+          "description": "Authentication type.",
+          "type": "string",
+          "const": "oauth2"
+        },
+        "authorization_endpoint": {
+          "description": "OAuth 2.0 authorization endpoint URL.",
+          "type": "string",
+          "format": "uri"
+        },
+        "token_endpoint": {
+          "description": "OAuth 2.0 token endpoint URL.",
+          "type": "string",
+          "format": "uri"
+        },
+        "registration_endpoint": {
+          "description": "Developer registration page URL.",
+          "type": "string",
+          "format": "uri"
+        },
+        "scopes_supported": {
+          "description": "OAuth scopes supported by this service.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "agent_attestation_required": {
+          "description": "Whether the service requires agent attestation JWTs.",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "ProviderInfo": {
+      "description": "Information about a service provider available through the gateway.",
+      "type": "object",
+      "required": ["provider_id", "display_name", "available_scopes", "auth_mode", "agent_approval_required"],
+      "properties": {
+        "provider_id": {
+          "description": "Unique identifier for this provider within the gateway.",
+          "type": "string",
+          "examples": ["example-mail"]
+        },
+        "display_name": {
+          "description": "Human-readable name of the provider.",
+          "type": "string",
+          "examples": ["Example Mail"]
+        },
+        "categories": {
+          "description": "Categories describing the provider's domain.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["email", "productivity"]]
+        },
+        "available_scopes": {
+          "description": "Scopes that agents can request for this provider.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["mail:read", "mail:send", "mail:delete"]]
+        },
+        "auth_mode": {
+          "description": "Authentication mode used by this provider.",
+          "type": "string",
+          "examples": ["OAUTH2"]
+        },
+        "agent_approval_required": {
+          "description": "Whether agents must be registered and approved before accessing this provider.",
+          "type": "boolean"
+        }
+      }
+    },
+    "AgentIdentityDocument": {
+      "description": "Agent identity document published at the agent's Agent_ID URI (e.g. https://agent.example.com/.well-known/agent.json). Contains the agent's metadata and public key for attestation verification.",
+      "type": "object",
+      "required": ["ath_version", "agent_id", "name", "developer", "public_key"],
+      "properties": {
+        "ath_version": {
+          "description": "Protocol version.",
+          "type": "string"
+        },
+        "agent_id": {
+          "description": "Canonical URI for this agent.",
+          "type": "string",
+          "format": "uri",
+          "examples": ["https://travel-agent.example.com/.well-known/agent.json"]
+        },
+        "name": {
+          "description": "Human-readable agent name.",
+          "type": "string",
+          "examples": ["TravelBot"]
+        },
+        "developer": {
+          "$ref": "#/$defs/DeveloperInfo"
+        },
+        "capabilities": {
+          "description": "List of agent capabilities.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["flight-search", "hotel-booking", "itinerary-planning"]]
+        },
+        "public_key": {
+          "description": "JWK or PEM public key for agent attestation verification."
+        }
+      }
+    },
+    "DeveloperInfo": {
+      "description": "Information about the agent's developer or organization.",
+      "type": "object",
+      "required": ["name", "id"],
+      "properties": {
+        "name": {
+          "description": "Developer or organization name.",
+          "type": "string",
+          "examples": ["Example Corp"]
+        },
+        "id": {
+          "description": "Developer identifier.",
+          "type": "string",
+          "examples": ["dev-example-12345"]
+        },
+        "contact": {
+          "description": "Security contact email.",
+          "type": "string",
+          "format": "email",
+          "examples": ["security@example.com"]
+        }
+      }
+    },
+    "AgentRegistrationRequest": {
+      "description": "Request body for POST /ath/agents/register. Registers a new agent with the ATH implementor (Phase A: app-side authorization).",
+      "type": "object",
+      "required": ["agent_id", "agent_attestation", "developer", "requested_providers"],
+      "properties": {
+        "agent_id": {
+          "description": "The agent's canonical URI.",
+          "type": "string",
+          "format": "uri",
+          "examples": ["https://travel-agent.example.com/.well-known/agent.json"]
+        },
+        "agent_attestation": {
+          "description": "Signed JWT (ES256) proving agent identity. Must include exp, aud, iss, sub claims.",
+          "type": "string"
+        },
+        "developer": {
+          "$ref": "#/$defs/DeveloperInfo"
+        },
+        "requested_providers": {
+          "description": "Providers and scopes the agent is requesting access to.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProviderScopeRequest"
+          },
+          "minItems": 1
+        },
+        "purpose": {
+          "description": "Human-readable description of the agent's purpose.",
+          "type": "string",
+          "examples": ["Travel planning assistant"]
+        },
+        "redirect_uris": {
+          "description": "OAuth callback URIs for this agent.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "ProviderScopeRequest": {
+      "description": "A request for access to a specific provider with specific scopes.",
+      "type": "object",
+      "required": ["provider_id", "scopes"],
+      "properties": {
+        "provider_id": {
+          "description": "Provider to request access to.",
+          "type": "string",
+          "examples": ["example-mail"]
+        },
+        "scopes": {
+          "description": "Scopes being requested for this provider.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["mail:read", "mail:send"]]
+        }
+      }
+    },
+    "AgentRegistrationResponse": {
+      "description": "Response from POST /ath/agents/register. Contains the agent's credentials and per-provider approval results.",
+      "type": "object",
+      "required": ["client_id", "client_secret", "agent_status", "approved_providers", "approval_expires"],
+      "properties": {
+        "client_id": {
+          "description": "Unique identifier for this agent registration.",
+          "type": "string",
+          "examples": ["ath_travelbot_001"]
+        },
+        "client_secret": {
+          "description": "Secret for authenticating token exchange requests. Store securely.",
+          "type": "string",
+          "examples": ["ath_secret_xxxxx"]
+        },
+        "agent_status": {
+          "description": "Overall registration status.",
+          "$ref": "#/$defs/AgentStatus"
+        },
+        "approved_providers": {
+          "description": "Per-provider approval results.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProviderApproval"
+          }
+        },
+        "approval_expires": {
+          "description": "When this registration expires. ISO 8601 timestamp.",
+          "type": "string",
+          "format": "date-time",
+          "examples": ["2027-01-01T00:00:00Z"]
+        }
+      }
+    },
+    "AgentStatus": {
+      "description": "Registration status of an agent.",
+      "type": "string",
+      "enum": ["approved", "pending", "denied"]
+    },
+    "ProviderApproval": {
+      "description": "The result of an agent's registration request for a specific provider. The implementor MAY approve a subset of requested scopes.",
+      "type": "object",
+      "required": ["provider_id", "approved_scopes", "denied_scopes"],
+      "properties": {
+        "provider_id": {
+          "description": "Provider this approval applies to.",
+          "type": "string",
+          "examples": ["example-mail"]
+        },
+        "approved_scopes": {
+          "description": "Scopes that were approved for the agent.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["mail:read"]]
+        },
+        "denied_scopes": {
+          "description": "Scopes that were denied for the agent.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["mail:send"]]
+        },
+        "denial_reason": {
+          "description": "Human-readable reason for scope denial.",
+          "type": "string",
+          "examples": ["Send capability requires additional review"]
+        }
+      }
+    },
+    "AuthorizationRequest": {
+      "description": "Request body for POST /ath/authorize. Initiates the user-side OAuth authorization flow (Phase B). The implementor generates PKCE parameters (RFC 7636) server-side.",
+      "type": "object",
+      "required": ["client_id", "agent_attestation", "provider_id", "scopes"],
+      "properties": {
+        "client_id": {
+          "description": "The agent's client_id from registration.",
+          "type": "string"
+        },
+        "agent_attestation": {
+          "description": "Fresh signed JWT proving agent identity.",
+          "type": "string"
+        },
+        "provider_id": {
+          "description": "Which provider to authorize access to.",
+          "type": "string"
+        },
+        "scopes": {
+          "description": "Scopes to request. Must be within the agent's approved scopes for this provider.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "user_redirect_uri": {
+          "description": "Where to redirect the user after OAuth consent.",
+          "type": "string",
+          "format": "uri"
+        },
+        "state": {
+          "description": "Opaque state parameter for CSRF protection.",
+          "type": "string"
+        },
+        "resource": {
+          "description": "Target resource server URI. Optional, per RFC 8707 (Resource Indicators).",
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "AuthorizationResponse": {
+      "description": "Response from POST /ath/authorize. Contains the OAuth consent URL (with PKCE parameters) and a session identifier.",
+      "type": "object",
+      "required": ["authorization_url", "ath_session_id"],
+      "properties": {
+        "authorization_url": {
+          "description": "URL where the user should be directed for OAuth consent. Includes code_challenge and code_challenge_method=S256 (PKCE).",
+          "type": "string",
+          "format": "uri"
+        },
+        "ath_session_id": {
+          "description": "Session identifier used during token exchange.",
+          "type": "string",
+          "examples": ["ath_sess_abc123"]
+        }
+      }
+    },
+    "TokenExchangeRequest": {
+      "description": "Request body for POST /ath/token. Exchanges an OAuth authorization code for an ATH access token after user consent.",
+      "type": "object",
+      "required": ["grant_type", "client_id", "client_secret", "code", "ath_session_id"],
+      "properties": {
+        "grant_type": {
+          "description": "Must be 'authorization_code'.",
+          "type": "string",
+          "const": "authorization_code"
+        },
+        "client_id": {
+          "description": "The agent's client_id.",
+          "type": "string"
+        },
+        "client_secret": {
+          "description": "The agent's client_secret.",
+          "type": "string"
+        },
+        "code": {
+          "description": "OAuth authorization code from the callback.",
+          "type": "string"
+        },
+        "ath_session_id": {
+          "description": "Session ID from the authorization step.",
+          "type": "string"
+        }
+      }
+    },
+    "TokenResponse": {
+      "description": "Response from POST /ath/token. Contains the ATH access token with scope intersection breakdown showing how effective permissions were derived.",
+      "type": "object",
+      "required": ["access_token", "token_type", "expires_in", "effective_scopes", "provider_id", "agent_id", "scope_intersection"],
+      "properties": {
+        "access_token": {
+          "description": "The ATH access token. Bound to (agent_id, user_id, provider_id, scopes).",
+          "type": "string",
+          "examples": ["ath_tk_xxxxxxxx"]
+        },
+        "token_type": {
+          "description": "Token type. Always 'Bearer'.",
+          "type": "string",
+          "const": "Bearer"
+        },
+        "expires_in": {
+          "description": "Token lifetime in seconds.",
+          "type": "integer",
+          "examples": [3600]
+        },
+        "effective_scopes": {
+          "description": "The computed effective scopes (result of scope intersection).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "provider_id": {
+          "description": "Which provider this token grants access to.",
+          "type": "string"
+        },
+        "agent_id": {
+          "description": "The agent this token is bound to.",
+          "type": "string",
+          "format": "uri"
+        },
+        "scope_intersection": {
+          "$ref": "#/$defs/ScopeIntersection"
+        }
+      }
+    },
+    "ScopeIntersection": {
+      "description": "Breakdown of the scope intersection computation. Effective = Agent Approved ∩ User Consented ∩ Requested.",
+      "type": "object",
+      "required": ["agent_approved", "user_consented", "effective"],
+      "properties": {
+        "agent_approved": {
+          "description": "Scopes the service approved for this agent (Phase A).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "user_consented": {
+          "description": "Scopes the user consented to in the OAuth flow (Phase B).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "effective": {
+          "description": "The intersection — the actual permissions the token carries.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TokenRevocationRequest": {
+      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token.",
+      "type": "object",
+      "required": ["client_id", "token"],
+      "properties": {
+        "client_id": {
+          "description": "The agent's client_id.",
+          "type": "string"
+        },
+        "token": {
+          "description": "The ATH access token to revoke.",
+          "type": "string"
+        }
+      }
+    },
+    "ATHError": {
+      "description": "Standard error response returned by all ATH endpoints on failure.",
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "description": "Machine-readable error code.",
+          "$ref": "#/$defs/ATHErrorCode"
+        },
+        "message": {
+          "description": "Human-readable error message.",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional structured error details.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "ATHErrorCode": {
+      "description": "Enumeration of ATH error codes.",
+      "type": "string",
+      "enum": [
+        "INVALID_ATTESTATION",
+        "AGENT_NOT_REGISTERED",
+        "AGENT_UNAPPROVED",
+        "PROVIDER_NOT_APPROVED",
+        "SCOPE_NOT_APPROVED",
+        "SESSION_NOT_FOUND",
+        "SESSION_EXPIRED",
+        "STATE_MISMATCH",
+        "TOKEN_INVALID",
+        "TOKEN_EXPIRED",
+        "TOKEN_REVOKED",
+        "AGENT_IDENTITY_MISMATCH",
+        "PROVIDER_MISMATCH",
+        "USER_DENIED",
+        "OAUTH_ERROR",
+        "INTERNAL_ERROR"
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+#content-area {
+  h5 {
+    font-weight: 500;
+  }
+
+  h6 {
+    font-weight: 400;
+  }
+
+  code .line-highlight {
+    --primary-light: 37 99 235;
+  }
+}
+
+#enable-section-numbers {
+  display: none;
+}
+
+body:has(#enable-section-numbers) {
+  #content-area,
+  #table-of-contents {
+    counter-reset: h2-counter h3-counter h4-counter h5-counter h6-counter;
+  }
+
+  #content-area h2[id],
+  #table-of-contents li[data-depth="0"] {
+    counter-increment: h2-counter;
+    counter-set: h3-counter h4-counter h5-counter h6-counter;
+  }
+
+  #content-area h3[id],
+  #table-of-contents li[data-depth="1"] {
+    counter-increment: h3-counter;
+    counter-set: h4-counter h5-counter h6-counter;
+  }
+
+  #content-area h4[id],
+  #table-of-contents li[data-depth="2"] {
+    counter-increment: h4-counter;
+    counter-set: h5-counter h6-counter;
+  }
+
+  #content-area h2[id]::before,
+  #table-of-contents li[data-depth="0"] a::before {
+    content: counter(h2-counter) ". ";
+  }
+
+  #content-area h3[id]::before,
+  #table-of-contents li[data-depth="1"] a::before {
+    content: counter(h2-counter) "." counter(h3-counter) " ";
+  }
+
+  #content-area h4[id]::before,
+  #table-of-contents li[data-depth="2"] a::before {
+    content: counter(h2-counter) "." counter(h3-counter) "." counter(h4-counter) " ";
+  }
+}
