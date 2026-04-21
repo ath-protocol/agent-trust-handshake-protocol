@@ -1,46 +1,49 @@
 ---
 title: "Trusted Handshake Flow"
 sidebarTitle: "Handshake Flow"
-description: "The two-phase trusted handshake protocol specification."
+description: "The 8-step trusted handshake protocol specification, aligned with README."
 ---
-
-<div id="enable-section-numbers" /> The protocol follows an 8-step flow for end-to-end trusted authorization, aligned with the project README. ## 8-Step Trusted Handshake Flow
-User Agent ATH Implementor Service
-│ │ │ │
-│ "Do X" │ │ │
-├────────────►│ │ │
-│ │ │ │
-│ 1. Request access │ │
-│ ├─────────────────►│ │
-│ │ │ │
-│ │ 2. Verify agent identity & approval │
-│ │ │ │
-│ │ 3. Initiate OAuth flow │
-│ │ ├───────────────►│
-│ │ │ │
-│ 4. OAuth consent page │ │
-│◄───────────────────────────────────────────────┤
-│ │ │
-│ 5. User approves consent │ │
-├───────────────────────────────────────────────►│
-│ │ │ │
-│ │ 6. Scope intersection & token binding │
-│ │ │ │
-│ │ 7. Issue ATH access token │
-│ │◄─────────────────┤ │
-│ │ │ │
-│ │ 8. Authenticated API call & response │
-│ ├─────────────────►│ │
-│ │ ├───────────────►│
-│ │ │◄───────────────┤
-│ Result │ │ │
-│◄────────────┤ │ │
-
+<div id="enable-section-numbers" />
+The protocol follows an 8-step flow for end-to-end trusted authorization, aligned with the project README.
+## 8-Step Trusted Handshake Flow
+```
+User         Agent        ATH Implementor      Service
+ │             │                  │                │
+ │  "Do X"    │                  │                │
+ ├────────────►│                  │                │
+ │             │                  │                │
+ │  1. Request access            │                │
+ │             ├─────────────────►│                │
+ │             │                  │                │
+ │             │  2. Verify agent identity & approval  │
+ │             │                  │                │
+ │             │  3. Initiate OAuth flow          │
+ │             │                  ├───────────────►│
+ │             │                  │                │
+ │  4. OAuth consent page         │                │
+ │◄───────────────────────────────────────────────┤
+ │                                │                │
+ │  5. User approves consent      │                │
+ ├───────────────────────────────────────────────►│
+ │             │                  │                │
+ │             │  6. Scope intersection & token binding  │
+ │             │                  │                │
+ │             │  7. Issue ATH access token       │
+ │             │◄─────────────────┤                │
+ │             │                  │                │
+ │             │  8. Authenticated API call & response  │
+ │             ├─────────────────►│                │
+ │             │                  ├───────────────►│
+ │             │                  │◄───────────────┤
+ │  Result     │                  │                │
+ │◄────────────┤                  │                │
+```
 <Note>
 In Gateway Mode, "ATH Implementor" is the gateway and "Service" is the upstream provider. In Native Mode, "ATH Implementor" and "Service" are the same entity.
 </Note>
 ## Scope Intersection (Step 6)
 The effective scope of any access token is the **intersection** of three sets:
+```
 Effective Scope = Agent Approved Scopes ∩ User Consented Scopes ∩ Requested Scopes
-
+```
 See [Scope Intersection](/specification/0.1/basic/scope-intersection) for details.
