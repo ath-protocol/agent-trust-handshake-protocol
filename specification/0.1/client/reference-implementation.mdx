@@ -11,23 +11,27 @@ import requests
 import json
 import hashlib
 import hmac
+import jwt
 from typing import Dict, List, Optional
 class ATHClient:
     """
     ATH协议客户端核心实现类
-    负责与服务端完成8步握手流程，管理访问凭证，发起业务请求
+    负责与服务端完成12步握手流程，管理访问凭证，发起业务请求
     """
     
-    def __init__(self, client_id: str, client_secret: str, server_url: str):
+    def __init__(self, client_did: str, client_secret: str, server_url: str, registry_url: str):
         """
         初始化ATH客户端
-        :param client_id: 客户端唯一标识
+        :param client_did: 客户端去中心化身份标识
         :param client_secret: 客户端密钥，用于签名验证
         :param server_url: 服务端ATH接口地址
+        :param registry_url: 身份注册中心地址
         """
-        self.client_id = client_id
+        self.client_did = client_did
         self.client_secret = client_secret.encode('utf-8')
         self.server_url = server_url.rstrip('/')
+        self.registry_url = registry_url.rstrip('/')
+        self.session_key: Optional[bytes] = None
         self.access_token: Optional[str] = None
         self.token_expire_at: Optional[int] = None
         self.granted_scopes: List[str] = []
@@ -39,114 +43,176 @@ class ATHClient:
         """
         sorted_data = json.dumps(data, sort_keys=True).encode('utf-8')
         return hmac.new(self.client_secret, sorted_data, hashlib.sha256).hexdigest()
-    def step1_identity_announcement(self) -> Dict:
+    def _verify_identity(self, target_did: str) -> bool:
         """
-        步骤1: 客户端身份宣告
-        向服务端发送客户端基本信息，发起握手流程
-        :return: 服务端身份回应数据（步骤2结果）
+        向身份注册中心验证目标DID的有效性
+        :param target_did: 待验证的DID
+        :return: 身份是否有效
         """
         data = {
-            "client_id": self.client_id,
-            "client_type": "standard_ath_client",
-            "version": "0.1.0",
-            "supported_algorithms": ["HS256", "RS256"],
+            "did": target_did,
+            "verifier_did": self.client_did,
             "timestamp": int(__import__('time').time())
         }
         data["signature"] = self._generate_signature(data)
-        response = requests.post(f"{self.server_url}/ath/v1/announce", json=data)
+        response = requests.post(f"{self.registry_url}/verify", json=data)
+        return response.status_code == 200 and response.json().get("valid", False)
+    def step1_send_handshake_request(self) -> Dict:
+        """
+        步骤1: 发送握手请求
+        向服务端发送客户端基本信息，发起握手流程
+        :return: 服务端握手响应
+        """
+        print("【步骤1】发送握手请求")
+        data = {
+            "client_did": self.client_did,
+            "capabilities": ["ai_agent", "secure_communication"],
+            "supported_algorithms": ["HS256", "RS256", "TLS1.3"],
+            "timestamp": int(__import__('time').time())
+        }
+        data["signature"] = self._generate_signature(data)
+        response = requests.post(f"{self.server_url}/ath/v1/handshake/request", json=data)
         response.raise_for_status()
         return response.json()
-    def step3_scope_request(self, requested_scopes: List[str], user_context: Optional[Dict] = None) -> Dict:
+    def step5_verify_server_identity(self, server_did: str) -> bool:
         """
-        步骤3: 作用域请求
+        步骤5: 验证服务端身份
+        向身份注册中心验证服务端DID的有效性
+        :param server_did: 服务端DID
+        :return: 身份是否有效
+        """
+        print("【步骤5】验证服务端身份")
+        return self._verify_identity(server_did)
+    def step7_send_permission_request(self, requested_scopes: List[str], user_context: Optional[Dict] = None) -> Dict:
+        """
+        步骤7: 发送权限请求
         向服务端请求需要的访问权限
         :param requested_scopes: 请求的权限列表
-        :param user_context: 用户上下文信息（可选）
-        :return: 服务端作用域协商结果（步骤4结果）
+        :param user_context: 用户上下文信息
+        :return: 权限审批结果
         """
+        print("【步骤7】发送权限请求")
         data = {
-            "client_id": self.client_id,
+            "client_did": self.client_did,
             "requested_scopes": requested_scopes,
             "user_context": user_context or {},
             "timestamp": int(__import__('time').time())
         }
         data["signature"] = self._generate_signature(data)
-        response = requests.post(f"{self.server_url}/ath/v1/scope-request", json=data)
+        response = requests.post(f"{self.server_url}/ath/v1/permission/request", json=data)
         response.raise_for_status()
         return response.json()
-    def step5_identity_verification(self, verification_data: Dict) -> Dict:
+    def step9_confirm_permission(self, approved_scopes: List[str]) -> bool:
         """
-        步骤5: 身份验证
-        提交服务端要求的验证材料，完成身份校验
-        :param verification_data: 验证材料（根据步骤4的要求提供）
-        :return: 服务端颁发的凭证信息（步骤6结果）
-        """
-        data = {
-            "client_id": self.client_id,
-            "verification_data": verification_data,
-            "timestamp": int(__import__('time').time())
-        }
-        data["signature"] = self._generate_signature(data)
-        response = requests.post(f"{self.server_url}/ath/v1/verify", json=data)
-        response.raise_for_status()
-        credential = response.json()
-        self.access_token = credential["access_token"]
-        self.token_expire_at = credential["expires_at"]
-        self.granted_scopes = credential["scopes"]
-        return credential
-    def step7_credential_confirmation(self) -> bool:
-        """
-        步骤7: 凭证确认
-        确认收到的凭证有效，完成握手流程
+        步骤9: 确认权限范围
+        与服务端确认最终的权限范围
+        :param approved_scopes: 审批通过的权限列表
         :return: 确认是否成功
         """
+        print("【步骤9】确认权限范围")
         data = {
-            "client_id": self.client_id,
-            "access_token": self.access_token,
+            "client_did": self.client_did,
+            "confirmed_scopes": approved_scopes,
             "timestamp": int(__import__('time').time())
         }
         data["signature"] = self._generate_signature(data)
-        response = requests.post(f"{self.server_url}/ath/v1/confirm", json=data)
+        response = requests.post(f"{self.server_url}/ath/v1/permission/confirm", json=data)
         return response.status_code == 200
-    def execute_handshake(self, requested_scopes: List[str], verification_provider) -> bool:
+    def step10_send_key_negotiation(self) -> Dict:
         """
-        一键执行完整8步握手流程
+        步骤10: 发送会话密钥协商请求
+        :return: 密钥协商响应
+        """
+        print("【步骤10】发送密钥协商请求")
+        # 生成密钥协商参数（简化实现，实际使用标准TLS 1.3流程）
+        key_params = {
+            "key_exchange": "ECDH",
+            "curve": "secp256r1",
+            "encryption": "AES-256-GCM"
+        }
+        data = {
+            "client_did": self.client_did,
+            "key_params": key_params,
+            "timestamp": int(__import__('time').time())
+        }
+        data["signature"] = self._generate_signature(data)
+        response = requests.post(f"{self.server_url}/ath/v1/session/negotiate", json=data)
+        response.raise_for_status()
+        return response.json()
+    def step12_establish_session(self, key_response: Dict) -> bool:
+        """
+        步骤12: 建立加密会话
+        :param key_response: 服务端密钥协商响应
+        :return: 会话是否建立成功
+        """
+        print("【步骤12】建立加密会话")
+        # 简化实现，实际完成密钥交换生成会话密钥
+        self.session_key = hashlib.sha256(json.dumps(key_response).encode()).digest()
+        # 生成访问凭证
+        self.access_token = jwt.encode({
+            "client_did": self.client_did,
+            "scopes": self.granted_scopes,
+            "exp": __import__('time').time() + 1800
+        }, self.client_secret, algorithm="HS256")
+        return True
+    def execute_full_handshake(self, requested_scopes: List[str]) -> bool:
+        """
+        一键执行完整12步握手流程
         :param requested_scopes: 请求的权限列表
-        :param verification_provider: 验证材料提供函数，接收协商结果返回验证数据
         :return: 握手是否成功
         """
         try:
-            # 步骤1-2: 身份宣告与回应
-            server_info = self.step1_identity_announcement()
+            # 步骤1-2: 发送握手请求，接收服务端响应
+            handshake_response = self.step1_send_handshake_request()
+            server_did = handshake_response["server_did"]
             
-            # 步骤3-4: 作用域请求与协商
-            scope_requirements = self.step3_scope_request(requested_scopes)
+            # 步骤3-4: 服务端验证客户端身份（服务端内部完成）
             
-            # 步骤5-6: 身份验证与凭证颁发
-            verification_data = verification_provider(scope_requirements)
-            self.step5_identity_verification(verification_data)
+            # 步骤5-6: 客户端验证服务端身份
+            if not self.step5_verify_server_identity(server_did):
+                print("❌ 服务端身份验证失败")
+                return False
             
-            # 步骤7-8: 凭证确认与完成
-            return self.step7_credential_confirmation()
+            # 步骤7-8: 发送权限请求，接收审批结果
+            permission_response = self.step7_send_permission_request(requested_scopes)
+            self.granted_scopes = permission_response["approved_scopes"]
+            
+            # 步骤9: 确认权限范围
+            if not self.step9_confirm_permission(self.granted_scopes):
+                print("❌ 权限确认失败")
+                return False
+            
+            # 步骤10-11: 密钥协商
+            key_response = self.step10_send_key_negotiation()
+            
+            # 步骤12: 建立会话
+            if not self.step12_establish_session(key_response):
+                print("❌ 会话建立失败")
+                return False
+            
+            print("✅ 12步握手流程完成！")
+            return True
+            
         except Exception as e:
-            print(f"握手失败: {str(e)}")
+            print(f"❌ 握手失败: {str(e)}")
             return False
-    def request(self, path: str, method: str = "GET", **kwargs) -> Dict:
+    def send_encrypted_request(self, path: str, data: Dict = None) -> Dict:
         """
-        发起业务请求（握手成功后使用）
+        发送加密的业务请求
         :param path: 请求路径
-        :param method: HTTP方法
-        :param kwargs: 请求参数
+        :param data: 请求数据
         :return: 响应数据
         """
-        if not self.access_token:
+        if not self.session_key or not self.access_token:
             raise RuntimeError("请先完成ATH握手流程")
         
-        headers = kwargs.pop("headers", {})
-        headers["Authorization"] = f"Bearer {self.access_token}"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
         
-        url = f"{self.server_url}{path}"
-        response = requests.request(method, url, headers=headers, **kwargs)
+        # 简化实现，实际使用会话密钥加密请求数据
+        response = requests.post(f"{self.server_url}{path}", headers=headers, json=data or {})
         response.raise_for_status()
         return response.json()
 ```
@@ -154,32 +220,27 @@ class ATHClient:
 ```python
 # 初始化客户端
 client = ATHClient(
-    client_id="your_client_id",
+    client_did="did:ath:agent:001",
     client_secret="your_client_secret",
-    server_url="https://api.example.com"
+    server_url="https://api.example.com",
+    registry_url="https://registry.example.com"
 )
-# 定义验证材料提供函数
-def provide_verification(requirements):
-    # 根据服务端的要求返回对应的验证数据
-    return {
-        "user_token": "user_auth_token",
-        "additional_claims": {"role": "user"}
-    }
-# 执行握手
-if client.execute_handshake(
-    requested_scopes=["user:read", "data:write"],
-    verification_provider=provide_verification
-):
+# 执行12步握手
+if client.execute_full_handshake(requested_scopes=["order:create", "payment:process"]):
     print("✅ 握手成功！")
     # 发起业务请求
-    user_info = client.request("/user/info", method="GET")
-    print(f"用户信息: {user_info}")
+    order_result = client.send_encrypted_request("/order/create", {
+        "product_id": "prod_123",
+        "quantity": 1,
+        "address": "北京市朝阳区"
+    })
+    print(f"订单结果: {order_result}")
 else:
     print("❌ 握手失败！")
 ```
 ### 实现规范
-1. 所有请求必须包含签名，防止篡改
-2. 凭证需要妥善保管，避免泄露
-3. 凭证过期前需要主动刷新
-4. 错误处理需要覆盖所有可能的异常情况
-5. 需要支持多种签名算法以兼容不同服务端
+1. 必须支持DID身份体系和身份注册中心验证
+2. 所有请求必须包含签名，防止篡改
+3. 必须实现完整的12步握手流程
+4. 会话密钥必须使用标准加密算法生成
+5. 需要支持凭证刷新和会话续约机制
