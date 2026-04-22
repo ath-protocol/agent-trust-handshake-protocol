@@ -1,0 +1,70 @@
+---
+title: "Deploy an ATH Gateway"
+sidebarTitle: "Deploy a Gateway"
+description: "Set up an ATH Gateway to protect services with the trusted handshake."
+---
+
+The ATH Gateway is the fastest way to add trusted handshake protection to existing services. Service providers need **zero changes** — the gateway handles agent registration, OAuth flows (with PKCE), scope intersection, and API proxying.
+
+## What the Gateway Does
+
+The gateway sits between agents and service providers, enforcing the trusted handshake:
+
+```
+Agent → ATH Gateway → Service Provider (unchanged)
+```
+
+It handles:
+
+1. **Agent Registry** — Verifies agent identity, manages per-agent capability policies
+2. **OAuth Bridge** — Orchestrates OAuth 2.0 authorization flows with PKCE ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636))
+3. **Scope Intersection** — Computes effective permissions from agent approvals, user consent, and requested scopes
+4. **API Proxy** — Validates ATH tokens and forwards requests to upstream services
+5. **Audit Logging** — Records all authorization decisions
+
+## Reference Implementation
+
+The official reference gateway is available at:
+
+<Card title="ATH Gateway" icon="server" href="https://github.com/ath-protocol/gateway">
+  TypeScript reference implementation (Hono + Node.js) — includes setup guide, configuration reference, and Docker deployment.
+</Card>
+
+{/* TODO: Update URL once gateway repo is published */}
+
+## OAuth Bridge Modes
+
+The reference gateway supports two OAuth bridge modes:
+
+| Mode | When to use |
+|------|-------------|
+| **Direct OAuth** | Connect to any OAuth2 provider (GitHub, Google, etc.) |
+| **Mock** | Built-in mock for testing without external dependencies |
+
+<Note>
+In direct OAuth mode, the gateway automatically generates a PKCE pair — `code_challenge` (S256) is sent to the authorization server, and `code_verifier` is stored on the session and sent during token exchange. No agent-side action is required.
+</Note>
+
+The request body also supports an optional `resource` parameter ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) to indicate the target resource server.
+
+## Approval Policy
+
+The gateway's approval policy controls which agents are approved for which scopes. In production, you would:
+
+1. **Review agent registrations** before approving
+2. **Restrict scopes per agent** (e.g., agent X can read emails but not send them)
+3. **Monitor audit logs** for unusual access patterns
+4. **Revoke agent access** if it misbehaves
+
+See the gateway repository for configuration details and policy customization.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Build an Agent" icon="robot" href="/docs/develop/build-agent">
+    Use the ATH Client SDK to connect your agent to a gateway
+  </Card>
+  <Card title="API Specification" icon="file-lines" href="/specification/0.1/server/registration">
+    See the complete API endpoint specification
+  </Card>
+</CardGroup>

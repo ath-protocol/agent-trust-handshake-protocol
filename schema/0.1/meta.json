@@ -1,0 +1,41 @@
+{
+  "version": "0.1",
+  "endpoints": {
+    "discovery": {
+      "method": "GET",
+      "path": "/.well-known/ath.json"
+    },
+    "service_discovery": {
+      "method": "GET",
+      "path": "/.well-known/ath-app.json"
+    },
+    "register": {
+      "method": "POST",
+      "path": "/ath/agents/register"
+    },
+    "get_agent": {
+      "method": "GET",
+      "path": "/ath/agents/{clientId}"
+    },
+    "authorize": {
+      "method": "POST",
+      "path": "/ath/authorize"
+    },
+    "callback": {
+      "method": "GET",
+      "path": "/ath/callback"
+    },
+    "token": {
+      "method": "POST",
+      "path": "/ath/token"
+    },
+    "proxy": {
+      "method": "ANY",
+      "path": "/ath/proxy/{provider_id}/{path}"
+    },
+    "revoke": {
+      "method": "POST",
+      "path": "/ath/revoke"
+    }
+  }
+}

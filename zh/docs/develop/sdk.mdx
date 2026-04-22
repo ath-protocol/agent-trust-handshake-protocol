@@ -1,0 +1,47 @@
+---
+title: "SDK"
+description: "用于构建 Agent Trust Handshake 协议的官方 SDK。"
+---
+
+使用我们的官方 SDK 构建 ATH 代理和网关。ATH 协议与编程语言无关——任何能够签署 JWT 的 HTTP 客户端都可以实现 ATH 客户端。
+
+## 可用 SDK
+
+| SDK | 仓库 | 状态 |
+| :--- | :--- | ---: |
+| <Icon icon="square-js" size={24} /> &nbsp; TypeScript | [ath-protocol/typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | <Badge color="blue" shape="pill">Official</Badge> |
+
+{/* TODO: 更多 SDK 发布后在此添加新行 */}
+
+## 快速入门
+
+每个 SDK 都提供实现 ATH 可信握手的代理生命周期方法：
+
+- `discover()` — 发现可用的服务提供者
+- `register()` — 注册你的代理，获得特定权限范围的批准
+- `authorize()` — 获取一个 URL 让用户授权 OAuth 访问
+- `exchangeToken()` — 用户批准后，获取带有权限范围交集的 ATH 令牌
+- `proxy()` — 通过 ATH 网关调用服务 API
+
+请访问你所选语言的 SDK 仓库，查找安装说明、API 文档和示例。
+
+## 构建自己的 SDK
+
+想为新语言构建 SDK？你需要实现：
+
+1. **JWT 签名** — ES256 代理证明令牌
+2. **HTTP 客户端** — 调用 [ATH API 端点](/zh/specification/0.1/server/registration)
+3. **PKCE 支持** — 网关在服务端处理 PKCE，但你的 SDK 需要处理授权流程
+
+有关完整的端点参考，请参阅 [API 规范](/zh/specification/0.1/server/registration)。
+
+## 后续步骤
+
+<CardGroup cols={2}>
+  <Card title="构建代理" icon="robot" href="/zh/docs/develop/build-agent">
+    使用 ATH Client SDK 连接你的代理
+  </Card>
+  <Card title="部署网关" icon="server" href="/zh/docs/develop/build-gateway">
+    为你的服务搭建 ATH 网关
+  </Card>
+</CardGroup>

@@ -1,0 +1,260 @@
+---
+title: "Schema Reference"
+sidebarTitle: "Schema"
+description: "Type definitions for ATH protocol request and response objects."
+---
+
+<div id="enable-section-numbers" />
+
+This page documents all request and response schemas used by the ATH protocol API.
+
+The canonical machine-readable schemas are available as:
+- [JSON Schema](https://github.com/ath-protocol/agent-trust-handshake-protocol/blob/main/schema/0.1/schema.json) (JSON Schema 2020-12) — for SDK code generation and validation
+- [OpenAPI 3.1 YAML](https://github.com/ath-protocol/agent-trust-handshake-protocol/blob/main/spec/openapi.yaml) — for API documentation and testing
+
+{/* TODO: Update URLs once repo is published */}
+
+## Discovery
+
+### DiscoveryDocument
+
+Returned by `GET /.well-known/ath.json`.
+
+```json
+{
+  "ath_version": "0.1",
+  "gateway_id": "ath-gateway.example.com",
+  "agent_registration_endpoint": "https://ath-gateway.example.com/ath/agents/register",
+  "supported_providers": [ProviderInfo]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ath_version` | string | Yes | Protocol version |
+| `gateway_id` | string | Yes | Gateway identifier |
+| `agent_registration_endpoint` | string (URI) | Yes | URL for agent registration |
+| `supported_providers` | ProviderInfo[] | Yes | Available providers |
+
+### ProviderInfo
+
+```json
+{
+  "provider_id": "example-mail",
+  "display_name": "Example Mail",
+  "categories": ["email", "productivity"],
+  "available_scopes": ["mail:read", "mail:send", "mail:delete"],
+  "auth_mode": "OAUTH2",
+  "agent_approval_required": true
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `provider_id` | string | Yes | Unique provider identifier |
+| `display_name` | string | Yes | Human-readable name |
+| `categories` | string[] | No | Provider categories |
+| `available_scopes` | string[] | Yes | Scopes that can be requested |
+| `auth_mode` | string | Yes | Authentication mode (e.g. `"OAUTH2"`) |
+| `agent_approval_required` | boolean | Yes | Whether registration is required |
+
+## Registration
+
+### AgentRegistrationRequest
+
+Sent to `POST /ath/agents/register`.
+
+```json
+{
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "agent_attestation": "<signed JWT>",
+  "developer": {
+    "name": "Example Corp",
+    "id": "dev-example-12345"
+  },
+  "requested_providers": [
+    { "provider_id": "example-mail", "scopes": ["mail:read", "mail:send"] }
+  ],
+  "purpose": "Travel planning assistant",
+  "redirect_uris": ["https://travel-agent.example.com/callback"]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `agent_id` | string (URI) | Yes | Agent's canonical URI |
+| `agent_attestation` | string (JWT) | Yes | Signed attestation token |
+| `developer.name` | string | Yes | Developer name |
+| `developer.id` | string | Yes | Developer identifier |
+| `requested_providers` | array | Yes | Providers and scopes to request |
+| `purpose` | string | No | Human-readable purpose |
+| `redirect_uris` | string[] | No | OAuth callback URIs |
+
+### AgentRegistrationResponse
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
+  "agent_status": "approved",
+  "approved_providers": [ProviderApproval],
+  "approval_expires": "2027-01-01T00:00:00Z"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `client_id` | string | Unique registration identifier |
+| `client_secret` | string | Secret for token exchange |
+| `agent_status` | `"approved"` \| `"pending"` \| `"denied"` | Registration status |
+| `approved_providers` | ProviderApproval[] | Per-provider approval results |
+| `approval_expires` | string (ISO 8601) | Expiration timestamp |
+
+### ProviderApproval
+
+```json
+{
+  "provider_id": "example-mail",
+  "approved_scopes": ["mail:read"],
+  "denied_scopes": ["mail:send"],
+  "denial_reason": "Send capability requires additional review"
+}
+```
+
+## Authorization
+
+### AuthorizationRequest
+
+Sent to `POST /ath/authorize`.
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "agent_attestation": "<signed JWT>",
+  "provider_id": "example-mail",
+  "scopes": ["mail:read"],
+  "user_redirect_uri": "https://travel-agent.example.com/callback",
+  "state": "<random-state-string>",
+  "resource": "https://api.example.com/v1"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `client_id` | string | Yes | Agent's client ID |
+| `agent_attestation` | string (JWT) | Yes | Fresh attestation token |
+| `provider_id` | string | Yes | Provider to authorize |
+| `scopes` | string[] | Yes | Scopes to request (within approved set) |
+| `user_redirect_uri` | string (URI) | No | Post-consent redirect |
+| `state` | string | No | CSRF protection state |
+| `resource` | string (URI) | No | Target resource server ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) |
+
+### AuthorizationResponse
+
+```json
+{
+  "authorization_url": "https://example.com/oauth/authorize?...&code_challenge=...&code_challenge_method=S256",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authorization_url` | string (URI) | OAuth consent URL with PKCE parameters |
+| `ath_session_id` | string | Session ID for token exchange |
+
+## Token
+
+### TokenExchangeRequest
+
+Sent to `POST /ath/token`.
+
+```json
+{
+  "grant_type": "authorization_code",
+  "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
+  "code": "<oauth-authorization-code>",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+### TokenResponse
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "provider_id": "example-mail",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+### ScopeIntersection
+
+```json
+{
+  "agent_approved": ["mail:read"],
+  "user_consented": ["mail:read", "mail:send"],
+  "effective": ["mail:read"]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `agent_approved` | string[] | Scopes the service approved for this agent |
+| `user_consented` | string[] | Scopes the user consented to |
+| `effective` | string[] | The intersection (effective permissions) |
+
+## Revocation
+
+### TokenRevocationRequest
+
+Sent to `POST /ath/revoke`.
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "token": "ath_tk_xxxxxxxx"
+}
+```
+
+## Errors
+
+### ATHError
+
+All error responses follow this structure:
+
+```json
+{
+  "code": "INVALID_ATTESTATION",
+  "message": "Agent attestation JWT has expired",
+  "details": {}
+}
+```
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `INVALID_ATTESTATION` | 401 | Agent attestation JWT failed verification |
+| `AGENT_NOT_REGISTERED` | 403 | Agent must register before authorizing |
+| `AGENT_UNAPPROVED` | 403 | Agent registration was denied |
+| `PROVIDER_NOT_APPROVED` | 403 | Agent not approved for this provider |
+| `SCOPE_NOT_APPROVED` | 403 | Agent not approved for requested scopes |
+| `SESSION_NOT_FOUND` | 400 | OAuth session not found |
+| `SESSION_EXPIRED` | 400 | OAuth session has expired |
+| `STATE_MISMATCH` | 400 | OAuth state parameter mismatch |
+| `TOKEN_INVALID` | 401 | ATH access token is invalid |
+| `TOKEN_EXPIRED` | 401 | ATH access token has expired |
+| `TOKEN_REVOKED` | 401 | ATH access token has been revoked |
+| `AGENT_IDENTITY_MISMATCH` | 403 | Agent ID in request does not match token binding |
+| `PROVIDER_MISMATCH` | 403 | Provider in request does not match token binding |
+| `USER_DENIED` | 403 | User denied the OAuth consent |
+| `OAUTH_ERROR` | 502 | Upstream OAuth provider returned an error |
+| `INTERNAL_ERROR` | 500 | Internal server error |

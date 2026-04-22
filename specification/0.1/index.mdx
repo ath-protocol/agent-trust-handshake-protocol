@@ -1,0 +1,63 @@
+---
+title: "ATH Protocol Specification v0.1"
+sidebarTitle: "Specification"
+description: "ATH Protocol Specification v0.1"
+---
+
+<div id="enable-section-numbers" />
+
+# ATH Protocol Specification v0.1
+
+This document defines the ATH (Agent Trust Handshake) protocol specification. ATH is a lightweight, decentralized application-layer security protocol that establishes trusted connections between AI agents and external services.
+
+## Status
+
+**Version**: 0.1 (Current)
+
+This is the initial release of the ATH specification, covering:
+
+- Agent identity model (URI-based Agent_ID + signed JWT attestation)
+- Three discovery modes (manual, gateway catalog, service-side `.well-known`)
+- Trusted handshake flow (Phase A: agent registration, Phase B: user OAuth consent)
+- Scope intersection enforcement
+- API endpoints (register, authorize, token, proxy, revoke)
+- Security considerations
+- Three adoption levels (gateway → agent-aware OAuth → native ATH)
+
+## Core Principle
+
+An agent can access a service **only when both conditions are met**:
+
+| Authorization | Who decides | What it answers |
+|---|---|---|
+| **App-side** | Service provider / agent registry | "Is this agent allowed to use this service?" |
+| **User-side** | End user | "Does this user allow this agent to act on their behalf?" |
+
+Neither authorization alone is sufficient.
+
+## Specification Sections
+
+<CardGroup cols={2}>
+  <Card title="Protocol Overview" icon="book" href="/specification/0.1/client/overview">
+    Design principles, architecture, and deployment models
+  </Card>
+  <Card title="Identity Model" icon="id-card" href="/specification/0.1/client/identity">
+    Agent_ID format, identity documents, and attestation JWTs
+  </Card>
+  <Card title="Discovery" icon="magnifying-glass" href="/specification/0.1/client/discovery">
+    Three discovery modes for finding ATH-compatible services
+  </Card>
+  <Card title="Handshake Flow" icon="handshake" href="/specification/0.1/client/handshake-flow">
+    The two-phase trusted handshake protocol
+  </Card>
+  <Card title="Scope Intersection" icon="filter" href="/specification/0.1/client/scope-intersection">
+    How effective permissions are computed
+  </Card>
+  <Card title="API Endpoints" icon="server" href="/specification/0.1/server/registration">
+    Complete API specification
+  </Card>
+</CardGroup>
+
+## Conformance
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this specification are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).

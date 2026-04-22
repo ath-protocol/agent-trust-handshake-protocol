@@ -1,0 +1,89 @@
+---
+title: "发现规范"
+sidebarTitle: "发现"
+description: "ATH 服务和网关发现规范。"
+---
+
+<div id="enable-section-numbers" />
+
+ATH 支持三种发现模式，从最简单到最复杂。实现必须（MUST）至少支持其中一种。
+
+## 模式 1：手动配置
+
+代理直接配置服务端点。无需发现协议。
+
+```json
+{
+  "provider": "example-service",
+  "api_base": "https://api.example.com/v1",
+  "oauth": {
+    "authorization_url": "https://example.com/oauth/authorize",
+    "token_url": "https://example.com/oauth/token"
+  }
+}
+```
+
+## 模式 2：网关目录发现
+
+ATH 合规的网关可以（MAY）在知名端点发布服务提供方目录。
+
+**端点**：`GET https://<gateway>/.well-known/ath.json`
+
+### 响应格式
+
+```json
+{
+  "ath_version": "0.1",
+  "gateway_id": "ath-gateway.example.com",
+  "agent_registration_endpoint": "https://ath-gateway.example.com/ath/agents/register",
+  "supported_providers": [
+    {
+      "provider_id": "example-mail",
+      "display_name": "Example Mail",
+      "categories": ["email", "productivity"],
+      "available_scopes": ["mail:read", "mail:send", "mail:delete"],
+      "auth_mode": "OAUTH2",
+      "agent_approval_required": true
+    }
+  ]
+}
+```
+
+### 字段说明
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `ath_version` | string | 是 | 协议版本 |
+| `gateway_id` | string | 是 | 网关标识符 |
+| `agent_registration_endpoint` | string | 是 | 代理注册 URL |
+| `supported_providers` | array | 是 | 可用的服务提供方列表 |
+| `supported_providers[].provider_id` | string | 是 | 唯一的服务提供方标识符 |
+| `supported_providers[].display_name` | string | 是 | 人类可读的名称 |
+| `supported_providers[].available_scopes` | string[] | 是 | 可请求的范围 |
+| `supported_providers[].auth_mode` | string | 是 | 认证模式（例如 `"OAUTH2"`） |
+| `supported_providers[].agent_approval_required` | boolean | 是 | 是否需要代理注册 |
+
+## 模式 3：服务端发现
+
+服务在知名端点发布 ATH 元数据，以实现代理与服务之间的直接发现。
+
+**端点**：`GET https://<service-domain>/.well-known/ath-app.json`
+
+### 响应格式
+
+```json
+{
+  "ath_version": "0.1",
+  "app_id": "com.example.mail",
+  "name": "Example Mail API",
+  "auth": {
+    "type": "oauth2",
+    "authorization_endpoint": "https://example.com/oauth/authorize",
+    "token_endpoint": "https://example.com/oauth/token",
+    "registration_endpoint": "https://example.com/developers",
+    "scopes_supported": ["mail:read", "mail:send"],
+    "agent_attestation_required": true
+  },
+  "api_base": "https://api.example.com/v1"
+}
+```

@@ -1,0 +1,56 @@
+---
+title: "Security Considerations"
+sidebarTitle: "Security"
+description: "Security requirements and considerations for ATH implementations."
+---
+
+<div id="enable-section-numbers" />
+
+## Agent Attestation Verification
+
+- Agent attestation JWTs MUST be verified against the agent's published public key at their `agent_id` URI
+- JWTs MUST include an expiration time (`exp`) and audience (`aud`)
+- Implementors MUST reject expired or audience-mismatched attestations
+
+## Token Binding
+
+- ATH access tokens MUST be bound to a specific `(agent_id, user_id, provider_id, scopes)` tuple
+- A token obtained by one agent MUST NOT be usable by another agent
+- A token obtained for one user MUST NOT be usable for another user
+
+## OAuth Security
+
+- All OAuth authorization requests MUST use PKCE ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) with the S256 challenge method
+- Token exchange requests MUST use `application/x-www-form-urlencoded` content type per [RFC 6749 §4.1.3](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3)
+- Provider OAuth client secrets MUST be stored securely and never exposed to agents or users
+- Provider tokens (access_token, refresh_token) obtained from OAuth flows MUST be stored server-side and never sent to agents
+
+## Transport Security
+
+- All ATH communications MUST use HTTPS (TLS 1.2+)
+- Implementors SHOULD validate TLS certificates of upstream services
+- mTLS is OPTIONAL for high-security environments (v2 consideration)
+
+## Audit Logging
+
+Implementors SHOULD log all authorization decisions:
+
+```json
+{
+  "timestamp": "2026-04-10T12:00:00Z",
+  "event": "access_granted",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "user_id": "user-12345",
+  "provider_id": "example-mail",
+  "requested_scopes": ["mail:read", "mail:send"],
+  "effective_scopes": ["mail:read"],
+  "denied_scopes": ["mail:send"],
+  "denial_reason": "agent not approved for mail:send"
+}
+```
+
+## Rate Limiting & Abuse Prevention
+
+- Implementors SHOULD enforce per-agent rate limits
+- Agents with abnormal request patterns SHOULD be flagged and potentially suspended
+- The agent registry SHOULD support revocation of compromised agents

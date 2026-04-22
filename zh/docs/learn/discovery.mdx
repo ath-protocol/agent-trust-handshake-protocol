@@ -1,0 +1,86 @@
+---
+title: "发现"
+description: "代理如何发现兼容 ATH 的服务和网关。"
+---
+
+ATH 支持三种发现模式，从最简单到最复杂。实现方必须至少支持其中一种。
+
+## 模式 1：手动配置
+
+代理直接配置服务端点。无需发现协议。
+
+```json
+{
+  "provider": "example-service",
+  "api_base": "https://api.example.com/v1",
+  "oauth": {
+    "authorization_url": "https://example.com/oauth/authorize",
+    "token_url": "https://example.com/oauth/token"
+  }
+}
+```
+
+**适用场景**：开发、测试、内部工具，或使用已有提供商配置的 OAuth 桥接时。
+
+## 模式 2：网关目录发现
+
+<Note>
+这是网关模式部署的推荐发现模式。
+</Note>
+
+ATH 兼容的网关可以在 well-known 端点发布提供商目录：
+
+**端点**：`GET https://<gateway>/.well-known/ath.json`
+
+```json
+{
+  "ath_version": "0.1",
+  "gateway_id": "ath-gateway.example.com",
+  "agent_registration_endpoint": "https://ath-gateway.example.com/ath/agents/register",
+  "supported_providers": [
+    {
+      "provider_id": "example-mail",
+      "display_name": "Example Mail",
+      "categories": ["email", "productivity"],
+      "available_scopes": ["mail:read", "mail:send", "mail:delete"],
+      "auth_mode": "OAUTH2",
+      "agent_approval_required": true
+    }
+  ]
+}
+```
+
+实现方可以从其配置的 OAuth 桥接自动生成此目录。
+
+## 模式 3：服务端发现
+
+服务在 well-known 端点发布 ATH 元数据，供代理直接发现服务。这是**原生模式**部署的发现模式。
+
+**端点**：`GET https://<service-domain>/.well-known/ath-app.json`
+
+```json
+{
+  "ath_version": "0.1",
+  "app_id": "com.example.mail",
+  "name": "Example Mail API",
+  "auth": {
+    "type": "oauth2",
+    "authorization_endpoint": "https://example.com/oauth/authorize",
+    "token_endpoint": "https://example.com/oauth/token",
+    "registration_endpoint": "https://example.com/developers",
+    "scopes_supported": ["mail:read", "mail:send"],
+    "agent_attestation_required": true
+  },
+  "api_base": "https://api.example.com/v1"
+}
+```
+
+**适用场景**：原生支持 ATH 的服务。
+
+## 选择发现模式
+
+| 模式 | 何时使用 | 工作量 |
+|------|---------|--------|
+| **手动** | 开发、测试、单个已知提供商 | 无 |
+| **网关目录** | 具有多个提供商的网关部署 | 低（使用参考实现时自动完成） |
+| **服务端** | 原生 ATH 实现 | 中（服务需发布 `.well-known/ath-app.json`） |

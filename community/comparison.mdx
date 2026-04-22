@@ -1,0 +1,58 @@
+---
+title: "Comparison with Related Protocols"
+sidebarTitle: "Protocol Comparison"
+description: "How ATH relates to OAuth, MCP, and A2A."
+---
+
+ATH occupies a unique position in the agent protocol ecosystem. It provides the **trust layer** that other protocols currently lack.
+
+## Feature Comparison
+
+| Feature | ATH | OAuth 2.0 | MCP Auth | A2A |
+|---|---|---|---|---|
+| Agent identity | ✓ (Agent_ID + attestation) | ✗ (client_id only) | ✗ | ✓ (Agent Card) |
+| App-side authorization | ✓ (mandatory) | ✗ | ✗ | ✗ |
+| User-side authorization | ✓ (via OAuth 2.0) | ✓ | ✓ | ✗ |
+| Trusted handshake | ✓ | ✗ | ✗ | ✗ |
+| PKCE (RFC 7636) | ✓ (mandatory) | Optional | ✗ | ✗ |
+| Resource Indicators (RFC 8707) | ✓ (optional) | Optional | ✗ | ✗ |
+| Service discovery | ✓ (.well-known) | ✗ | ✗ | ✓ (.well-known) |
+| Scope intersection | ✓ | ✗ | ✗ | ✗ |
+| Dynamic provider config | ✓ (admin API) | N/A | ✗ | ✗ |
+| Works without service changes | ✓ (gateway mode) | N/A | ✗ | ✗ |
+
+## ATH vs OAuth 2.0
+
+OAuth 2.0 answers one question: "Did the user consent?" ATH adds a second mandatory question: "Did the service approve this agent?"
+
+ATH **builds on** OAuth 2.0 — it does not replace it. The user-side authorization in ATH uses standard OAuth flows. ATH adds the agent identity layer and app-side authorization on top.
+
+## ATH vs MCP
+
+MCP (Model Context Protocol) provides a standardized way for AI applications to connect to external tools and data sources. MCP focuses on **what** agents can do (tools, resources, prompts).
+
+ATH focuses on **whether** an agent is trusted to do it. The two protocols are complementary:
+
+```
+┌─────────────────────────────────────┐
+│  ATH (Trust & Authorization)        │  "Is this agent trusted?"
+├─────────────────────────────────────┤
+│  MCP (Capabilities)                 │  "What can this agent do?"
+├─────────────────────────────────────┤
+│  HTTPS / TLS (Transport)            │  Secure transport
+└─────────────────────────────────────┘
+```
+
+## ATH vs A2A
+
+A2A (Agent-to-Agent) focuses on communication between agents. A2A provides Agent Cards for identity but does not enforce app-side authorization or scope intersection.
+
+ATH could serve as the trust layer for A2A interactions, ensuring that agents are approved by the services they access before any agent-to-agent collaboration occurs.
+
+## When to Use ATH
+
+Use ATH when you need to answer: **"Should this specific agent be allowed to access this specific service on behalf of this specific user, with these specific permissions?"**
+
+If you only need tool/resource connectivity → MCP.
+If you only need agent-to-agent messaging → A2A.
+If you need **trust verification** before granting access → ATH.

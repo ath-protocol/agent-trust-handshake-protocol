@@ -1,0 +1,260 @@
+---
+title: "Schema 参考"
+sidebarTitle: "Schema"
+description: "ATH 协议请求和响应对象的类型定义。"
+---
+
+<div id="enable-section-numbers" />
+
+本页面记录了 ATH 协议 API 使用的所有请求和响应 Schema。
+
+规范的机器可读 Schema 提供以下格式：
+- [JSON Schema](https://github.com/ath-protocol/agent-trust-handshake-protocol/blob/main/schema/0.1/schema.json)（JSON Schema 2020-12）— 用于 SDK 代码生成和验证
+- [OpenAPI 3.1 YAML](https://github.com/ath-protocol/agent-trust-handshake-protocol/blob/main/spec/openapi.yaml) — 用于 API 文档和测试
+
+{/* TODO: Update URLs once repo is published */}
+
+## 发现
+
+### DiscoveryDocument
+
+由 `GET /.well-known/ath.json` 返回。
+
+```json
+{
+  "ath_version": "0.1",
+  "gateway_id": "ath-gateway.example.com",
+  "agent_registration_endpoint": "https://ath-gateway.example.com/ath/agents/register",
+  "supported_providers": [ProviderInfo]
+}
+```
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `ath_version` | string | 是 | 协议版本 |
+| `gateway_id` | string | 是 | 网关标识符 |
+| `agent_registration_endpoint` | string (URI) | 是 | 代理注册 URL |
+| `supported_providers` | ProviderInfo[] | 是 | 可用的服务提供方 |
+
+### ProviderInfo
+
+```json
+{
+  "provider_id": "example-mail",
+  "display_name": "Example Mail",
+  "categories": ["email", "productivity"],
+  "available_scopes": ["mail:read", "mail:send", "mail:delete"],
+  "auth_mode": "OAUTH2",
+  "agent_approval_required": true
+}
+```
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `provider_id` | string | 是 | 唯一的服务提供方标识符 |
+| `display_name` | string | 是 | 人类可读的名称 |
+| `categories` | string[] | 否 | 服务提供方分类 |
+| `available_scopes` | string[] | 是 | 可请求的范围 |
+| `auth_mode` | string | 是 | 认证模式（例如 `"OAUTH2"`） |
+| `agent_approval_required` | boolean | 是 | 是否需要注册 |
+
+## 注册
+
+### AgentRegistrationRequest
+
+发送至 `POST /ath/agents/register`。
+
+```json
+{
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "agent_attestation": "<signed JWT>",
+  "developer": {
+    "name": "Example Corp",
+    "id": "dev-example-12345"
+  },
+  "requested_providers": [
+    { "provider_id": "example-mail", "scopes": ["mail:read", "mail:send"] }
+  ],
+  "purpose": "Travel planning assistant",
+  "redirect_uris": ["https://travel-agent.example.com/callback"]
+}
+```
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `agent_id` | string (URI) | 是 | 代理的规范 URI |
+| `agent_attestation` | string (JWT) | 是 | 签名的证明令牌 |
+| `developer.name` | string | 是 | 开发者名称 |
+| `developer.id` | string | 是 | 开发者标识符 |
+| `requested_providers` | array | 是 | 请求的服务提供方和范围 |
+| `purpose` | string | 否 | 人类可读的用途说明 |
+| `redirect_uris` | string[] | 否 | OAuth 回调 URI |
+
+### AgentRegistrationResponse
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
+  "agent_status": "approved",
+  "approved_providers": [ProviderApproval],
+  "approval_expires": "2027-01-01T00:00:00Z"
+}
+```
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `client_id` | string | 唯一的注册标识符 |
+| `client_secret` | string | 令牌交换的密钥 |
+| `agent_status` | `"approved"` \| `"pending"` \| `"denied"` | 注册状态 |
+| `approved_providers` | ProviderApproval[] | 各服务提供方的审批结果 |
+| `approval_expires` | string (ISO 8601) | 过期时间戳 |
+
+### ProviderApproval
+
+```json
+{
+  "provider_id": "example-mail",
+  "approved_scopes": ["mail:read"],
+  "denied_scopes": ["mail:send"],
+  "denial_reason": "Send capability requires additional review"
+}
+```
+
+## 授权
+
+### AuthorizationRequest
+
+发送至 `POST /ath/authorize`。
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "agent_attestation": "<signed JWT>",
+  "provider_id": "example-mail",
+  "scopes": ["mail:read"],
+  "user_redirect_uri": "https://travel-agent.example.com/callback",
+  "state": "<random-state-string>",
+  "resource": "https://api.example.com/v1"
+}
+```
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `client_id` | string | 是 | 代理的客户端 ID |
+| `agent_attestation` | string (JWT) | 是 | 新鲜的证明令牌 |
+| `provider_id` | string | 是 | 要授权的服务提供方 |
+| `scopes` | string[] | 是 | 要请求的范围（需在已批准范围内） |
+| `user_redirect_uri` | string (URI) | 否 | 授权同意后的重定向地址 |
+| `state` | string | 否 | CSRF 保护状态值 |
+| `resource` | string (URI) | 否 | 目标资源服务器（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)） |
+
+### AuthorizationResponse
+
+```json
+{
+  "authorization_url": "https://example.com/oauth/authorize?...&code_challenge=...&code_challenge_method=S256",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `authorization_url` | string (URI) | 包含 PKCE 参数的 OAuth 授权同意 URL |
+| `ath_session_id` | string | 用于令牌交换的会话 ID |
+
+## 令牌
+
+### TokenExchangeRequest
+
+发送至 `POST /ath/token`。
+
+```json
+{
+  "grant_type": "authorization_code",
+  "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
+  "code": "<oauth-authorization-code>",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+### TokenResponse
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "provider_id": "example-mail",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+### ScopeIntersection
+
+```json
+{
+  "agent_approved": ["mail:read"],
+  "user_consented": ["mail:read", "mail:send"],
+  "effective": ["mail:read"]
+}
+```
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `agent_approved` | string[] | 服务为该代理批准的范围 |
+| `user_consented` | string[] | 用户同意的范围 |
+| `effective` | string[] | 交集（有效权限） |
+
+## 吊销
+
+### TokenRevocationRequest
+
+发送至 `POST /ath/revoke`。
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "token": "ath_tk_xxxxxxxx"
+}
+```
+
+## 错误
+
+### ATHError
+
+所有错误响应遵循以下结构：
+
+```json
+{
+  "code": "INVALID_ATTESTATION",
+  "message": "Agent attestation JWT has expired",
+  "details": {}
+}
+```
+
+| 错误码 | HTTP 状态码 | 描述 |
+|------|-------------|-------------|
+| `INVALID_ATTESTATION` | 401 | 代理证明 JWT 验证失败 |
+| `AGENT_NOT_REGISTERED` | 403 | 代理必须先注册才能授权 |
+| `AGENT_UNAPPROVED` | 403 | 代理注册被拒绝 |
+| `PROVIDER_NOT_APPROVED` | 403 | 代理未获得该服务提供方的批准 |
+| `SCOPE_NOT_APPROVED` | 403 | 代理未获得所请求范围的批准 |
+| `SESSION_NOT_FOUND` | 400 | 未找到 OAuth 会话 |
+| `SESSION_EXPIRED` | 400 | OAuth 会话已过期 |
+| `STATE_MISMATCH` | 400 | OAuth state 参数不匹配 |
+| `TOKEN_INVALID` | 401 | ATH 访问令牌无效 |
+| `TOKEN_EXPIRED` | 401 | ATH 访问令牌已过期 |
+| `TOKEN_REVOKED` | 401 | ATH 访问令牌已被吊销 |
+| `AGENT_IDENTITY_MISMATCH` | 403 | 请求中的代理 ID 与令牌绑定不匹配 |
+| `PROVIDER_MISMATCH` | 403 | 请求中的服务提供方与令牌绑定不匹配 |
+| `USER_DENIED` | 403 | 用户拒绝了 OAuth 授权同意 |
+| `OAUTH_ERROR` | 502 | 上游 OAuth 提供方返回错误 |
+| `INTERNAL_ERROR` | 500 | 内部服务器错误 |

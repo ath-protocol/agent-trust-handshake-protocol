@@ -1,0 +1,21 @@
+---
+title: "Glossary"
+description: "Key terms used in the ATH protocol."
+---
+
+| Term | Definition |
+|---|---|
+| **Agent** | An AI-powered application that acts on behalf of a user to access external services |
+| **Agent_ID** | A URI-based unique identifier for an agent (e.g., `https://agent.example.com/.well-known/agent.json`) |
+| **Agent Attestation** | A signed JWT proving the agent's identity, verified against the agent's published public key |
+| **App-side Authorization** | The service (or gateway) approving an agent to access specific capabilities — Phase A of the trusted handshake |
+| **User-side Authorization** | The end user consenting to an agent acting on their behalf via OAuth — Phase B of the trusted handshake |
+| **Trusted Handshake** | The core ATH principle requiring that both app-side and user-side authorization must be granted before access is allowed |
+| **Scope Intersection** | The effective permission set computed as the intersection of agent-approved, user-consented, and requested scopes |
+| **ATH Gateway** | A middleware that enforces the ATH trusted handshake and delegates OAuth flows to a service provider (Gateway Mode) |
+| **ATH Implementor** | Any entity (gateway or service) that implements the ATH protocol |
+| **OAuth Bridge** | An implementation-specific component that handles OAuth flows with service providers |
+| **Provider** | A third-party service that an agent wants to access (e.g., email service, calendar, database) |
+| **Gateway Mode** | Deployment model where an ATH gateway sits between agents and services — service providers need zero changes |
+| **Native Mode** | Deployment model where services implement ATH endpoints directly |
+| **Discovery Document** | JSON metadata published at `.well-known/ath.json` (gateway) or `.well-known/ath-app.json` (service) |

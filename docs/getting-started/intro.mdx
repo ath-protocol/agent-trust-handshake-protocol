@@ -1,0 +1,102 @@
+---
+title: "What is the Agent Trust Handshake Protocol (ATH)?"
+sidebarTitle: "What is ATH?"
+description: "ATH is an open protocol for establishing trusted connections between AI agents and external services."
+---
+
+ATH (Agent Trust Handshake Protocol) is an open, lightweight protocol for establishing trusted connections between AI agents and external services. It builds on OAuth 2.0 with a **trusted handshake** — both the service and the user must approve before an agent can access anything.
+
+ATH is not tied to any specific platform, vendor, or technology stack. Anyone can implement it.
+
+## The Problem
+
+When AI agents access services on behalf of users, a single question is usually asked:
+
+> "Did the user consent?" (OAuth)
+
+But a second question is equally important:
+
+> "Did the service approve this agent?"
+
+Without both checks, any agent — including malicious ones — can access any service as long as it tricks a user into consenting.
+
+## The Solution: Trusted Handshake
+
+ATH adds **app-side authorization** (the service approves the agent) on top of **user-side authorization** (the user consents via OAuth):
+
+```
+                App-side: Is this agent approved?
+                           │
+    Agent ───── ATH ────► Service
+                           │
+                User-side: Did the user consent? (OAuth 2.0)
+```
+
+An agent can access a service **only when both conditions are met**. The effective permission is the intersection:
+
+```
+Effective Scope = Agent Approved ∩ User Consented ∩ Requested
+```
+
+## What can ATH enable?
+
+<CardGroup cols={2}>
+  <Card title="Secure Agent Access" icon="shield-check">
+    Agents can access services like email, calendars, and databases — only after both the service operator and the user have approved.
+  </Card>
+  <Card title="Zero-Change Deployment" icon="rocket">
+    In Gateway Mode, service providers need zero changes. The ATH Gateway handles the trusted handshake on their behalf.
+  </Card>
+  <Card title="Scope Intersection" icon="filter">
+    Even if a user consents to broad permissions, the agent only gets the scopes the service has pre-approved for that agent.
+  </Card>
+  <Card title="Complements MCP & A2A" icon="puzzle-piece">
+    ATH provides the trust layer that agent-to-tool (MCP) and agent-to-agent (A2A) protocols currently lack.
+  </Card>
+</CardGroup>
+
+## Why does ATH matter?
+
+Depending on where you sit in the ecosystem, ATH provides different benefits:
+
+| Role | Benefit |
+|------|---------|
+| **Agent Developers** | Register once, get approved scopes, build with confidence that your agent has verified access |
+| **Service Operators** | Control which agents can access your service, at what scope level, without changing your OAuth setup |
+| **End Users** | Know that the agent accessing your account has been vetted by the service — not just that you clicked "Allow" |
+| **Enterprises** | Audit trail of every agent's approved capabilities and access patterns |
+
+## Protocol Positioning
+
+ATH operates at the application layer, complementing existing protocols:
+
+```
+┌─────────────────────────────────────┐
+│  User Operations (CLI, UI, Skills)  │  User interacts with agent
+├─────────────────────────────────────┤
+│  ATH (Trust & Authorization)        │  Agent identity + trusted handshake
+├─────────────────────────────────────┤
+│  A2A / MCP (Collaboration)          │  Agent-to-agent / agent-to-tool
+├─────────────────────────────────────┤
+│  HTTPS / TLS (Transport)            │  Secure transport
+└─────────────────────────────────────┘
+```
+
+ATH does not compete with MCP or A2A. It complements them by providing the trust layer that these protocols currently lack.
+
+## Start Building
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="play" href="/docs/getting-started/quickstart">
+    Run the reference implementation in 5 minutes
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/docs/learn/architecture">
+    Understand the architecture and design principles
+  </Card>
+  <Card title="Build an Agent" icon="robot" href="/docs/develop/build-agent">
+    Use the ATH Client SDK to connect your agent
+  </Card>
+  <Card title="Specification" icon="file-lines" href="/specification/0.1">
+    Read the full protocol specification
+  </Card>
+</CardGroup>

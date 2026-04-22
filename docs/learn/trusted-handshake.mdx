@@ -1,0 +1,98 @@
+---
+title: "The Trusted Handshake"
+sidebarTitle: "Trusted Handshake"
+description: "The core security mechanism of ATH — requiring both app-side and user-side authorization."
+---
+
+The trusted handshake is the core security principle of the ATH protocol. It requires that **both** the service and the user must approve before an agent can access any resource.
+
+## Core Principle
+
+An agent can access a service **only when both conditions are met**:
+
+| Authorization | Who decides | What it answers |
+|---|---|---|
+| **App-side** | Service provider / agent registry | "Is this agent allowed to use this service?" |
+| **User-side** | End user | "Does this user allow this agent to act on their behalf?" |
+
+Neither authorization alone is sufficient:
+- If the app has not approved the agent, the user's consent is irrelevant
+- If the user has not consented, the app's approval of the agent is irrelevant
+
+## Two-Phase Flow
+
+The trusted handshake consists of two distinct phases:
+
+### Phase A: App-Side Authorization (One-Time Setup)
+
+The agent developer registers the agent with the ATH implementor. This is a one-time process that establishes the agent's identity and approved capabilities.
+
+```
+Agent Developer                    ATH Implementor
+      │                            (Gateway or Service)
+      │                                    │
+      │  1. Register agent                 │
+      │  (agent_id, attestation,           │
+      │   requested capabilities)          │
+      ├───────────────────────────────────►│
+      │                                    │
+      │                          2. Verify agent identity
+      │                             Review capabilities
+      │                             Approve/reject
+      │                                    │
+      │  3. Registration response          │
+      │  (client_id, approved_scopes,      │
+      │   approval_expiry)                 │
+      │◄───────────────────────────────────┤
+```
+
+**Result**: The agent is in the approved registry with specific capability limits. This persists until revoked.
+
+### Phase B: User-Side Authorization (Per-User, Runtime)
+
+When a user wants an agent to access a service on their behalf, a standard OAuth consent flow occurs — but only if the agent passed Phase A.
+
+```
+User         Agent        ATH Implementor      Service
+ │             │                  │                │
+ │  "Do X"    │                  │                │
+ ├────────────►│                  │                │
+ │             │  Request access  │                │
+ │             ├─────────────────►│                │
+ │             │        Verify agent identity      │
+ │             │        Check approval status      │
+ │             │        Initiate OAuth flow        │
+ │             │                  ├───────────────►│
+ │  OAuth consent page            │                │
+ │◄──────────────────────────────────────────────┤
+ │  User approves                 │                │
+ ├──────────────────────────────────────────────►│
+ │             │                  │  OAuth token   │
+ │             │                  │◄───────────────┤
+ │             │       Scope intersection          │
+ │             │       & token binding             │
+ │             │  ATH access token                 │
+ │             │◄─────────────────┤                │
+ │             │  API call        │                │
+ │             ├─────────────────►│  Proxy/serve   │
+ │             │                  ├───────────────►│
+ │             │                  │◄───────────────┤
+ │             │◄─────────────────┤                │
+ │◄────────────┤                  │                │
+```
+
+<Note>
+In Gateway Mode, "ATH Implementor" is the gateway and "Service" is the upstream provider. In Native Mode, "ATH Implementor" and "Service" are the same entity.
+</Note>
+
+## Why Both Phases Matter
+
+Without Phase A (app-side authorization):
+- Any agent could initiate OAuth flows to any service
+- A malicious agent could trick users into granting access
+- Service operators have no visibility into which agents access their APIs
+
+Without Phase B (user-side authorization):
+- Agents could access user data without the user's knowledge
+- No per-user consent for data access
+- Violates established OAuth privacy expectations

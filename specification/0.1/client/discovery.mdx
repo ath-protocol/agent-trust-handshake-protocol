@@ -1,0 +1,89 @@
+---
+title: "Discovery Specification"
+sidebarTitle: "Discovery"
+description: "ATH service and gateway discovery specification."
+---
+
+<div id="enable-section-numbers" />
+
+ATH supports three discovery modes, from simplest to most sophisticated. Implementations MUST support at least one.
+
+## Mode 1: Manual Configuration
+
+The agent is directly configured with service endpoints. No discovery protocol needed.
+
+```json
+{
+  "provider": "example-service",
+  "api_base": "https://api.example.com/v1",
+  "oauth": {
+    "authorization_url": "https://example.com/oauth/authorize",
+    "token_url": "https://example.com/oauth/token"
+  }
+}
+```
+
+## Mode 2: Gateway Catalog Discovery
+
+An ATH-compliant gateway MAY publish a provider catalog at a well-known endpoint.
+
+**Endpoint**: `GET https://<gateway>/.well-known/ath.json`
+
+### Response Format
+
+```json
+{
+  "ath_version": "0.1",
+  "gateway_id": "ath-gateway.example.com",
+  "agent_registration_endpoint": "https://ath-gateway.example.com/ath/agents/register",
+  "supported_providers": [
+    {
+      "provider_id": "example-mail",
+      "display_name": "Example Mail",
+      "categories": ["email", "productivity"],
+      "available_scopes": ["mail:read", "mail:send", "mail:delete"],
+      "auth_mode": "OAUTH2",
+      "agent_approval_required": true
+    }
+  ]
+}
+```
+
+### Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ath_version` | string | Yes | Protocol version |
+| `gateway_id` | string | Yes | Gateway identifier |
+| `agent_registration_endpoint` | string | Yes | URL for agent registration |
+| `supported_providers` | array | Yes | List of available providers |
+| `supported_providers[].provider_id` | string | Yes | Unique provider identifier |
+| `supported_providers[].display_name` | string | Yes | Human-readable name |
+| `supported_providers[].available_scopes` | string[] | Yes | Scopes that can be requested |
+| `supported_providers[].auth_mode` | string | Yes | Authentication mode (e.g., `"OAUTH2"`) |
+| `supported_providers[].agent_approval_required` | boolean | Yes | Whether agent registration is required |
+
+## Mode 3: Service-Side Discovery
+
+Services publish ATH metadata at a well-known endpoint for direct agent-to-service discovery.
+
+**Endpoint**: `GET https://<service-domain>/.well-known/ath-app.json`
+
+### Response Format
+
+```json
+{
+  "ath_version": "0.1",
+  "app_id": "com.example.mail",
+  "name": "Example Mail API",
+  "auth": {
+    "type": "oauth2",
+    "authorization_endpoint": "https://example.com/oauth/authorize",
+    "token_endpoint": "https://example.com/oauth/token",
+    "registration_endpoint": "https://example.com/developers",
+    "scopes_supported": ["mail:read", "mail:send"],
+    "agent_attestation_required": true
+  },
+  "api_base": "https://api.example.com/v1"
+}
+```

@@ -1,0 +1,113 @@
+---
+title: "身份模型"
+sidebarTitle: "身份"
+description: "ATH 协议的代理和服务身份规范。"
+---
+
+<div id="enable-section-numbers" />
+
+## 代理身份（Agent_ID）
+
+每个代理必须（MUST）拥有唯一且可验证的身份。
+
+**格式**：基于 URI 的标识符，遵循以下模式：
+
+```
+https://<agent-domain>/.well-known/agent.json
+```
+
+**示例**：
+```
+https://travel-agent.example.com/.well-known/agent.json
+https://coding-assistant.example.com/.well-known/agent.json
+```
+
+## 代理身份文档
+
+代理必须（MUST）在其 `agent_id` URI 上发布一个 JSON 文档：
+
+```json
+{
+  "ath_version": "0.1",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "name": "TravelBot",
+  "developer": {
+    "name": "Example Corp",
+    "id": "dev-example-12345",
+    "contact": "security@example.com"
+  },
+  "capabilities": ["flight-search", "hotel-booking", "itinerary-planning"],
+  "public_key": "<JWK or PEM for agent attestation verification>"
+}
+```
+
+### 必填字段
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `ath_version` | string | 协议版本（例如 `"0.1"`） |
+| `agent_id` | string | 该代理的规范 URI |
+| `name` | string | 人类可读的代理名称 |
+| `developer` | object | 开发者信息 |
+| `developer.name` | string | 开发者或组织名称 |
+| `developer.id` | string | 开发者标识符 |
+| `public_key` | string/object | 用于证明验证的 JWK 或 PEM |
+
+### 可选字段
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `developer.contact` | string | 安全联系邮箱 |
+| `capabilities` | string[] | 代理能力列表 |
+
+## 服务身份（App_ID）
+
+服务通过其现有标识符进行识别：
+- **客户端应用**：包名（例如 `com.example.mail`）
+- **服务端服务**：URI（例如 `https://api.example.com`）
+
+## 代理证明
+
+代理使用签名的 JWT（代理证明令牌）来证明其身份。
+
+### JWT 头部
+
+```json
+{
+  "alg": "ES256",
+  "typ": "JWT",
+  "kid": "<key-id>"
+}
+```
+
+### JWT 载荷
+
+```json
+{
+  "iss": "https://travel-agent.example.com",
+  "sub": "<agent_id>",
+  "aud": "<target-service-or-gateway>",
+  "iat": 1720000000,
+  "exp": 1720003600,
+  "capabilities": ["flight-search"]
+}
+```
+
+### 必需声明
+
+| 声明 | 描述 |
+|-------|-------------|
+| `iss` | 签发者 — 代理的域名 |
+| `sub` | 主体 — 完整的 `agent_id` URI |
+| `aud` | 受众 — 目标服务或网关 URL |
+| `iat` | 签发时间 — 时间戳 |
+| `exp` | 过期时间 — 必须（MUST）存在 |
+
+### 验证
+
+验证方（网关或服务）：
+1. 从 `agent_id` URI 获取代理的身份文档
+2. 提取公钥
+3. 使用公钥验证 JWT 签名
+4. 验证 `exp`（未过期）和 `aud`（与验证方的 URL 匹配）
+5. 实现者必须（MUST）拒绝已过期或受众不匹配的证明

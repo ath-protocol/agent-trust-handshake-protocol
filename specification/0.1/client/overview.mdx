@@ -1,0 +1,61 @@
+---
+title: "Protocol Overview"
+sidebarTitle: "Overview"
+description: "ATH design principles, architecture, and positioning relative to other protocols."
+---
+
+<div id="enable-section-numbers" />
+
+## Overview
+
+ATH (Agent Trust Handshake Protocol) is a lightweight, decentralized application-layer security protocol that establishes trusted connections between AI agents and external services (third-party apps, other agents, etc.).
+
+ATH builds on **OAuth 2.0**, the widely deployed third-party authorization framework. It adds an agent identity layer and an app-side authorization layer on top of OAuth, enabling a **trusted handshake** — the core security principle of this protocol.
+
+## Design Principles
+
+1. **Trusted Handshake**: Both app-side and user-side authorization are mandatory. Neither can be bypassed.
+2. **Decentralized**: Supports any agent connecting to any service without a central authority.
+3. **Open**: Not bound to a single platform, vendor, or technology stack.
+4. **Lightweight**: Focuses solely on trust handshake and authorization. Does not cover business logic or transport protocols.
+5. **Incrementally Adoptable**: Services can adopt ATH in phases, from zero-change gateway mode to full native implementation.
+
+## Protocol Positioning
+
+ATH operates at the application layer, positioned between user-facing operations and communication protocols:
+
+```
+┌─────────────────────────────────────┐
+│  User Operations (CLI, UI, Skills)  │  User interacts with agent
+├─────────────────────────────────────┤
+│  ATH (Trust & Authorization)        │  Agent identity + trusted handshake
+├─────────────────────────────────────┤
+│  A2A / MCP (Collaboration)          │  Agent-to-agent / agent-to-tool
+├─────────────────────────────────────┤
+│  HTTPS / TLS (Transport)            │  Secure transport
+└─────────────────────────────────────┘
+```
+
+ATH does not compete with MCP or A2A. It complements them by providing the trust layer that these protocols currently lack.
+
+## Deployment Models
+
+ATH supports two deployment models. Both are valid protocol-compliant approaches.
+
+### Gateway Mode
+
+An ATH-compliant gateway sits between agents and services. Service providers do not need to implement ATH — the gateway enforces the trusted handshake on their behalf using any OAuth bridge implementation.
+
+```
+Agent → ATH Gateway → Service Provider (unchanged)
+```
+
+### Native Mode
+
+Services implement ATH endpoints directly for tighter integration.
+
+```
+Agent → Service Provider (ATH-native)
+```
+
+Both models enforce the same trusted handshake. Gateway mode is easier to deploy; native mode gives services more control. See [Architecture](/docs/learn/architecture) for detailed diagrams.

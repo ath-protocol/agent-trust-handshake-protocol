@@ -1,0 +1,91 @@
+---
+title: "Agent Identity Model"
+sidebarTitle: "Agent Identity"
+description: "How ATH identifies and verifies AI agents using URI-based identities and signed attestations."
+---
+
+Every agent in the ATH protocol has a unique, verifiable identity. This is a foundational requirement — without verified identity, app-side authorization would be meaningless.
+
+## Agent Identity (Agent_ID)
+
+Agent identities follow a URI-based pattern:
+
+```
+https://<agent-domain>/.well-known/agent.json
+```
+
+**Examples:**
+```
+https://travel-agent.example.com/.well-known/agent.json
+https://coding-assistant.example.com/.well-known/agent.json
+```
+
+## Agent Identity Document
+
+Each agent publishes a JSON document at their `agent_id` URI containing their metadata and public key:
+
+```json
+{
+  "ath_version": "0.1",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "name": "TravelBot",
+  "developer": {
+    "name": "Example Corp",
+    "id": "dev-example-12345",
+    "contact": "security@example.com"
+  },
+  "capabilities": ["flight-search", "hotel-booking", "itinerary-planning"],
+  "public_key": "<JWK or PEM for agent attestation verification>"
+}
+```
+
+This document serves two purposes:
+1. **Discovery** — Other parties can learn about the agent's capabilities
+2. **Verification** — The public key is used to verify agent attestation JWTs
+
+## Agent Attestation
+
+Agents prove their identity using a signed JWT (Agent Attestation Token):
+
+```json
+{
+  "header": {
+    "alg": "ES256",
+    "typ": "JWT",
+    "kid": "<key-id>"
+  },
+  "payload": {
+    "iss": "https://travel-agent.example.com",
+    "sub": "<agent_id>",
+    "aud": "<target-service-or-gateway>",
+    "iat": 1720000000,
+    "exp": 1720003600,
+    "capabilities": ["flight-search"]
+  }
+}
+```
+
+The verifier (gateway or service) validates this JWT against the agent's published public key at the `agent_id` URI.
+
+<Note>
+Attestation JWTs MUST include an expiration time (`exp`) and audience (`aud`). Implementors MUST reject expired or audience-mismatched attestations.
+</Note>
+
+## Service Identity (App_ID)
+
+Services are identified by their existing identifiers:
+
+- **Client-side apps**: Package name (e.g., `com.example.mail`)
+- **Server-side services**: URI (e.g., `https://api.example.com`)
+
+No new identity infrastructure is required for services.
+
+## Verification Flow
+
+When an agent interacts with an ATH implementor:
+
+1. The agent signs an attestation JWT with its private key
+2. The implementor fetches the agent's identity document from the `agent_id` URI
+3. The implementor extracts the public key from the identity document
+4. The implementor verifies the JWT signature, expiry, and audience
+5. If valid, the agent's identity is confirmed
