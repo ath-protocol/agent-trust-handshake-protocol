@@ -1,100 +1,27 @@
 ---
-title: "Trusted Handshake Flow"
-sidebar_position: 2
+title: Server Handshake Flow
+sidebar_label: Handshake Flow
 ---
-# Server-Side Handshake Flow
-This document describes the handshake process from the server's perspective, following the standard 8-step ATH protocol flow.
-## 8-Step Flow for Server Implementation
-### 8-Step Handshake Flow:
-1. Client Identity Announcement
-2. Server Identity Response
-3. Scope Request
-4. Scope Negotiation
-5. Identity Verification
-6. Credential Issuance
-7. Credential Confirmation
-8. Handshake Complete
-
-## Server Implementation Requirements
-- Implement fine-grained access control policies for scope negotiation
-- Use secure random number generation for challenges
-- Support token revocation mechanism
-- Implement comprehensive audit logging for all handshake events
-
-
-## Authorization Policy
-### Scope Validation
-Servers must validate scope requests against:
-- Client identity and trust level
-- Resource owner consent (if applicable)
-- Organizational access control policies
-- Rate limiting rules
-### Policy Decision
-Authorization decisions can be:
-- ✅ **Approve**: Full scope request approved
-- ⚠️ **Partial**: Subset of scopes approved
-- ❌ **Deny**: No scopes approved, handshake terminated
-
-
-## Server Registration & Identity
-### Server DID Format
-Server DID follows the format: `did:ath:server:<domain>`
-Example: `did:ath:server:api.example.com`
-### Well-Known Configuration
-Servers must expose a well-known configuration endpoint at `/.well-known/ath-protocol.json`:
-```json
-{
-  "did": "did:ath:server:api.example.com",
-  "public_key": "-----BEGIN PUBLIC KEY-----
-...",
-  "versions": ["0.1"],
-  "scopes_supported": ["user:read", "data:write", "payment:initiate"],
-  "token_formats": ["jwt", "paseto"]
-}
-```
-
-
-## Token Specification
-### Token Formats
-Supported token formats:
-1. **JWT (JSON Web Token)** - RFC 7519 compliant
-2. **PASETO (Platform-Agnostic Security Tokens)** - RECOMMENDED
-### Token Claims
-Standard claims included in all tokens:
-- `iss`: Server DID
-- `sub`: Client DID
-- `scope`: Space-separated list of approved scopes
-- `iat`: Issued timestamp
-- `exp`: Expiration timestamp
-- `jti`: Unique token ID
-### Token Signing
-Tokens must be signed using:
-- Ed25519 (RECOMMENDED)
-- secp256k1
-- HS256/HS512 (only for symmetric use cases)
-
-
-## Token Revocation
-### Revocation Endpoint
-Servers must provide a revocation endpoint: `POST /ath/v1/revoke`
-### Revocation Reasons
-Tokens can be revoked for:
-- Client requested logout
-- Security compromise detected
-- Scope permissions changed
-- Token expiration (automatic)
-### Revocation List
-Servers should maintain a token revocation list (TRL) or use short-lived tokens to minimize revocation overhead.
-
-
-## Proxy Mode Support
-Servers can operate as ATH protocol proxies:
-- Forward requests to backend services
-- Validate tokens before forwarding
-- Add additional security headers and logging
-- Implement cross-domain access control
-### Proxy Headers
-When proxying, servers add the following headers:
-- `X-ATH-Client-DID`: Authenticated client DID
-- `X-ATH-Scopes`: Approved scopes for the request
-- `X-ATH-Token-ID`: Unique token ID for audit logging
+# ATH Protocol Server Handshake Flow
+This document describes the handshake process from the server (receiving agent) perspective.
+## Server Role
+The server is the party that receives the handshake request, authenticates the client, and negotiates permissions.
+## Complete Server-side Flow
+| Step | Operation | Description |
+|------|-----------|-------------|
+| 1 | Receive Handshake Request | Parse client's handshake request, extract DID and capability information |
+| 2 | Verify Client Identity | Send client's DID to Identity Registry for validity verification |
+| 3 | Process Verification Result | If client identity is invalid, return error and terminate handshake |
+| 4 | Send Handshake Response | Return server's own DID, capability list, and supported algorithms |
+| 5 | Receive Permission Request | Parse client's permission request list, evaluate permission requirements |
+| 6 | Approve/Deny Permissions | Based on policy, return permission approval result (approve/deny/partial) |
+| 7 | Receive Permission Confirmation | Confirm the final permission scope with the client |
+| 8 | Process Key Negotiation Request | Parse client's key negotiation request, select appropriate encryption algorithm |
+| 9 | Send Key Negotiation Response | Return key negotiation response, complete key exchange |
+| 10 | Establish Encrypted Session | Generate shared session key, establish end-to-end encrypted communication channel |
+## Server Responsibilities
+1. Strictly verify the identity of all requesting clients
+2. Implement permission control policies based on least privilege principle
+3. Ensure the security of session key generation and storage
+4. Enforce permission limits during business processing
+5. Maintain complete audit logs of all handshake and access processes
