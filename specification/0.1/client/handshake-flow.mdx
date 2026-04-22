@@ -52,3 +52,66 @@ This document describes the handshake process from the client's perspective, fol
 - Tokens must be stored securely with encryption at rest
 - Implement proper error handling for each step failure
 - Support token refresh and re-authentication workflows
+
+
+## Client Discovery Mechanism
+### Endpoint Discovery
+Clients can discover server endpoints through:
+- Well-known endpoint: `/.well-known/ath-protocol.json`
+- Distributed DID registry lookup
+- Static configuration provided by trusted sources
+### Discovery Response Format
+```json
+{
+  "did": "did:ath:server:example.com",
+  "versions": ["0.1"],
+  "endpoints": {
+    "handshake": "/ath/v1/handshake",
+    "token": "/ath/v1/token",
+    "revocation": "/ath/v1/revoke"
+  },
+  "capabilities": ["sig:ed25519", "token:jwt", "token:paseto"]
+}
+```
+
+
+## Client Identity Specification
+### DID Format
+Client DID follows the format: `did:ath:client:<unique-identifier>`
+Example: `did:ath:client:app:mywallet:123456`
+### Identity Claims
+Clients may include the following claims in identity announcements:
+- `iss`: Client DID
+- `iat`: Issuance timestamp
+- `capabilities`: List of supported client capabilities
+- `credentials`: Optional verifiable credentials
+
+
+## Scope Intersection Logic
+### Scope Format
+Scopes use the format: `<resource-type>:<operation>[:<resource-id>]`
+Examples:
+- `user:read` - Read user profile
+- `data:write:documents` - Write documents
+- `payment:initiate` - Initiate payment transactions
+### Negotiation Strategy
+Clients should implement the following negotiation logic:
+1. Request minimal required scopes first
+2. Handle partial scope approval gracefully
+3. Avoid requesting unnecessary permissions
+
+
+## Client Security Best Practices
+### Signature Algorithms
+Required supported algorithms:
+- Ed25519 (RECOMMENDED)
+- secp256k1
+- RSA-2048+ (NOT RECOMMENDED)
+### Token Storage
+- Tokens must be stored in secure encrypted storage
+- Never expose tokens to client-side JavaScript
+- Implement automatic token rotation
+### Error Handling
+- Do not leak sensitive information in error messages
+- Implement rate limiting for handshake attempts
+- Log all security-relevant events
