@@ -6,85 +6,143 @@ description: "The core security mechanism of ATH — requiring both app-side and
 
 The trusted handshake is the core security principle of the ATH protocol. It requires that **both** the service and the user must approve before an agent can access any resource.
 
-## Core Principle
-
-An agent can access a service **only when both conditions are met**:
-
-| Authorization | Who decides | What it answers |
-|---|---|---|
-| **App-side** | Service provider / agent registry | "Is this agent allowed to use this service?" |
-| **User-side** | End user | "Does this user allow this agent to act on their behalf?" |
-
-Neither authorization alone is sufficient:
-- If the app has not approved the agent, the user's consent is irrelevant
-- If the user has not consented, the app's approval of the agent is irrelevant
-
-## Two-Phase Flow
-
-The trusted handshake consists of two distinct phases:
-
-### Phase A: App-Side Authorization (One-Time Setup)
-
-The agent developer registers the agent with the ATH implementor. This is a one-time process that establishes the agent's identity and approved capabilities.
-
+## Handshake Flow
+## 8-Step Handshake Flow Overview
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    
+    Note over C,S: Step 1: Client Identity Announcement
+    C->>S: Client DID + Supported Versions + Capabilities
+    Note over C,S: Step 2: Server Identity Response
+    S->>C: Server DID + Negotiated Version + Capabilities
+    Note over C,S: Step 3: Scope Request
+    C->>S: Requested Permission Scopes + Validity Period
+    Note over C,S: Step 4: Scope Negotiation
+    S->>C: Approved Scopes + Access Restrictions
+    Note over C,S: Step 5: Identity Verification
+    S->>C: Random Challenge
+    C->>S: Challenge Signature
+    Note over C,S: Step 6: Credential Issuance
+    S->>C: Signed Access Token
+    Note over C,S: Step 7: Credential Confirmation
+    C->>S: Credential Validation Confirmation
+    Note over C,S: Step 8: Handshake Complete
+    S->>C: Final Confirmation
 ```
-Agent Developer                    ATH Implementor
-      │                            (Gateway or Service)
-      │                                    │
-      │  1. Register agent                 │
-      │  (agent_id, attestation,           │
-      │   requested capabilities)          │
-      ├───────────────────────────────────►│
-      │                                    │
-      │                          2. Verify agent identity
-      │                             Review capabilities
-      │                             Approve/reject
-      │                                    │
-      │  3. Registration response          │
-      │  (client_id, approved_scopes,      │
-      │   approval_expiry)                 │
-      │◄───────────────────────────────────┤
+## Detailed Step Description
+### Step 1: Client Identity Announcement
+The client initiates a connection request and announces its identity information to the server:
+- **Client DID**: Decentralized identity identifier, uniquely identifies the client identity
+- **Supported protocol version list**: ATH protocol versions supported by the client, sorted by priority
+- **Client capability set**: Capabilities such as encryption algorithms and authentication methods supported by the client
+- **Optional identity credential**: Third-party identity credentials held by the client, used to enhance identity credibility
+### Step 2: Server Identity Response
+The server responds to the client's identity announcement and returns its own identity information:
+- **Server DID**: Decentralized identity identifier of the server
+- **Negotiated protocol version**: The highest version supported by both parties selected from the version list provided by the client
+- **Server capability set**: Capabilities such as encryption algorithms and authentication methods supported by the server
+- **Server metadata**: Contains configuration information such as service endpoint information, supported scope lists, and token validity periods
+### Step 3: Scope Request
+The client requests the resource scope that needs to be accessed from the server:
+- **Permission list**: Resource and operation permissions that the client needs to access, in the format `resource:operation` (e.g., `user:read`, `data:write`)
+- **Access validity period**: The validity period of the access credential requested by the client
+- **Request context**: Optional context information used to explain the purpose of access, business scenarios, etc.
+### Step 4: Scope Negotiation
+The server reviews and negotiates the scope requested by the client according to its own security policy:
+- **Approved scope list**: The permission scope that the server finally agrees to grant to the client
+- **Rejected scopes and reasons**: For rejected permissions, return a clear reason for rejection
+- **Access restriction conditions**: Restriction conditions attached to the granted permissions, such as IP restrictions, rate limits, etc.
+### Step 5: Identity Verification
+Both parties perform identity authenticity verification to ensure that the other party's identity is credible:
+- The server generates a random challenge string and sends it to the client
+- The client signs the challenge string with its own private key and returns the signature to the server
+- The server verifies the validity of the signature using the client's public key to confirm the client's identity
+- Optional: The client can also initiate a challenge to the server for two-way identity verification
+### Step 6: Credential Issuance
+The server issues short-term access credentials to the client:
+- Generate access tokens that comply with protocol specifications (supports JWT, PASETO and other formats)
+- The token content includes information such as the DID of both parties, negotiated scope, validity period, and issuance time
+- Sign the token with the server's private key to ensure that the token cannot be tampered with
+### Step 7: Credential Confirmation
+The client verifies the validity of the received access credential and sends confirmation to the server:
+- The client verifies the validity of the token signature using the server's public key
+- Confirm that the token content is consistent with the previously negotiated result
+- Send a confirmation message to the server indicating that the credential has been received and verified
+### Step 8: Handshake Complete
+Both parties confirm that the handshake process is successfully completed:
+- The server returns a final confirmation message
+- Officially establish a trusted communication channel
+- All subsequent business requests are authenticated using the issued access credentials
+## 8-Step Handshake Flow Overview
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    
+    Note over C,S: Step 1: Client Identity Announcement
+    C->>S: Client DID + Supported Versions + Capabilities
+    Note over C,S: Step 2: Server Identity Response
+    S->>C: Server DID + Negotiated Version + Capabilities
+    Note over C,S: Step 3: Scope Request
+    C->>S: Requested Permission Scopes + Validity Period
+    Note over C,S: Step 4: Scope Negotiation
+    S->>C: Approved Scopes + Access Restrictions
+    Note over C,S: Step 5: Identity Verification
+    S->>C: Random Challenge
+    C->>S: Challenge Signature
+    Note over C,S: Step 6: Credential Issuance
+    S->>C: Signed Access Token
+    Note over C,S: Step 7: Credential Confirmation
+    C->>S: Credential Validation Confirmation
+    Note over C,S: Step 8: Handshake Complete
+    S->>C: Final Confirmation
 ```
-
-**Result**: The agent is in the approved registry with specific capability limits. This persists until revoked.
-
-### Phase B: User-Side Authorization (Per-User, Runtime)
-
-When a user wants an agent to access a service on their behalf, a standard OAuth consent flow occurs — but only if the agent passed Phase A.
-
-```
-User         Agent        ATH Implementor      Service
- │             │                  │                │
- │  "Do X"    │                  │                │
- ├────────────►│                  │                │
- │             │  Request access  │                │
- │             ├─────────────────►│                │
- │             │        Verify agent identity      │
- │             │        Check approval status      │
- │             │        Initiate OAuth flow        │
- │             │                  ├───────────────►│
- │  OAuth consent page            │                │
- │◄──────────────────────────────────────────────┤
- │  User approves                 │                │
- ├──────────────────────────────────────────────►│
- │             │                  │  OAuth token   │
- │             │                  │◄───────────────┤
- │             │       Scope intersection          │
- │             │       & token binding             │
- │             │  ATH access token                 │
- │             │◄─────────────────┤                │
- │             │  API call        │                │
- │             ├─────────────────►│  Proxy/serve   │
- │             │                  ├───────────────►│
- │             │                  │◄───────────────┤
- │             │◄─────────────────┤                │
- │◄────────────┤                  │                │
-```
-
-<Note>
-In Gateway Mode, "ATH Implementor" is the gateway and "Service" is the upstream provider. In Native Mode, "ATH Implementor" and "Service" are the same entity.
-</Note>
-
+## Detailed Step Description
+### Step 1: Client Identity Announcement
+The client initiates a connection request and announces its identity information to the server:
+- **Client DID**: Decentralized identity identifier, uniquely identifies the client identity
+- **Supported protocol version list**: ATH protocol versions supported by the client, sorted by priority
+- **Client capability set**: Capabilities such as encryption algorithms and authentication methods supported by the client
+- **Optional identity credential**: Third-party identity credentials held by the client, used to enhance identity credibility
+### Step 2: Server Identity Response
+The server responds to the client's identity announcement and returns its own identity information:
+- **Server DID**: Decentralized identity identifier of the server
+- **Negotiated protocol version**: The highest version supported by both parties selected from the version list provided by the client
+- **Server capability set**: Capabilities such as encryption algorithms and authentication methods supported by the server
+- **Server metadata**: Contains configuration information such as service endpoint information, supported scope lists, and token validity periods
+### Step 3: Scope Request
+The client requests the resource scope that needs to be accessed from the server:
+- **Permission list**: Resource and operation permissions that the client needs to access, in the format `resource:operation` (e.g., `user:read`, `data:write`)
+- **Access validity period**: The validity period of the access credential requested by the client
+- **Request context**: Optional context information used to explain the purpose of access, business scenarios, etc.
+### Step 4: Scope Negotiation
+The server reviews and negotiates the scope requested by the client according to its own security policy:
+- **Approved scope list**: The permission scope that the server finally agrees to grant to the client
+- **Rejected scopes and reasons**: For rejected permissions, return a clear reason for rejection
+- **Access restriction conditions**: Restriction conditions attached to the granted permissions, such as IP restrictions, rate limits, etc.
+### Step 5: Identity Verification
+Both parties perform identity authenticity verification to ensure that the other party's identity is credible:
+- The server generates a random challenge string and sends it to the client
+- The client signs the challenge string with its own private key and returns the signature to the server
+- The server verifies the validity of the signature using the client's public key to confirm the client's identity
+- Optional: The client can also initiate a challenge to the server for two-way identity verification
+### Step 6: Credential Issuance
+The server issues short-term access credentials to the client:
+- Generate access tokens that comply with protocol specifications (supports JWT, PASETO and other formats)
+- The token content includes information such as the DID of both parties, negotiated scope, validity period, and issuance time
+- Sign the token with the server's private key to ensure that the token cannot be tampered with
+### Step 7: Credential Confirmation
+The client verifies the validity of the received access credential and sends confirmation to the server:
+- The client verifies the validity of the token signature using the server's public key
+- Confirm that the token content is consistent with the previously negotiated result
+- Send a confirmation message to the server indicating that the credential has been received and verified
+### Step 8: Handshake Complete
+Both parties confirm that the handshake process is successfully completed:
+- The server returns a final confirmation message
+- Officially establish a trusted communication channel
+- All subsequent business requests are authenticated using the issued access credentials
 ## Why Both Phases Matter
 
 Without Phase A (app-side authorization):
