@@ -4,20 +4,20 @@ sidebar_label: 网关场景示例
 ---
 # 网关场景ATH协议应用示例
 ## 场景描述
-在微服务架构中，智能体A需要通过API网关访问后端的多个服务（订单服务、支付服务、商品服务），整个过程通过ATH 8步握手协议与网关建立可信连接，网关统一负责身份验证和权限管控。
+在微服务架构中，智能体A需要通过API网关访问后端的多个服务（订单服务、支付服务、商品服务），整个过程通过ATH 9步握手协议与网关建立可信连接，网关统一负责身份验证和权限管控。
 ### 架构说明
 ```
-[智能体A] ←ATH 8步握手→ [API网关] ←转发→ [订单服务]
+[智能体A] ←ATH 9步握手→ [API网关] ←转发→ [订单服务]
                                          [支付服务]
                                          [商品服务]
 ```
 ### 业务流程
 1. 用户让智能体A完成「下单+支付」的组合操作
-2. 智能体A与API网关进行8步握手，建立可信连接
+2. 智能体A与API网关进行9步握手，建立可信连接
 3. 网关验证通过后，颁发包含多服务访问权限的凭证
 4. 智能体A使用同一凭证访问网关后的多个服务
 5. 网关统一验证凭证并转发请求到对应的后端服务
-## ATH 8步握手流程
+## ATH 9步握手流程
 | 步骤 | 名称 | 描述 |
 |------|------|------|
 | 1 | 客户端身份宣告 | 智能体A向API网关发送身份信息，声明自己是经过用户授权的合法智能体 |
@@ -109,14 +109,14 @@ class ATHGatewayClient:
 if __name__ == "__main__":
     client = ATHGatewayClient(client_id="agent_A_001", client_secret="secret_agent_A")
     
-    # 执行8步握手
+    # 执行9步握手
     gateway_info = client.step1_identity_announcement()  # 步骤1，等待步骤2回应
     scope_requirements = client.step3_scope_request(gateway_info)  # 步骤3，等待步骤4回应
     credential = client.step5_identity_verification(scope_requirements)  # 步骤5，等待步骤6回应
     confirm_success = client.step7_credential_confirmation(credential)  # 步骤7，等待步骤8完成
     
     if confirm_success:
-        print("✅ 8步握手完成，可以访问网关后所有授权服务")
+        print("✅ 9步握手完成，可以访问网关后所有授权服务")
         print(f"📋 获得权限: {client.permissions}")
         
         # 1. 查询商品信息
