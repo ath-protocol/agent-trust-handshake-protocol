@@ -5,48 +5,16 @@ sidebar_position: 2
 # Server-Side Handshake Flow
 This document describes the handshake process from the server's perspective, following the standard 8-step ATH protocol flow.
 ## 8-Step Flow for Server Implementation
-### Step 1: Process Client Identity Announcement
-**Server Responsibility**: Validate and process client's identity announcement
-- Record client DID and capabilities
-- Verify any provided client identity credentials
-- Determine highest mutually supported protocol version
-### Step 2: Send Identity Response
-**Server Responsibility**: Respond with server identity information
-- Include server DID identifier
-- Announce negotiated protocol version
-- Provide server capabilities and metadata (endpoints, supported scopes, token formats, etc.)
-- Optionally attach server identity credentials
-### Step 3: Process Scope Request
-**Server Responsibility**: Receive and validate client's scope request
-- Parse requested permissions and validity period
-- Validate request against server security policies
-- Check client's permission eligibility
-### Step 4: Send Scope Negotiation Response
-**Server Responsibility**: Perform scope negotiation based on security policies
-- Approve or reject requested scopes based on access control policies
-- Provide clear reasons for rejected scopes
-- Attach any access restrictions (IP limits, rate limits, etc.) to approved scopes
-### Step 5: Perform Identity Verification
-**Server Responsibility**: Verify client identity authenticity
-- Generate and send random challenge string to client
-- Verify client's signature using client's public key
-- Ensure client possesses the private key corresponding to the claimed DID
-- Optionally respond to client challenge for mutual authentication
-### Step 6: Issue Access Credential
-**Server Responsibility**: Generate and issue signed access token
-- Create token containing agreed scopes, validity period, and party identifiers
-- Sign token using server's private key
-- Support multiple token formats (JWT, PASETO, etc.)
-### Step 7: Process Credential Confirmation
-**Server Responsibility**: Validate client's credential confirmation
-- Verify client has successfully received and validated the token
-- Record active token for future access control
-- Prepare for business request processing
-### Step 8: Complete Handshake
-**Server Responsibility**: Finalize handshake process
-- Send final confirmation message to client
-- Establish trusted communication session
-- Enforce scope-based access control for all subsequent requests
+### 8-Step Handshake Flow:
+1. Client Identity Announcement
+2. Server Identity Response
+3. Scope Request
+4. Scope Negotiation
+5. Identity Verification
+6. Credential Issuance
+7. Credential Confirmation
+8. Handshake Complete
+
 ## Server Implementation Requirements
 - Implement fine-grained access control policies for scope negotiation
 - Use secure random number generation for challenges
