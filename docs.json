@@ -120,6 +120,7 @@
               {
                 "group": "Security",
                 "pages": [
+                  "specification/0.1/basic/threat-model",
                   "specification/0.1/basic/security"
                 ]
               },
@@ -224,6 +225,7 @@
               {
                 "group": "安全",
                 "pages": [
+                  "zh/specification/0.1/basic/threat-model",
                   "zh/specification/0.1/basic/security"
                 ]
               },
