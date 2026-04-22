@@ -4,13 +4,13 @@ sidebar_label: 购物场景示例
 ---
 # 购物场景ATH协议应用示例
 ## 场景描述
-用户让智能体A帮忙从电商服务器B上进行商品下单操作，整个过程通过ATH 8步握手协议建立可信连接，确保通信安全。
+用户让智能体A帮忙从电商服务器B上进行商品下单操作，整个过程通过ATH 9步握手协议建立可信连接，确保通信安全。
 ### 业务流程
 1. 用户向智能体A发送指令：「帮我购买XX商品」
 2. 智能体A需要与电商服务器B建立可信连接
-3. 经过8步握手验证身份和权限后，完成下单操作
+3. 经过9步握手验证身份和权限后，完成下单操作
 4. 服务器B返回下单结果给智能体A，再反馈给用户
-## ATH 8步握手流程
+## ATH 9步握手流程
 | 步骤 | 名称 | 描述 |
 |------|------|------|
 | 1 | 客户端身份宣告 | 智能体A向服务器B发送身份信息，声明自己是经过用户授权的合法智能体 |
@@ -87,14 +87,14 @@ class ATHClient:
 if __name__ == "__main__":
     client = ATHClient(client_id="agent_A_001", client_secret="secret_agent_A")
     
-    # 执行8步握手
+    # 执行9步握手
     server_info = client.step1_identity_announcement()  # 步骤1，等待步骤2回应
     scope_requirements = client.step3_scope_request(server_info)  # 步骤3，等待步骤4回应
     credential = client.step5_identity_verification(scope_requirements)  # 步骤5，等待步骤6回应
     confirm_success = client.step7_credential_confirmation(credential)  # 步骤7，等待步骤8完成
     
     if confirm_success:
-        print("✅ 8步握手完成，开始下单")
+        print("✅ 9步握手完成，开始下单")
         order_result = client.place_order(product_id="prod_123", quantity=1)
         print(f"📦 下单结果: {json.dumps(order_result, indent=2, ensure_ascii=False)}")
     else:
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     app.run(port=5000, debug=False)
 ```
 ## 示例说明
-1. 客户端和服务端都严格遵循ATH 8步握手流程
+1. 客户端和服务端都严格遵循ATH 9步握手流程
 2. 代码包含完整的中文注释，便于理解每个步骤的作用
 3. 实现了从握手到下单的完整业务流程
 4. 使用JWT作为凭证，安全可靠
