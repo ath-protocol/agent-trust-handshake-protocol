@@ -1,35 +1,122 @@
----
-title: Handshake Flow Specification
-sidebar_label: Handshake Flow
----
-# ATH Protocol Handshake Flow Specification
-## Overview
-The ATH protocol handshake process consists of 3 core phases and 12 standard steps, enabling secure trust establishment between heterogeneous AI agents.
-## 3 Core Phases
-### Phase 1: Identity Verification (6 steps)
-Mutual identity verification through decentralized identity registry, ensuring both parties are legitimate.
-### Phase 2: Permission Negotiation (3 steps)
-Fine-grained permission negotiation based on OAuth 2.0 extension framework, implementing least privilege principle.
-### Phase 3: Session Establishment (3 steps)
-Establish end-to-end encrypted communication session using TLS 1.3 protocol.
-## Complete 12-Step Handshake Flow
-| Step | Phase | Description |
-|------|-------|-------------|
-| 1 | Identity Verification | Agent A sends handshake request to Agent B, including DID (Decentralized Identifier) and capability list |
-| 2 | Identity Verification | Agent B sends Agent A's identity information to Identity Registry for validity verification |
-| 3 | Identity Verification | Identity Registry returns identity verification result to Agent B |
-| 4 | Identity Verification | Agent B returns handshake response to Agent A, including its own DID and capability list |
-| 5 | Identity Verification | Agent A sends Agent B's identity information to Identity Registry for validity verification |
-| 6 | Identity Verification | Identity Registry returns identity verification result to Agent A |
-| 7 | Permission Negotiation | Agent A sends permission request list to Agent B, including requested interfaces and data scope |
-| 8 | Permission Negotiation | Agent B returns permission approval result to Agent A (approve/deny/partial approve), including validity period |
-| 9 | Permission Negotiation | Agent A sends permission scope confirmation to Agent B |
-| 10 | Session Establishment | Agent A sends session key negotiation request to Agent B |
-| 11 | Session Establishment | Agent B returns session key negotiation response to Agent A |
-| 12 | Session Establishment | Both parties establish encrypted communication session |
-## Key Features
-1. **Decentralized Identity**: Uses DID as unique identifier, no single point of failure
-2. **Mutual Verification**: Both parties verify each other's identity through independent registry
-3. **Fine-grained Permission**: Supports interface-level, data-level and time-level permission control
-4. **End-to-end Encryption**: TLS 1.3 based encryption, ensuring communication security
-5. **Auditable**: All handshake processes are recorded for audit and traceability
+# 基础握手流程规范
+## 概述
+本文档定义了ATH协议的基础握手流程，是所有ATH实现必须遵循的核心规范。
+## 核心特性
+- **完全去中心化**：无需任何中心化身份注册中心或第三方机构
+- **双向身份验证**：客户端和服务端互相验证对方身份
+- **双向授权机制**：应用侧和用户侧授权均为必需
+- **轻量级**：8步完成握手，性能高效
+## 握手流程
+### 1. 客户端身份宣告
+**报文结构**：
+```json
+{
+  "type": "handshake_request",
+  "client_did": "did:ath:xxxxxx",
+  "client_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "versions": ["0.1", "0.2"],
+  "capabilities": ["ES256", "EdDSA", "TLS1.3"],
+  "nonce": "random_string_a",
+  "timestamp": 1234567890
+}
+```
+### 2. 服务端身份回应
+**报文结构**：
+```json
+{
+  "type": "handshake_response",
+  "server_did": "did:ath:yyyyyy",
+  "server_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "version": "0.1",
+  "capabilities": ["ES256", "TLS1.3"],
+  "nonce": "random_string_b",
+  "signature": "signature_of_nonce_a",
+  "timestamp": 1234567891
+}
+```
+### 3. 客户端身份证明
+**报文结构**：
+```json
+{
+  "type": "identity_proof",
+  "signature": "signature_of_nonce_b",
+  "credentials": [/* 可选的身份凭证 */],
+  "timestamp": 1234567892
+}
+```
+### 4. 身份验证结果
+**报文结构**：
+```json
+{
+  "type": "identity_result",
+  "success": true,
+  "metadata": {
+    "scopes_supported": ["user:read", "data:write"],
+    "token_max_ttl": 3600
+  },
+  "error": null,
+  "timestamp": 1234567893
+}
+```
+### 5. 权限请求
+**报文结构**：
+```json
+{
+  "type": "scope_request",
+  "scopes": ["user:read", "data:write"],
+  "ttl": 1800,
+  "user_credential": "jwt_token_signed_by_user",
+  "context": "用于生成用户月度报告",
+  "timestamp": 1234567894
+}
+```
+### 6. 权限审批结果
+**报文结构**：
+```json
+{
+  "type": "scope_result",
+  "scopes_granted": ["user:read"],
+  "scopes_denied": [
+    {
+      "scope": "data:write",
+      "reason": "用户没有该资源的写入权限"
+    }
+  ],
+  "ttl_granted": 1800,
+  "restrictions": {
+    "ip_whitelist": ["192.168.1.0/24"],
+    "rate_limit": "100/second"
+  },
+  "timestamp": 1234567895
+}
+```
+### 7. 会话密钥协商
+**报文结构**：
+```json
+{
+  "type": "key_negotiation_request",
+  "key_exchange_algs": ["ECDH-P256", "X25519"],
+  "key_exchange_params": "ecdh_public_key",
+  "cipher_suites": ["AES-256-GCM", "ChaCha20-Poly1305"],
+  "timestamp": 1234567896
+}
+```
+### 8. 握手完成
+**报文结构**：
+```json
+{
+  "type": "handshake_complete",
+  "key_exchange_alg": "ECDH-P256",
+  "key_exchange_params": "ecdh_public_key",
+  "cipher_suite": "AES-256-GCM",
+  "access_token": "jwt_token_signed_by_server",
+  "timestamp": 1234567897
+}
+```
+## 错误处理
+详细错误码定义请参考错误规范文档。
+## 安全要求
+- 所有报文必须使用TLS 1.3加密传输
+- 所有签名必须使用至少256位安全强度的算法
+- 随机数必须使用密码学安全的随机生成器
+- 时间戳误差不能超过5分钟，防止重放攻击
