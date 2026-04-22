@@ -24,55 +24,15 @@ This example walks through a complete ATH flow where a travel agent checks fligh
 
 ## Phase B: Runtime (Alice Wants to Check Emails)
 
-**Step 1**: Alice tells TravelBot: "Find confirmation emails for my Tokyo trip"
-
-**Step 2**: TravelBot sends authorization request:
-
-```
-POST /ath/authorize
-{
-  "client_id": "ath_travelbot_001",
-  "provider_id": "example-mail",
-  "scopes": ["mail:read"]
-}
-```
-
-**Step 3**: Implementor verifies:
-- TravelBot is registered and approved (**app-side auth** ✓)
-- TravelBot is approved for `mail:read` ✓
-
-**Step 4**: Implementor initiates OAuth flow → email service consent page
-
-**Step 5**: Alice sees the consent page:
-
-> "TravelBot wants to view your email messages"
-
-**Step 6**: Alice approves (**user-side auth** ✓)
-
-**Step 7**: Implementor receives OAuth token, computes scope intersection:
-
-```
-Agent approved:  mail:read  ✓
-User consented:  mail:read  ✓
-Effective scope: mail:read
-```
-
-**Step 8**: Implementor issues ATH access token to TravelBot, bound to:
-- Agent: TravelBot
-- User: Alice
-- Provider: example-mail
-- Scopes: mail:read
-
-**Step 9**: TravelBot calls email API:
-
-```
-GET /ath/proxy/example-mail/v1/messages?q=Tokyo+trip
-Authorization: Bearer ath_tk_xxxxxxxx
-```
-
-**Step 10**: Implementor validates token, serves/proxies the request, returns results
-
-**Step 11**: TravelBot summarizes the confirmation emails for Alice
+**8-Step Handshake Flow:
+1. Client Identity Announcement
+2. Server Identity Response
+3. Scope Request
+4. Scope Negotiation
+5. Identity Verification
+6. Credential Issuance
+7. Credential Confirmation
+8. Handshake Complete
 
 ## What If TravelBot Tries to Send Email?
 
