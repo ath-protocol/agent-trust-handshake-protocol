@@ -1,0 +1,239 @@
+---
+title: 购物场景ATH协议示例
+sidebar_label: 购物场景示例
+---
+# 购物场景ATH协议应用示例
+## 场景描述
+用户让智能体A帮忙从电商服务器B上进行商品下单操作，整个过程通过ATH 8步握手协议建立可信连接，确保通信安全。
+### 业务流程
+1. 用户向智能体A发送指令：「帮我购买XX商品」
+2. 智能体A需要与电商服务器B建立可信连接
+3. 经过8步握手验证身份和权限后，完成下单操作
+4. 服务器B返回下单结果给智能体A，再反馈给用户
+## ATH 8步握手流程
+| 步骤 | 名称 | 描述 |
+|------|------|------|
+| 1 | 客户端身份宣告 | 智能体A向服务器B发送身份信息，声明自己是经过用户授权的合法智能体 |
+| 2 | 服务端身份回应 | 服务器B返回身份凭证，证明自己是正规电商服务提供者 |
+| 3 | 作用域请求 | 智能体A请求获取「商品查询」和「订单创建」的访问权限 |
+| 4 | 作用域协商 | 服务器B返回权限要求，需要智能体A提供用户授权凭证和支付能力证明 |
+| 5 | 身份验证 | 智能体A提交用户的授权令牌和支付方式信息供验证 |
+| 6 | 凭证颁发 | 服务器B验证通过后，颁发有效期为30分钟的下单操作凭证 |
+| 7 | 凭证确认 | 智能体A确认凭证有效，向服务器B发送确认信息 |
+| 8 | 握手完成 | 双方建立可信连接，开始执行下单操作 |
+## 代码实现
+### 客户端（智能体A）实现
+```python
+import requests
+import json
+class ATHClient:
+    def __init__(self, client_id, client_secret):
+        self.client_id = client_id  # 智能体ID
+        self.client_secret = client_secret  # 智能体密钥
+        self.server_url = "https://api.example.com/ath"
+        self.access_token = None  # 访问凭证
+    def step1_identity_announcement(self):
+        """步骤1: 客户端身份宣告"""
+        print("【步骤1】客户端身份宣告")
+        data = {
+            "client_id": self.client_id,
+            "client_type": "ai_agent",
+            "capabilities": ["order_operation"]
+        }
+        response = requests.post(f"{self.server_url}/announce", json=data)
+        return response.json()
+    def step3_scope_request(self, server_info):
+        """步骤3: 作用域请求"""
+        print("【步骤3】作用域请求")
+        data = {
+            "requested_scopes": ["product:read", "order:create"],
+            "user_id": "user_123456",
+            "request_purpose": "user_requested_shopping"
+        }
+        response = requests.post(f"{self.server_url}/scope-request", json=data)
+        return response.json()
+    def step5_identity_verification(self, scope_requirements):
+        """步骤5: 身份验证"""
+        print("【步骤5】身份验证")
+        data = {
+            "user_auth_token": "user_token_abc123",
+            "payment_method": "credit_card_xxxx",
+            "client_signature": self.client_secret
+        }
+        response = requests.post(f"{self.server_url}/verify", json=data)
+        return response.json()
+    def step7_credential_confirmation(self, credential):
+        """步骤7: 凭证确认"""
+        print("【步骤7】凭证确认")
+        self.access_token = credential["access_token"]
+        data = {
+            "token": self.access_token,
+            "confirm": True
+        }
+        response = requests.post(f"{self.server_url}/confirm", json=data)
+        return response.status_code == 200
+    def place_order(self, product_id, quantity):
+        """下单操作(握手完成后执行)"""
+        print("【下单操作】开始执行下单")
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        data = {
+            "product_id": product_id,
+            "quantity": quantity,
+            "user_address": "北京市朝阳区XX街道"
+        }
+        response = requests.post("https://api.example.com/order/create", headers=headers, json=data)
+        return response.json()
+# 客户端执行流程
+if __name__ == "__main__":
+    client = ATHClient(client_id="agent_A_001", client_secret="secret_agent_A")
+    
+    # 执行8步握手
+    server_info = client.step1_identity_announcement()  # 步骤1，等待步骤2回应
+    scope_requirements = client.step3_scope_request(server_info)  # 步骤3，等待步骤4回应
+    credential = client.step5_identity_verification(scope_requirements)  # 步骤5，等待步骤6回应
+    confirm_success = client.step7_credential_confirmation(credential)  # 步骤7，等待步骤8完成
+    
+    if confirm_success:
+        print("✅ 8步握手完成，开始下单")
+        order_result = client.place_order(product_id="prod_123", quantity=1)
+        print(f"📦 下单结果: {json.dumps(order_result, indent=2, ensure_ascii=False)}")
+    else:
+        print("❌ 握手失败，无法下单")
+```
+### 服务端（电商服务器B）实现
+```python
+from flask import Flask, request, jsonify
+import jwt
+import datetime
+app = Flask(__name__)
+SECRET_KEY = "ath_server_secret_key"
+# 模拟用户数据库
+valid_users = {
+    "user_123456": {
+        "auth_token": "user_token_abc123",
+        "balance": 1000.0
+    }
+}
+# 模拟商品数据库
+products = {
+    "prod_123": {
+        "name": "无线耳机",
+        "price": 299.0,
+        "stock": 100
+    }
+}
+@app.route('/ath/announce', methods=['POST'])
+def step2_identity_response():
+    """步骤2: 服务端身份回应"""
+    print("【步骤2】服务端身份回应")
+    client_info = request.json
+    response = {
+        "server_id": "server_B_001",
+        "server_name": "XX电商平台",
+        "supported_scopes": ["product:read", "order:create", "pay:process"],
+        "signature": "server_signature_xyz"
+    }
+    return jsonify(response)
+@app.route('/ath/scope-request', methods=['POST'])
+def step4_scope_negotiation():
+    """步骤4: 作用域协商"""
+    print("【步骤4】作用域协商")
+    scope_request = request.json
+    response = {
+        "required_credentials": ["user_auth_token", "payment_method"],
+        "scope_limits": {
+            "order:create": {
+                "max_amount": 5000.0,
+                "expire_time": "30m"
+            }
+        },
+        "terms": "同意服务条款方可继续"
+    }
+    return jsonify(response)
+@app.route('/ath/verify', methods=['POST'])
+def step6_credential_issuance():
+    """步骤6: 凭证颁发"""
+    print("【步骤6】凭证颁发")
+    verify_data = request.json
+    
+    # 验证用户信息
+    user = valid_users.get("user_123456")
+    if not user or user["auth_token"] != verify_data["user_auth_token"]:
+        return jsonify({"error": "无效的用户凭证"}), 401
+    
+    # 生成JWT凭证
+    access_token = jwt.encode({
+        "user_id": "user_123456",
+        "scopes": ["product:read", "order:create"],
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+    }, SECRET_KEY, algorithm="HS256")
+    
+    response = {
+        "access_token": access_token,
+        "expires_in": 1800,
+        "scopes": ["product:read", "order:create"]
+    }
+    return jsonify(response)
+@app.route('/ath/confirm', methods=['POST'])
+def step8_handshake_complete():
+    """步骤8: 握手完成"""
+    print("【步骤8】握手完成")
+    confirm_data = request.json
+    try:
+        jwt.decode(confirm_data["token"], SECRET_KEY, algorithms=["HS256"])
+        return jsonify({"status": "success", "message": "握手完成，可以开始业务操作"}), 200
+    except:
+        return jsonify({"error": "无效的凭证"}), 401
+@app.route('/order/create', methods=['POST'])
+def create_order():
+    """下单接口(需要ATH验证)"""
+    # 验证凭证
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "需要认证"}), 401
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    except:
+        return jsonify({"error": "无效的凭证"}), 401
+    
+    # 检查权限
+    if "order:create" not in payload["scopes"]:
+        return jsonify({"error": "没有下单权限"}), 403
+    
+    # 执行下单
+    order_data = request.json
+    product = products.get(order_data["product_id"])
+    if not product or product["stock"] < order_data["quantity"]:
+        return jsonify({"error": "商品库存不足"}), 400
+    
+    total_amount = product["price"] * order_data["quantity"]
+    user = valid_users[payload["user_id"]]
+    
+    if user["balance"] < total_amount:
+        return jsonify({"error": "余额不足"}), 400
+    
+    # 扣减库存和余额
+    product["stock"] -= order_data["quantity"]
+    user["balance"] -= total_amount
+    
+    response = {
+        "order_id": "order_" + str(datetime.datetime.now().timestamp()),
+        "product_name": product["name"],
+        "quantity": order_data["quantity"],
+        "total_amount": total_amount,
+        "status": "success",
+        "message": "下单成功"
+    }
+    return jsonify(response)
+if __name__ == "__main__":
+    print("🚀 ATH电商服务端启动，端口5000")
+    app.run(port=5000, debug=False)
+```
+## 示例说明
+1. 客户端和服务端都严格遵循ATH 8步握手流程
+2. 代码包含完整的中文注释，便于理解每个步骤的作用
+3. 实现了从握手到下单的完整业务流程
+4. 使用JWT作为凭证，安全可靠
+5. 包含权限验证、库存检查、余额扣除等实际业务逻辑
