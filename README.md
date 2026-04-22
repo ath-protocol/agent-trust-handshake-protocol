@@ -255,7 +255,7 @@ AI服务的买卖双方通过ATH协议完成交易，自动结算，全程可追
 ---
 ## 📚 中文协议文档
 为了方便国内开发者和非技术人员理解，我们提供了完整的中文注释版协议：
-📄 [ATH协议标准-中文注释版](./specification/0.1/basic/handshake-flow.zh.mdx)
+📄 [ATH协议标准-中文注释版](./specification/ath-protocol-chinese-commented.md)
 ---
 ## 🚀 部署模式
 ATH支持两种部署模式，可以根据实际需求选择：
