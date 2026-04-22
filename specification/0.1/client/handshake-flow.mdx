@@ -5,48 +5,16 @@ sidebar_position: 2
 # Client-Side Handshake Flow
 This document describes the handshake process from the client's perspective, following the standard 8-step ATH protocol flow.
 ## 8-Step Flow for Client Implementation
-### Step 1: Send Identity Announcement
-**Client Responsibility**: Construct and send identity announcement to server
-- Generate and include client DID identifier
-- List all supported ATH protocol versions in priority order
-- Announce client capabilities (supported signature algorithms, token formats, etc.)
-- Optionally attach third-party identity credentials for enhanced trust
-### Step 2: Process Server Identity Response
-**Client Responsibility**: Validate and process server's identity response
-- Verify server DID authenticity
-- Confirm negotiated protocol version is supported
-- Store server capabilities and metadata (endpoints, supported scopes, etc.)
-- Validate any server-provided identity credentials
-### Step 3: Send Scope Request
-**Client Responsibility**: Construct and send access scope request
-- List all required permissions in `resource:operation` format
-- Specify requested access credential validity period
-- Include optional context information (access purpose, business scenario, etc.)
-### Step 4: Process Scope Negotiation Response
-**Client Responsibility**: Process server's scope negotiation result
-- Record approved scopes and any access restrictions
-- Handle rejected scopes and understand the rejection reasons
-- Decide whether to proceed with handshake based on negotiated results
-### Step 5: Respond to Identity Verification Challenge
-**Client Responsibility**: Prove client identity possession
-- Receive random challenge string from server
-- Sign challenge using client's private key
-- Return signature and public key information to server
-- Optionally challenge server identity for mutual authentication
-### Step 6: Receive and Validate Access Credential
-**Client Responsibility**: Validate received access token
-- Verify token signature using server's public key
-- Confirm token content matches negotiated scopes and validity period
-- Store token securely for subsequent requests
-### Step 7: Send Credential Confirmation
-**Client Responsibility**: Acknowledge successful credential validation
-- Send confirmation message to server indicating credential is valid
-- Indicate readiness to start business communication
-### Step 8: Complete Handshake
-**Client Responsibility**: Finalize handshake process
-- Receive final confirmation from server
-- Establish trusted communication channel
-- Use issued token for all subsequent business requests
+### 8-Step Handshake Flow:
+1. Client Identity Announcement
+2. Server Identity Response
+3. Scope Request
+4. Scope Negotiation
+5. Identity Verification
+6. Credential Issuance
+7. Credential Confirmation
+8. Handshake Complete
+
 ## Client Implementation Requirements
 - All signature operations must use secure cryptographic algorithms
 - Tokens must be stored securely with encryption at rest
