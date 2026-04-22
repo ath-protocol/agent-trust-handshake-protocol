@@ -1,18 +1,38 @@
 # 基础握手流程规范
 ## 概述
 本文档定义了ATH协议的基础握手流程，是所有ATH实现必须遵循的核心规范。
-## 核心特性
-- **完全去中心化**：无需任何中心化身份注册中心或第三方机构
-- **双向身份验证**：客户端和服务端互相验证对方身份
-- **双向授权机制**：应用侧和用户侧授权均为必需
-- **轻量级**：8步完成握手，性能高效
+## 核心角色
+ATH协议是三方协议，包含三个独立的参与角色：
+| 角色 | 英文名称 | 职责 |
+|------|----------|------|
+| 用户 | User | 资源的所有者，拥有最终授权决定权 |
+| 客户端 | Client | 即智能体，代表用户执行任务，访问服务资源 |
+| 服务端 | Server | 资源的提供者，提供API服务和数据资源 |
+## 核心原则
+### 双重授权原则
+客户端要成功访问服务端资源，必须同时满足两个条件：
+1. 获得用户的明确授权（User Authorization）
+2. 获得服务端的明确授权（Server Authorization）
+两者缺一不可。
 ## 握手流程
-### 1. 客户端身份宣告
+### 前置步骤：用户预授权
+用户在使用客户端前，预先向客户端授予委托权限：
+**用户授权凭证结构**：
+```json
+{
+  "user_did": "did:ath:user_xxxxxx",
+  "client_did": "did:ath:client_xxxxxx",
+  "scopes": ["user:read", "data:write"],
+  "expires_at": 1234567890,
+  "signature": "signature_signed_by_user_private_key"
+}
+```
+### 步骤1：客户端身份宣告
 **报文结构**：
 ```json
 {
   "type": "handshake_request",
-  "client_did": "did:ath:xxxxxx",
+  "client_did": "did:ath:client_xxxxxx",
   "client_pubkey": "-----BEGIN PUBLIC KEY-----...",
   "versions": ["0.1", "0.2"],
   "capabilities": ["ES256", "EdDSA", "TLS1.3"],
@@ -20,12 +40,12 @@
   "timestamp": 1234567890
 }
 ```
-### 2. 服务端身份回应
+### 步骤2：服务端身份回应
 **报文结构**：
 ```json
 {
   "type": "handshake_response",
-  "server_did": "did:ath:yyyyyy",
+  "server_did": "did:ath:server_yyyyyy",
   "server_pubkey": "-----BEGIN PUBLIC KEY-----...",
   "version": "0.1",
   "capabilities": ["ES256", "TLS1.3"],
@@ -34,7 +54,7 @@
   "timestamp": 1234567891
 }
 ```
-### 3. 客户端身份证明
+### 步骤3：客户端身份证明
 **报文结构**：
 ```json
 {
@@ -44,7 +64,7 @@
   "timestamp": 1234567892
 }
 ```
-### 4. 身份验证结果
+### 步骤4：身份验证结果
 **报文结构**：
 ```json
 {
@@ -52,25 +72,59 @@
   "success": true,
   "metadata": {
     "scopes_supported": ["user:read", "data:write"],
-    "token_max_ttl": 3600
+    "token_max_ttl": 3600,
+    "require_user_confirmation": false
   },
   "error": null,
   "timestamp": 1234567893
 }
 ```
-### 5. 权限请求
+### 步骤5：权限请求
 **报文结构**：
 ```json
 {
   "type": "scope_request",
   "scopes": ["user:read", "data:write"],
   "ttl": 1800,
-  "user_credential": "jwt_token_signed_by_user",
+  "user_authorization": {
+    "credential": "jwt_token_signed_by_user",
+    "signature": "signature_by_client"
+  },
   "context": "用于生成用户月度报告",
   "timestamp": 1234567894
 }
 ```
-### 6. 权限审批结果
+### 步骤6：服务端向用户确认授权（可选）
+**触发条件**：当服务端安全策略要求二次验证，或者用户授权凭证存在疑问时触发。
+**报文结构（服务端→用户）**：
+```json
+{
+  "type": "authorization_confirmation_request",
+  "request_id": "req_xxxxxx",
+  "client_did": "did:ath:client_xxxxxx",
+  "client_info": {
+    "name": "AI助手",
+    "developer": "某某公司"
+  },
+  "requested_scopes": ["user:read", "data:write"],
+  "expires_at": 1234567890,
+  "timestamp": 1234567895
+}
+```
+### 步骤7：用户返回授权确认结果
+**报文结构（用户→服务端）**：
+```json
+{
+  "type": "authorization_confirmation_response",
+  "request_id": "req_xxxxxx",
+  "approved": true,
+  "approved_scopes": ["user:read"],
+  "expires_at": 1234567890,
+  "signature": "signature_signed_by_user",
+  "timestamp": 1234567896
+}
+```
+### 步骤8：权限审批结果
 **报文结构**：
 ```json
 {
@@ -79,7 +133,7 @@
   "scopes_denied": [
     {
       "scope": "data:write",
-      "reason": "用户没有该资源的写入权限"
+      "reason": "用户未授权该操作"
     }
   ],
   "ttl_granted": 1800,
@@ -87,21 +141,10 @@
     "ip_whitelist": ["192.168.1.0/24"],
     "rate_limit": "100/second"
   },
-  "timestamp": 1234567895
+  "timestamp": 1234567897
 }
 ```
-### 7. 会话密钥协商
-**报文结构**：
-```json
-{
-  "type": "key_negotiation_request",
-  "key_exchange_algs": ["ECDH-P256", "X25519"],
-  "key_exchange_params": "ecdh_public_key",
-  "cipher_suites": ["AES-256-GCM", "ChaCha20-Poly1305"],
-  "timestamp": 1234567896
-}
-```
-### 8. 握手完成
+### 步骤9：握手完成
 **报文结构**：
 ```json
 {
@@ -110,7 +153,7 @@
   "key_exchange_params": "ecdh_public_key",
   "cipher_suite": "AES-256-GCM",
   "access_token": "jwt_token_signed_by_server",
-  "timestamp": 1234567897
+  "timestamp": 1234567898
 }
 ```
 ## 错误处理
@@ -120,3 +163,4 @@
 - 所有签名必须使用至少256位安全强度的算法
 - 随机数必须使用密码学安全的随机生成器
 - 时间戳误差不能超过5分钟，防止重放攻击
+- 用户授权凭证必须由用户私钥签名，不可伪造
