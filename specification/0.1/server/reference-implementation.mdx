@@ -1,0 +1,265 @@
+---
+title: Server Reference Implementation
+sidebar_label: Reference Implementation
+---
+# ATH Protocol Server Reference Implementation
+## 服务端核心实现规范
+本文档提供ATH协议服务端的标准参考实现，所有兼容ATH协议的服务端都应该遵循此实现规范。
+### 核心类结构
+```python
+from flask import Flask, request, jsonify
+import jwt
+import datetime
+import hmac
+import hashlib
+import json
+from typing import Dict, List, Callable
+app = Flask(__name__)
+class ATHServer:
+    """
+    ATH协议服务端核心实现类
+    负责处理客户端的8步握手请求，验证身份，颁发凭证，校验业务请求
+    """
+    
+    def __init__(self, jwt_secret: str, token_expire_minutes: int = 30):
+        """
+        初始化ATH服务端
+        :param jwt_secret: JWT签名密钥
+        :param token_expire_minutes: 凭证默认有效期（分钟）
+        """
+        self.jwt_secret = jwt_secret
+        self.token_expire_minutes = token_expire_minutes
+        self.client_registry: Dict[str, str] = {}  # 客户端ID -> 客户端密钥映射
+        self.scope_validators: Dict[str, Callable] = {}  # 权限验证函数
+        self.verification_handlers: Dict[str, Callable] = {}  # 验证处理函数
+    def register_client(self, client_id: str, client_secret: str) -> None:
+        """
+        注册合法客户端
+        :param client_id: 客户端ID
+        :param client_secret: 客户端密钥
+        """
+        self.client_registry[client_id] = client_secret
+    def register_scope_validator(self, scope: str, validator: Callable) -> None:
+        """
+        注册权限验证器
+        :param scope: 权限名称
+        :param validator: 验证函数，接收客户端信息和用户上下文，返回是否允许
+        """
+        self.scope_validators[scope] = validator
+    def register_verification_handler(self, verification_type: str, handler: Callable) -> None:
+        """
+        注册验证处理函数
+        :param verification_type: 验证类型
+        :param handler: 处理函数，接收验证数据，返回是否验证通过
+        """
+        self.verification_handlers[verification_type] = handler
+    def _verify_signature(self, client_id: str, data: Dict, signature: str) -> bool:
+        """
+        验证客户端请求签名
+        :param client_id: 客户端ID
+        :param data: 请求数据
+        :param signature: 客户端提供的签名
+        :return: 签名是否有效
+        """
+        if client_id not in self.client_registry:
+            return False
+        
+        client_secret = self.client_registry[client_id].encode('utf-8')
+        sorted_data = json.dumps(data, sort_keys=True).encode('utf-8')
+        expected_signature = hmac.new(client_secret, sorted_data, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected_signature, signature)
+    def _generate_access_token(self, client_id: str, scopes: List[str], user_context: Dict) -> str:
+        """
+        生成JWT访问凭证
+        :param client_id: 客户端ID
+        :param scopes: 授权的权限列表
+        :param user_context: 用户上下文
+        :return: JWT凭证
+        """
+        payload = {
+            "client_id": client_id,
+            "scopes": scopes,
+            "user_context": user_context,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=self.token_expire_minutes),
+            "iat": datetime.datetime.utcnow()
+        }
+        return jwt.encode(payload, self.jwt_secret, algorithm="HS256")
+    def handle_step1_announcement(self) -> Dict:
+        """
+        处理步骤1: 客户端身份宣告
+        :return: 步骤2: 服务端身份回应
+        """
+        data = request.json
+        client_id = data.get("client_id")
+        signature = data.pop("signature", "")
+        
+        # 验证客户端是否存在
+        if client_id not in self.client_registry:
+            return {"error": "无效的客户端ID"}, 401
+        
+        # 验证签名
+        if not self._verify_signature(client_id, data, signature):
+            return {"error": "无效的签名"}, 401
+        
+        # 返回服务端信息
+        return {
+            "server_id": "ath-server-0.1.0",
+            "supported_algorithms": ["HS256", "RS256"],
+            "available_scopes": list(self.scope_validators.keys()),
+            "verification_methods": list(self.verification_handlers.keys())
+        }, 200
+    def handle_step3_scope_request(self) -> Dict:
+        """
+        处理步骤3: 作用域请求
+        :return: 步骤4: 作用域协商结果
+        """
+        data = request.json
+        client_id = data.get("client_id")
+        requested_scopes = data.get("requested_scopes", [])
+        signature = data.pop("signature", "")
+        
+        if not self._verify_signature(client_id, data, signature):
+            return {"error": "无效的签名"}, 401
+        
+        # 检查请求的权限是否都支持
+        unsupported_scopes = [s for s in requested_scopes if s not in self.scope_validators]
+        if unsupported_scopes:
+            return {"error": f"不支持的权限: {unsupported_scopes}"}, 400
+        
+        # 返回验证要求
+        return {
+            "required_verifications": ["user_token", "client_attestation"],
+            "scope_restrictions": {
+                scope: {"max_expire": "30m"} for scope in requested_scopes
+            }
+        }, 200
+    def handle_step5_verification(self) -> Dict:
+        """
+        处理步骤5: 身份验证
+        :return: 步骤6: 凭证颁发
+        """
+        data = request.json
+        client_id = data.get("client_id")
+        verification_data = data.get("verification_data", {})
+        signature = data.pop("signature", "")
+        
+        if not self._verify_signature(client_id, data, signature):
+            return {"error": "无效的签名"}, 401
+        
+        # 执行所有要求的验证
+        for verify_type, handler in self.verification_handlers.items():
+            if verify_type in verification_data:
+                if not handler(verification_data[verify_type]):
+                    return {"error": f"{verify_type}验证失败"}, 401
+        
+        # 生成并返回凭证
+        access_token = self._generate_access_token(
+            client_id=client_id,
+            scopes=list(self.scope_validators.keys()),
+            user_context=verification_data.get("user_context", {})
+        )
+        
+        return {
+            "access_token": access_token,
+            "expires_at": int((datetime.datetime.utcnow() + datetime.timedelta(minutes=self.token_expire_minutes)).timestamp()),
+            "scopes": list(self.scope_validators.keys()),
+            "token_type": "Bearer"
+        }, 200
+    def handle_step7_confirmation(self) -> Dict:
+        """
+        处理步骤7: 凭证确认
+        :return: 步骤8: 握手完成
+        """
+        data = request.json
+        client_id = data.get("client_id")
+        access_token = data.get("access_token")
+        signature = data.pop("signature", "")
+        
+        if not self._verify_signature(client_id, data, signature):
+            return {"error": "无效的签名"}, 401
+        
+        # 验证凭证有效性
+        try:
+            jwt.decode(access_token, self.jwt_secret, algorithms=["HS256"])
+            return {"status": "success", "message": "握手完成"}, 200
+        except jwt.InvalidTokenError:
+            return {"error": "无效的凭证"}, 401
+    def verify_request(self, required_scopes: List[str] = None) -> Dict:
+        """
+        验证业务请求的凭证和权限
+        :param required_scopes: 需要的权限列表
+        :return: 解码后的凭证payload，验证失败返回错误响应
+        """
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return {"error": "需要ATH认证"}, 401
+        
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, self.jwt_secret, algorithms=["HS256"])
+        except jwt.InvalidTokenError:
+            return {"error": "无效的凭证"}, 401
+        
+        # 验证权限
+        if required_scopes:
+            for scope in required_scopes:
+                if scope not in payload["scopes"]:
+                    return {"error": f"缺少权限: {scope}"}, 403
+        
+        return payload
+```
+### 服务端使用示例
+```python
+# 初始化ATH服务端
+ath_server = ATHServer(
+    jwt_secret="your_server_jwt_secret",
+    token_expire_minutes=30
+)
+# 注册合法客户端
+ath_server.register_client(
+    client_id="client_001",
+    client_secret="client_secret_abc123"
+)
+# 注册权限验证器
+ath_server.register_scope_validator("user:read", lambda client, ctx: True)
+ath_server.register_scope_validator("data:write", lambda client, ctx: ctx.get("role") == "admin")
+# 注册验证处理函数
+ath_server.register_verification_handler("user_token", lambda token: token.startswith("user_token_"))
+# 注册ATH协议路由
+@app.route('/ath/v1/announce', methods=['POST'])
+def step1():
+    return ath_server.handle_step1_announcement()
+@app.route('/ath/v1/scope-request', methods=['POST'])
+def step3():
+    return ath_server.handle_step3_scope_request()
+@app.route('/ath/v1/verify', methods=['POST'])
+def step5():
+    return ath_server.handle_step5_verification()
+@app.route('/ath/v1/confirm', methods=['POST'])
+def step7():
+    return ath_server.handle_step7_confirmation()
+# 业务接口示例
+@app.route('/user/info', methods=['GET'])
+def get_user_info():
+    # 验证请求需要user:read权限
+    payload = ath_server.verify_request(required_scopes=["user:read"])
+    if isinstance(payload, tuple) and payload[1] != 200:
+        return payload
+    
+    # 执行业务逻辑
+    return jsonify({
+        "user_id": payload["user_context"].get("user_id"),
+        "name": "张三",
+        "email": "zhangsan@example.com"
+    })
+if __name__ == "__main__":
+    print("🚀 ATH服务端启动，端口5000")
+    app.run(port=5000, debug=False)
+```
+### 实现规范
+1. 必须验证所有请求的签名，防止伪造请求
+2. 凭证必须使用JWT标准，包含必要的过期时间和权限信息
+3. 需要实现完善的客户端注册和管理机制
+4. 权限验证必须细粒度，确保最小权限原则
+5. 需要记录所有握手和业务请求的审计日志
+6. 必须支持凭证的主动吊销机制
