@@ -21,7 +21,7 @@ This is the initial release of the ATH specification, covering:
 - Trusted handshake flow (Phase A: agent registration, Phase B: user OAuth consent)
 - Scope intersection enforcement
 - API endpoints (register, authorize, token, proxy, revoke)
-- Security considerations
+- Security considerations, grounded in an explicit threat model
 - Three adoption levels (gateway → agent-aware OAuth → native ATH)
 
 ## Core Principle
@@ -55,6 +55,9 @@ Neither authorization alone is sufficient.
   </Card>
   <Card title="API Endpoints" icon="server" href="/specification/0.1/server/registration">
     Complete API specification
+  </Card>
+  <Card title="Threat Model" icon="shield-halved" href="/specification/0.1/basic/threat-model">
+    Actors, attackers, assumptions, and security goals
   </Card>
 </CardGroup>
 

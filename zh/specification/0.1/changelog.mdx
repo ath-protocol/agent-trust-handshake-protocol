@@ -29,6 +29,7 @@ description: "ATH 协议规范 v0.1 的变更记录。"
 
 ### 安全性
 
+- 明确的[威胁模型](/zh/specification/0.1/basic/threat-model)，定义参与方（A1–A6）、在范围攻击者（T1–T4）、不在范围威胁（OOS1–OOS18）、安全目标（G1–G10）与假设（AS1–AS10）
 - 强制使用 PKCE（[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)）及 S256 挑战方法
 - 可选的资源指示符（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)）
 - 令牌绑定到 `(agent_id, user_id, provider_id, scopes)` 元组

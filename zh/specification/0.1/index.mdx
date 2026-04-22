@@ -21,7 +21,7 @@ description: "ATH 协议规范 v0.1"
 - 可信握手流程（阶段 A：代理注册，阶段 B：用户 OAuth 授权同意）
 - 范围交集执行机制
 - API 端点（注册、授权、令牌、代理转发、吊销）
-- 安全性考量
+- 安全性考量，基于明确的威胁模型
 - 三个采纳级别（网关 → 代理感知 OAuth → 原生 ATH）
 
 ## 核心原则
@@ -55,6 +55,9 @@ description: "ATH 协议规范 v0.1"
   </Card>
   <Card title="API 端点" icon="server" href="/zh/specification/0.1/server/registration">
     完整的 API 规范
+  </Card>
+  <Card title="威胁模型" icon="shield-halved" href="/zh/specification/0.1/basic/threat-model">
+    参与方、攻击者、假设与安全目标
   </Card>
 </CardGroup>
 

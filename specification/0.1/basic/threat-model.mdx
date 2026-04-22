@@ -1,0 +1,275 @@
+---
+title: "Threat Model and Security Scope"
+sidebarTitle: "Threat Model"
+description: "Defines who ATH protects against, what it assumes, and what it does not attempt to defend."
+---
+
+<div id="enable-section-numbers" />
+
+# Threat Model and Security Scope
+
+This document is normative. Every MUST, MUST NOT, SHOULD, and SHOULD NOT elsewhere in this specification exists to preserve a specific security goal defined here against a specific attacker archetype defined here. A requirement that cannot be traced back to this document is either redundant or misplaced.
+
+## Purpose
+
+ATH operates at the application layer. It builds on OAuth 2.0 and inherits OAuth 2.0's layered trust assumptions: TLS protects the wire, the upstream authorization server protects user authentication, and ATH protects the agent identity and app-side authorization layer on top of both.
+
+This document states:
+
+- Which actors participate, and how much each is trusted.
+- Which attackers the protocol defends against ("in scope").
+- Which attackers and failure modes the protocol does **not** defend against ("out of scope"), because they are the responsibility of a lower layer or a different party.
+- Which properties the protocol guarantees when the in-scope attackers are present and the assumptions hold.
+- Which operating conditions the protocol assumes, independent of attackers.
+
+Implementors MUST NOT claim ATH conformance without satisfying every assumption and preserving every goal defined below against every in-scope attacker.
+
+## Actors
+
+The protocol has six actors. Trust levels are stated from the ATH implementor's perspective.
+
+| # | Actor | Description | Trust |
+|---|-------|-------------|-------|
+| A1 | End user | The human who consents to agent access and whose upstream account is being acted upon. | Honest but gullible: trusted to decide what to consent to; not trusted to detect phishing or to audit tokens. |
+| A2 | Agent runtime | The software process that holds the agent's private key and calls ATH endpoints on behalf of users. | Semi-trusted: identified by key, constrained by Phase A approval. May be dishonest or compromised. |
+| A3 | Agent developer | The organization that registers and operates the agent. | Untrusted for identity claims: `developer.name`, `developer.contact`, `purpose`, and `capabilities` are self-asserted and MUST NOT be rendered as authoritative to end users. |
+| A4 | ATH implementor | The party that runs the ATH endpoints (a gateway in Gateway Mode, or the service itself in Native Mode). | Trusted. ATH's security guarantees terminate here. Protecting the implementor itself is out of scope. |
+| A5 | Upstream OAuth authorization server | The OAuth AS that authenticates the user and issues the upstream OAuth token. In Native Mode, this is part of A4. | Trusted to implement [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) and [RFC 9700](https://datatracker.ietf.org/doc/html/rfc9700) correctly. |
+| A6 | Upstream resource server | The API that holds the user's data. In Native Mode, this is part of A4. | Trusted within its own authorization model. |
+
+## In-Scope Attackers
+
+The protocol MUST preserve the goals below against all attackers in this section, under the assumptions below.
+
+### T1 — Malicious or dishonest agent
+
+An attacker in control of an agent runtime (A2). Capabilities:
+
+- Holds a valid agent key pair and publishes a valid identity document.
+- May be registered at the ATH implementor and hold a `client_id` / `client_secret`.
+- Makes arbitrary, well-formed or malformed, calls to every ATH endpoint an agent can call.
+- May collude with T2 (for example, as a gateway tenant operating its own agent).
+
+The attacker's goal is typically to exceed its Phase A approval, impersonate another agent, or obtain a token bound to a user who did not consent.
+
+### T2 — Malicious local user of the ATH implementor
+
+An attacker holding legitimate credentials at the ATH implementor — a gateway tenant, an authenticated end user, or a low-privilege operator inside a multi-tenant deployment. Capabilities:
+
+- Calls every authenticated ATH endpoint.
+- Registers agents, initiates authorization flows, and obtains tokens for their own account and provider relationships.
+- May control both the agent runtime and the end-user browser in their own session.
+
+The attacker's goal is typically to escape tenant isolation or hijack another user's session, token, or agent registration.
+
+### T3 — Application-layer side-channel observer
+
+An attacker who learns the contents of protocol messages through side channels that **persist despite** TLS working correctly. Capabilities include observing any of:
+
+- Web `Referer` headers sent from implementor-origin pages.
+- URLs recorded in browser history or by server-side access logs.
+- URL parameters surfaced to user-space logging, APM, error-reporting sinks, or analytics pixels.
+- Content visible to installed browser extensions or other in-browser JavaScript running on implementor-origin pages.
+- Credentials or URL parameters exposed via screen sharing, clipboard, or copy-paste by an untrained user.
+
+This attacker **cannot** decrypt or tamper with TLS-protected traffic — that is delegated to the out-of-scope list below.
+
+The attacker's goal is typically to capture an `authorization_code`, a `state` value, an `ath_session_id`, an ATH access token, an agent attestation JWT, or an OAuth authorization-code redirect URL.
+
+### T4 — Phishing and social-engineering attacker
+
+An attacker who can:
+
+- Send arbitrary messages and links to end users and developers.
+- Publish arbitrary content at any URL the user visits.
+- Operate a counterfeit ATH implementor, counterfeit agent, or counterfeit consent page that victims can be induced to visit.
+- Induce the user to click, approve, or type — but not bypass browser same-origin policy or TLS.
+
+ATH MUST NOT introduce phishing surface that did not already exist under plain OAuth 2.0. In particular, any string field shown to the user that originates from A2 or A3 MUST be treated as untrusted; any redirect destination that originates from A2 MUST be validated against a pre-registered allowlist; and the protocol MUST NOT rely on the user recognizing origin strings for security.
+
+## Out-of-Scope Threats
+
+The protocol makes **no guarantee** against the following. Mitigations for these belong to the party named. An implementor failing against one of these attackers is not failing to conform to ATH.
+
+### Network and transport layer (delegated to TLS)
+
+| # | Threat | Rationale | Responsible party |
+|---|--------|-----------|-------------------|
+| OOS1 | Passive interception or active modification of TLS-protected traffic | ATH is an application-layer protocol and delegates wire confidentiality and integrity to TLS. A defeated TLS layer defeats ATH. | Deployer's TLS configuration; CA ecosystem |
+| OOS2 | Compromise of a certificate authority trusted by the agent's or user's runtime, including malicious CA installation by enterprise MDM | Delegated to the browser/OS trust store. | Certificate authorities; device administrator |
+| OOS3 | DNS spoofing, DNS cache poisoning, or BGP hijack against any ATH or OAuth endpoint | Prevented by TLS's identification of the server by certificate, not by DNS. | Network operator |
+| OOS4 | First-contact man-in-the-middle against an agent or user that has not yet pinned a given endpoint | Addressed by HSTS preload, HPKP successors, or out-of-band endpoint distribution; not by ATH. | Deployer; client operator |
+| OOS5 | Protocol-agnostic denial of service (packet floods, TCP exhaustion, Slowloris) | Infrastructure concern. ATH addresses only application-layer DoS via the rate-limit requirements in `basic/security.mdx`. | Deployer's infrastructure |
+
+### Endpoint compromise
+
+| # | Threat | Rationale | Responsible party |
+|---|--------|-----------|-------------------|
+| OOS6 | Fully compromised ATH implementor (stolen server keys, malicious administrator, database exfiltration) | ATH's security terminates at A4; there is no recourse once the trusted root is compromised. Implementors SHOULD reduce blast radius (see the Trust Model section) but the protocol does not promise security in this scenario. | Implementor's operational security |
+| OOS7 | Fully compromised upstream OAuth authorization server or resource server | Delegated trust, not ATH's root. | Upstream operator |
+| OOS8 | Compromised user device (malware, rootkit, keylogger, hostile OS, compromised browser binary itself) | Any consent protocol fails if the user's endpoint is controlled by the attacker. Distinct from T3, which covers legitimate browser features used for side channels, not a malicious browser. | End user; device management |
+| OOS9 | Theft of the agent's private key from its at-rest storage | The protocol assumes the key is confidential; how the agent protects it is out of scope. An attacker holding a stolen agent key is equivalent to T1. | Agent developer |
+
+### Cryptographic and implementation layer
+
+| # | Threat | Rationale | Responsible party |
+|---|--------|-----------|-------------------|
+| OOS10 | Side-channel attacks against cryptographic primitives (timing, speculative execution, fault injection, electromagnetic) | Library- and platform-level; orthogonal to protocol design. | Crypto library; runtime |
+| OOS11 | Novel mathematical break of a primitive ATH depends on (e.g., ECDSA on P-256) | Mitigated by the protocol's algorithm-agility provisions; a primitive break is handled by a version bump, not by runtime defense. | Cryptography research community |
+| OOS12 | Supply-chain compromise of a crypto library, JSON parser, HTTP server, or TLS stack used by any party | Build-system and software-provenance concern. | Every party's SBOM process |
+
+### Policy, legal, and business
+
+| # | Threat | Rationale | Responsible party |
+|---|--------|-----------|-------------------|
+| OOS13 | An end user voluntarily granting excessive scopes to their own agent | The user is the final authority on their own account. | End user |
+| OOS14 | Lawful access, jurisdictional compulsion, or contractual disclosure by any party | Policy concern. | Party in the jurisdiction |
+| OOS15 | The business decision of which agents to approve in Phase A | ATH specifies the mechanism, not the policy. | Implementor |
+| OOS16 | Manual out-of-band configuration (`basic/discovery.mdx` Mode 1) | Manual configuration is not a protocol flow. | Deployer |
+
+### Known limitations of v0.1
+
+| # | Threat | Rationale |
+|---|--------|-----------|
+| OOS17 | Theft of a bearer ATH access token from the agent's process memory or its downstream storage | v0.1 issues bearer tokens ([RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)). Sender-constrained tokens (DPoP, mTLS) are RECOMMENDED but not REQUIRED; see G6 and the Known Limitations section. |
+| OOS18 | Cross-implementor agent identity federation | v0.1 treats each ATH implementor as an independent trust root; see the Trust Model section. |
+
+## Security Goals
+
+The protocol MUST preserve each goal below against every in-scope attacker, under every assumption. Each normative requirement elsewhere in this specification MUST identify the goal(s) it preserves.
+
+### G1 — Agent identity integrity
+
+A party without control of an agent's private key MUST NOT be able to act as that agent at any ATH endpoint. An agent identity that has been registered with an implementor MUST NOT be impersonable by substituting a different key against the same `agent_id` without the prior key authorizing the transition.
+
+### G2 — App-side authorization non-bypass
+
+No agent may obtain an ATH access token for a `provider_id` for which it has not been granted `agent_status: "approved"` with a non-empty `approved_scopes` intersection during Phase A.
+
+### G3 — User-side authorization non-bypass
+
+No ATH access token may be issued without an end user having completed an upstream OAuth consent flow specifically for the requesting agent and the bound `provider_id`.
+
+### G4 — Scope confinement
+
+The effective scope of any issued ATH access token MUST equal `Agent Approved ∩ User Consented ∩ Requested`. No token MUST permit any operation outside this set. The scopes presented for user consent at the upstream AS MUST NOT exceed `Agent Approved ∩ Requested`.
+
+### G5 — Session integrity
+
+A handshake initiated by user U in user agent B for agent X and provider P MUST only be completable by user agent B, MUST result in a token bound to X and (some) U acting at P, and MUST NOT result in a token bound to any other agent, any other user, or any other provider.
+
+### G6 — Token unforgeability and containment
+
+An ATH access token MUST NOT be forgeable by any party that does not hold the implementor's token-issuance secret. A token, once issued, is bound to a specific `(agent_id, user_id, provider_id, scopes)` tuple and MUST NOT be accepted for any other tuple.
+
+In v0.1, ATH access tokens are bearer tokens ([RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)); theft of a token (from the agent's runtime or downstream storage) therefore grants the thief the bearer's ability to act within the bound tuple's scopes until expiry or revocation. This residual risk is OOS17. Sender-constrained tokens (DPoP, mTLS) are RECOMMENDED for high-security deployments and will be REQUIRED in a future version.
+
+### G7 — Revocation responsiveness
+
+After a token or agent registration is revoked, subsequent attempts to use the revoked credential MUST be rejected by the implementor within a bounded time. The implementor MUST document this bound; RECOMMENDED: 5 seconds.
+
+### G8 — Phishing surface minimization
+
+The protocol MUST NOT cause user-facing consent or authentication flows to rely on attacker-controlled strings as authoritative. Specifically:
+
+- `developer.name`, `developer.contact`, `purpose`, `capabilities`, and any other agent- or developer-supplied metadata MUST be labeled in any user UI as "claimed by the agent" and MUST NOT be presented as verified.
+- `user_redirect_uri` MUST be validated against a pre-registered list (`redirect_uris`) using exact-match comparison.
+- Error-flow redirects originating from the ATH implementor MUST terminate at implementor-origin pages, not at agent-supplied URIs.
+- The protocol MUST NOT rely on the user recognizing origin strings, domain names, or TLS lock icons as security indicators.
+
+### G9 — Mix-up resistance
+
+When an agent interacts with more than one ATH implementor, or when an implementor is connected to more than one upstream OAuth authorization server, the protocol MUST prevent any party from confusing responses across those boundaries. A response from implementor A or authorization server A MUST NOT be acceptable as a response from implementor B or authorization server B, for any observable protocol decision.
+
+### G10 — Interoperability consistency
+
+Two spec-conformant implementors presented with identical protocol inputs MUST produce outputs and make security decisions that differ only in values the spec explicitly leaves to implementor choice. Security-relevant divergence between conformant implementors is a specification defect.
+
+## Assumptions
+
+If any assumption fails, the protocol's guarantees do not hold. Each assumption is the responsibility of a specific party. Assumptions AS1–AS3 carry the bulk of this model's weight, because they are what allows the network-layer threats (OOS1–OOS5) to be declared out of scope.
+
+| # | Assumption | Responsible party |
+|---|------------|-------------------|
+| AS1 | TLS 1.3 (RECOMMENDED) or TLS 1.2 (MINIMUM) is deployed on every ATH, OAuth, and `.well-known` endpoint, with certificates issued by a trust anchor the counterparty accepts. TLS is the sole mechanism by which ATH obtains wire-level confidentiality and integrity. | Every HTTPS endpoint operator |
+| AS2 | Every ATH implementor serves `Strict-Transport-Security` ([RFC 6797](https://datatracker.ietf.org/doc/html/rfc6797)) with `max-age` of at least six months, and agent and browser implementations honor it. Production deployments SHOULD submit their host for HSTS preloading. | ATH implementor; client and browser operators |
+| AS3 | Certificate validation is enforced at every party and is not disabled, weakened, or bypassed by development flags in production. The trust anchor set is administered under a coherent policy. | Every TLS client |
+| AS4 | Private keys (agent keys, implementor token-issuance secrets, upstream OAuth client secrets, session-JWT signing keys) are held confidentially by their owner. | Key holder |
+| AS5 | System clocks are synchronized to within ±60 seconds across parties that exchange time-bearing tokens. | Every party |
+| AS6 | The upstream OAuth authorization server (A5) is conformant to [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) and to the applicable parts of [RFC 9700](https://datatracker.ietf.org/doc/html/rfc9700). In particular: authorization codes are single-use and PKCE-bound, `state` is honored, `iss` is returned in the authorization response ([RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207)) where required, and tokens are audience-scoped. | Upstream AS operator |
+| AS7 | Every URL that the ATH implementor fetches as a result of protocol data (notably the agent identity document URL) is validated before the fetch is issued: MUST be `https://`, MUST NOT resolve to an address in a reserved or internal range (loopback, RFC 1918, link-local, instance metadata), MUST be subject to a connect and read timeout, and MUST NOT follow redirects to addresses failing these rules. | ATH implementor |
+| AS8 | JSON parsing and JWT verification are performed with a fixed algorithm allowlist (`ES256` REQUIRED, `EdDSA` RECOMMENDED; `none` MUST be rejected; symmetric algorithms MUST be rejected when the key material is public). Algorithm selection is driven by the JWKS entry matched by `kid`, not by the JWT header. | ATH implementor |
+| AS9 | Random values used by the protocol (`state`, `ath_session_id`, `client_id`, `client_secret`, ATH access tokens, PKCE verifiers, attestation `jti`s) are generated from a cryptographically secure RNG and have at least 128 bits of entropy. | ATH implementor; agent runtime |
+| AS10 | HTTP request smuggling, header injection, parameter pollution, and path-normalization attacks are prevented at the ATH implementor's edge. Bodies and URLs are decoded once before use. | ATH implementor |
+
+## Trust Model of the ATH Implementor
+
+The ATH implementor (A4) is the root of trust for this protocol. This is a deliberate design choice with the consequences that follow.
+
+### Guaranteed when A4 is honest
+
+If A4 is honest and the assumptions hold, the protocol preserves all goals above against all in-scope attackers. This is the security statement of v0.1.
+
+### Not guaranteed when A4 is compromised
+
+If A4 is compromised (OOS6), no goal survives:
+
+- A compromised A4 can issue ATH tokens without Phase A approval (breaks G2).
+- A compromised A4 can fabricate user consent (breaks G3).
+- A compromised A4 in Gateway Mode holds every user's upstream OAuth refresh token and can act as any user at any configured provider (breaks G3 and G4 simultaneously).
+- A compromised A4 can forge tokens (breaks G6).
+
+Because ATH cannot defend against this, the protocol REQUIRES implementors to reduce the blast radius of a **partial** compromise:
+
+- Implementors MUST encrypt stored upstream OAuth refresh tokens at rest using a key held in a key-management service or hardware security module separate from the ATH datastore.
+- Implementors MUST NOT log upstream OAuth tokens, ATH access tokens, or agent `client_secret`s in plaintext.
+- Implementors SHOULD use per-user envelope encryption such that a database disclosure alone does not yield plaintext credentials.
+- Implementors SHOULD audit-log every token issuance and revocation in tamper-evident storage.
+
+These mitigations do not promote "compromised A4" into the in-scope threat set; they are defense in depth.
+
+### Federated trust is out of scope for v0.1
+
+A4 is not federated in v0.1. An agent that registers at implementor A4a and implementor A4b holds two unrelated identities from the protocol's perspective. Cross-implementor trust — shared agent registries, federated developer identity, cross-implementor token acceptance — is explicitly out of scope for v0.1 (OOS18) and is tracked for future versions (see the [Roadmap](/community/roadmap)).
+
+## Deployment-Mode Differences
+
+### Gateway Mode
+
+- A4 (gateway) is distinct from A5 and A6.
+- A4 aggregates upstream OAuth refresh tokens for every (user, provider) pair it serves. This aggregation is the protocol's primary residual risk under the Trust Model section and REQUIRES the mitigations listed there.
+- `/ath/proxy/{provider_id}/{path}` is the sole enforcement point for the trusted handshake at runtime. Bypassing the proxy (direct calls to A6 using stolen upstream tokens) is an A4-compromise scenario (OOS6).
+
+### Native Mode
+
+- A4, A5, and A6 coincide.
+- No credential aggregation occurs beyond what A4 already holds for its own users.
+- The service's existing API endpoints serve the role of `/ath/proxy/{provider_id}/{path}` and MUST validate the bound ATH token on every request.
+
+### Agent-Aware OAuth (Level 2)
+
+For threat-model purposes, Level 2 is classified as Gateway Mode: although the upstream AS has agent-aware metadata, the ATH state machine still lives outside the AS and the Gateway Mode rules apply.
+
+## Convention for Subsequent Security Discussion
+
+Every security-relevant normative requirement in this specification MUST annotate:
+
+- The in-scope attacker(s) it defends against (T1, T2, T3, T4).
+- The goal(s) it preserves (G1–G10).
+- The assumption(s) it depends on (AS1–AS10).
+
+Every security claim made about ATH SHOULD follow the template:
+
+> Under assumptions AS{list}, goal G{n} is preserved against attackers T{list}, because {mechanism}.
+
+Claims that do not follow this template are informal.
+
+## Known Limitations of v0.1
+
+This section is non-normative. It enumerates the deliberate trade-offs of v0.1 so that implementors and reviewers are not misled about the protocol's current guarantees.
+
+- **Bearer tokens.** v0.1 uses bearer ATH access tokens. Token theft grants the thief the token's scopes until expiry or revocation (OOS17). G6 is preserved only in the sense of unforgeability; containment against theft is partial. Future versions will require sender-constrained tokens (DPoP, mTLS).
+- **Implementor trust as root.** Per the Trust Model section, compromise of A4 breaks every goal. v0.1 does not defend against this; it only limits blast radius.
+- **Developer identity self-asserted.** G8 relies on UI labeling rather than verified developer identity. Federated and verified developer identity is planned for v0.2.
+- **No native refresh-token flow.** An ATH token that expires requires a new user-consent round trip. Implementors may issue longer-lived tokens to mitigate UX friction, at the cost of larger blast radius per G6.
+- **Single upstream AS per provider.** v0.1 does not model providers with multiple OAuth authorization servers or dynamic client registration.
