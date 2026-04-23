@@ -1,0 +1,16 @@
+# OpenATH Open Source License
+## Version 1.0
+### Copyright (c) 2026 ATH Protocol Community
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+1. **Copyright Notice**: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+2. **Attribution Requirement**: If you use this Software in your product, you must clearly mark "This product is developed based on OpenATH protocol" in your product documentation, about page or promotional materials, and provide the official link to this project.
+3. **License Compatibility**: Modified versions or derivative works of this Software may be released under the OpenATH license or other compatible open source licenses. If released under other licenses, the differences from this Agreement must be clearly stated.
+4. **Patent Grant**: This license grants you a perpetual, worldwide, free, non-exclusive patent license to make, use, sell, import the Software and the patented technology contained therein.
+5. **Disclaimer of Warranty**:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+6. **Version Updates**: The ATH Protocol Community reserves the right to release updated versions of this license. After a new version is released, you may choose to continue using the old version or upgrade to the new version.
+---
+### Terminology
+- **Software**: All code, documentation, specifications and related resources covered by this license.
+- **Derivative Work**: A new work formed by modifying, extending, or integrating based on this Software.
+- **Sublicense**: The act of including this Software in your work and releasing it under a different license.

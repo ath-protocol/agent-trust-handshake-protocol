@@ -1,0 +1,303 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Agent Trust Handshake Protocol",
+  "description": "ATH is an open protocol for establishing trusted connections between AI agents and external services, building on OAuth 2.0 with a trusted handshake.",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#60A5FA",
+    "dark": "#1E40AF"
+  },
+  "background": {
+    "color": {
+      "light": "#f8f9fc",
+      "dark": "#0f172a"
+    }
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "GitHub",
+      "href": "https://github.com/ath-protocol"
+    },
+    "links": [
+      {
+        "label": "Specification",
+        "href": "/specification/0.1"
+      }
+    ]
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "TypeScript SDK",
+          "href": "https://github.com/ath-protocol/typescript-sdk",
+          "icon": "square-js"
+        },
+        {
+          "anchor": "Reference Gateway",
+          "href": "https://github.com/ath-protocol/gateway",
+          "icon": "server"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "language": "en",
+        "tabs": [
+          {
+            "tab": "Documentation",
+            "pages": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "docs/getting-started/intro",
+                  "docs/getting-started/quickstart"
+                ]
+              },
+              {
+                "group": "About ATH",
+                "pages": [
+                  "docs/learn/architecture",
+                  "docs/learn/identity",
+                  "docs/learn/discovery",
+                  "docs/learn/trusted-handshake",
+                  "docs/learn/scope-intersection",
+                  "docs/learn/adoption-levels",
+                  "docs/learn/versioning"
+                ]
+              },
+              {
+                "group": "Develop with ATH",
+                "pages": [
+                  "docs/develop/build-gateway",
+                  "docs/develop/build-agent",
+                  "docs/develop/sdk",
+                  {
+                    "group": "Security",
+                    "pages": [
+                      "docs/tutorials/security/best-practices",
+                      "docs/tutorials/security/audit-logging"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Examples",
+                "pages": [
+                  "docs/examples/scenario"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Specification",
+            "pages": [
+              "specification/0.1/index",
+              "specification/0.1/changelog",
+              {
+                "group": "Protocol",
+                "pages": [
+                  "specification/0.1/client/overview",
+                  "specification/0.1/client/identity",
+                  "specification/0.1/client/discovery",
+                  "specification/0.1/client/handshake-flow",
+                  "specification/0.1/client/scope-intersection"
+                ]
+              },
+              {
+                "group": "API Endpoints",
+                "pages": [
+                  "specification/0.1/server/registration",
+                  "specification/0.1/server/authorization",
+                  "specification/0.1/server/token",
+                  "specification/0.1/server/proxy",
+                  "specification/0.1/server/revocation"
+                ]
+              },
+              {
+                "group": "Security",
+                "pages": [
+                  "specification/0.1/client/security"
+                ]
+              },
+              "specification/0.1/schema",
+              "specification/0.1/openapi"
+            ]
+          },
+          {
+            "tab": "Community",
+            "pages": [
+              {
+                "group": "Get Involved",
+                "pages": [
+                  "community/contributing",
+                  "community/roadmap"
+                ]
+              },
+              {
+                "group": "About",
+                "pages": [
+                  "community/comparison",
+                  "community/glossary"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh",
+        "tabs": [
+          {
+            "tab": "文档",
+            "pages": [
+              {
+                "group": "快速开始",
+                "pages": [
+                  "zh/docs/getting-started/intro",
+                  "zh/docs/getting-started/quickstart"
+                ]
+              },
+              {
+                "group": "关于 ATH",
+                "pages": [
+                  "zh/docs/learn/architecture",
+                  "zh/docs/learn/identity",
+                  "zh/docs/learn/discovery",
+                  "zh/docs/learn/trusted-handshake",
+                  "zh/docs/learn/scope-intersection",
+                  "zh/docs/learn/adoption-levels",
+                  "zh/docs/learn/versioning"
+                ]
+              },
+              {
+                "group": "使用 ATH 开发",
+                "pages": [
+                  "zh/docs/develop/build-gateway",
+                  "zh/docs/develop/build-agent",
+                  "zh/docs/develop/sdk",
+                  {
+                    "group": "安全",
+                    "pages": [
+                      "zh/docs/tutorials/security/best-practices",
+                      "zh/docs/tutorials/security/audit-logging"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "示例",
+                "pages": [
+                  "zh/docs/examples/scenario"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "规范",
+            "pages": [
+              "zh/specification/0.1/index",
+              "zh/specification/0.1/changelog",
+              {
+                "group": "协议",
+                "pages": [
+                  "zh/specification/0.1/client/overview",
+                  "zh/specification/0.1/client/identity",
+                  "zh/specification/0.1/client/discovery",
+                  "zh/specification/0.1/client/handshake-flow",
+                  "zh/specification/0.1/client/scope-intersection"
+                ]
+              },
+              {
+                "group": "API 端点",
+                "pages": [
+                  "zh/specification/0.1/server/registration",
+                  "zh/specification/0.1/server/authorization",
+                  "zh/specification/0.1/server/token",
+                  "zh/specification/0.1/server/proxy",
+                  "zh/specification/0.1/server/revocation"
+                ]
+              },
+              {
+                "group": "安全",
+                "pages": [
+                  "zh/specification/0.1/client/security"
+                ]
+              },
+              "zh/specification/0.1/schema",
+              "zh/specification/0.1/openapi"
+            ]
+          },
+          {
+            "tab": "社区",
+            "pages": [
+              {
+                "group": "参与贡献",
+                "pages": [
+                  "zh/community/contributing",
+                  "zh/community/roadmap"
+                ]
+              },
+              {
+                "group": "关于",
+                "pages": [
+                  "zh/community/comparison",
+                  "zh/community/glossary"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "seo": {
+    "metatags": {
+      "og:image": "https://raw.githubusercontent.com/ath-protocol/agent-trust-handshake-protocol/main/images/og-image.png"
+    },
+    "indexing": "navigable"
+  },
+  "api": {
+    "playground": {
+      "proxy": false
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/ath-protocol"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view"
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/introduction",
+      "destination": "/docs/getting-started/intro"
+    },
+    {
+      "source": "/quickstart",
+      "destination": "/docs/getting-started/quickstart"
+    },
+    {
+      "source": "/specification/latest",
+      "destination": "/specification/0.1",
+      "permanent": false
+    },
+    {
+      "source": "/specification/latest/:slug*",
+      "destination": "/specification/0.1/:slug*",
+      "permanent": false
+    }
+  ]
+}
