@@ -1,0 +1,57 @@
+---
+title: "Scope Intersection Specification"
+sidebarTitle: "Scope Intersection"
+description: "Formal specification of the scope intersection enforcement mechanism."
+---
+
+<div id="enable-section-numbers" />
+
+## Definition
+
+The effective scopes of any ATH access token MUST be computed as follows:
+
+```
+Effective Scopes = Agent-Approved Scopes ∩ User-Consented Scopes ∩ Requested Scopes
+```
+
+Where:
+- **Agent-Approved Scopes**: The set of scopes approved for the agent by the ATH implementer during Phase A registration
+- **User-Consented Scopes**: The set of scopes granted by the user during the Phase B OAuth authorization consent flow
+- **Requested Scopes**: The set of scopes requested by the agent in the authorization request
+
+## Example
+
+```
+Agent-Approved Scopes:     mail:read, mail:send
+User-Consented Scopes:     mail:read, mail:send, mail:delete
+Agent-Requested Scopes:    mail:read
+────────────────────────────────────────────────
+Effective Scopes:          mail:read
+```
+
+## Requirements
+
+1. Implementers MUST compute the scope intersection before issuing any ATH access token
+2. Token responses MUST include `scope_intersection` breakdown information
+3. Implementers MUST NOT issue tokens containing scopes outside the computed intersection
+4. If the intersection is empty, implementers MUST NOT issue a token
+
+## Token Response Format
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "provider_id": "example-mail",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+The `scope_intersection` field provides full transparency into how the effective scopes were derived.
