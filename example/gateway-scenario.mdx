@@ -1,0 +1,140 @@
+# 场景示例：网关代理模式
+## 场景描述
+企业内部有多个legacy系统（无ATH协议支持），员工使用AI办公助手（智能体/客户端）访问这些系统。部署ATH网关作为统一接入层，所有智能体请求都经过网关转发到后端服务。
+**模式特点**：后端服务不需要修改代码，通过ATH网关提供ATH协议支持，实现零侵入接入。
+## 参与角色
+| 角色 | 描述 |
+|------|------|
+| 用户 | 企业员工，使用AI办公助手 |
+| 智能体 | AI办公助手，代表员工访问企业内部系统 |
+| ATH网关 | 统一接入层，代理所有请求，实现ATH协议逻辑 |
+| 后端服务 | 企业内部legacy系统（如OA、CRM、财务系统等），无ATH支持 |
+## 架构图
+```
+┌──────────┐     ┌──────────┐     ┌─────────────┐
+│ 智能体   │────▶│ ATH网关  │────▶│ 后端服务     │
+│ (客户端) │     │ (代理)   │     │ (无ATH支持)  │
+└──────────┘     └──────────┘     └─────────────┘
+```
+## 流程说明
+### 前置步骤：用户预授权
+1. 用户打开AI办公助手，授权助手可以代表自己访问OA、CRM系统
+2. 用户签署授权凭证，授权范围：`oa:read`, `crm:write`，有效期8小时
+3. AI助手安全存储用户授权凭证
+### 完整9步握手流程
+#### 步骤1：智能体发起握手请求
+AI助手向ATH网关发送握手请求：
+```json
+{
+  "type": "handshake_request",
+  "client_did": "did:ath:ai_office_assistant_001",
+  "client_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "versions": ["0.1"],
+  "capabilities": ["ES256", "TLS1.3"],
+  "nonce": "random_abc123",
+  "timestamp": 1717200000
+}
+```
+#### 步骤2：ATH网关返回握手响应
+网关验证请求格式，返回自身身份信息：
+```json
+{
+  "type": "handshake_response",
+  "server_did": "did:ath:enterprise_gateway_001",
+  "server_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "version": "0.1",
+  "capabilities": ["ES256", "TLS1.3"],
+  "nonce": "random_def456",
+  "signature": "signature_of_random_abc123",
+  "timestamp": 1717200001
+}
+```
+#### 步骤3：智能体发送身份证明
+AI助手使用自身私钥对`random_def456`签名，发送身份证明：
+```json
+{
+  "type": "identity_proof",
+  "signature": "signature_of_random_def456",
+  "timestamp": 1717200002
+}
+```
+#### 步骤4：ATH网关返回身份验证结果
+网关验证签名通过，返回支持的权限列表：
+```json
+{
+  "type": "identity_result",
+  "success": true,
+  "metadata": {
+    "scopes_supported": ["oa:read", "oa:write", "crm:read", "crm:write", "finance:read"],
+    "token_max_ttl": 28800
+  },
+  "timestamp": 1717200003
+}
+```
+#### 步骤5：智能体发送权限请求
+AI助手请求OA读取和CRM写入权限，附带用户授权凭证：
+```json
+{
+  "type": "scope_request",
+  "scopes": ["oa:read", "crm:write"],
+  "ttl": 28800,
+  "user_authorization": {
+    "credential": "jwt_token_signed_by_user",
+    "signature": "signature_by_ai_assistant"
+  },
+  "context": "用户需要查询OA审批和更新CRM客户信息",
+  "timestamp": 1717200004
+}
+```
+#### 步骤6：ATH网关向用户确认授权
+网关通过企业微信向用户发送授权确认：
+```
+【授权确认】AI办公助手请求访问您的企业账号，权限：读取OA、写入CRM
+是否同意？[同意/拒绝]
+```
+#### 步骤7：用户返回授权确认结果
+用户回复「同意」，网关收到用户确认结果。
+#### 步骤8：ATH网关返回权限审批结果
+网关根据权限策略审批通过，返回权限信息：
+```json
+{
+  "type": "scope_result",
+  "scopes_granted": ["oa:read", "crm:write"],
+  "ttl_granted": 28800,
+  "restrictions": {
+    "ip_whitelist": ["10.0.0.0/8"],
+    "access_time": "9:00-18:00"
+  },
+  "timestamp": 1717200007
+}
+```
+#### 步骤9：完成握手建立会话
+双方完成密钥协商，网关颁发访问令牌，AI助手开始访问API：
+```python
+# 查询OA审批（网关自动转发到OA系统）
+response = ai_assistant.request(
+  "GET /oa/api/approval/list",
+  headers={"Authorization": "Bearer <access_token>"}
+)
+# 更新CRM客户信息（网关自动转发到CRM系统）
+response = ai_assistant.request(
+  "POST /crm/api/customer/123",
+  json={"status": "跟进中"},
+  headers={"Authorization": "Bearer <access_token>"}
+)
+```
+## 网关核心功能
+1. **协议转换**：将ATH协议请求转换为后端服务支持的协议格式
+2. **权限控制**：统一管理所有后端服务的访问权限
+3. **审计日志**：记录所有智能体的访问行为，支持安全审计
+4. **流量控制**：统一实现限流、熔断等流量治理功能
+## 模式优势
+1. **零侵入**：后端服务不需要修改任何代码，即可支持ATH协议
+2. **统一管理**：所有接入和权限控制在网关层统一配置
+3. **快速落地**：不需要改造现有系统，短时间内即可实现全系统ATH支持
+4. **兼容legacy系统**：对老旧系统非常友好
+## 适用场景
+- 已有大量legacy系统，改造代价大
+- 需要统一管理所有服务的访问权限
+- 快速落地ATH协议的场景
+- 多系统统一接入的场景
