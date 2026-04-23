@@ -99,22 +99,36 @@
               "specification/0.1/index",
               "specification/0.1/changelog",
               {
-                "group": "Handshake Flow",
+                "group": "Protocol",
+                "pages": [
+                  "specification/0.1/client/overview",
+                  "specification/0.1/client/identity",
+                  "specification/0.1/client/discovery",
+                  "specification/0.1/client/handshake-flow",
+                  "specification/0.1/client/scope-intersection"
+                ]
+              },
+              {
+                "group": "API Endpoints",
+                "pages": [
+                  "specification/0.1/server/registration",
+                  "specification/0.1/server/authorization",
+                  "specification/0.1/server/token",
+                  "specification/0.1/server/proxy",
+                  "specification/0.1/server/revocation"
+                ]
+              },
+              {
+                "group": "Security",
+                "pages": [
+                  "specification/0.1/client/security"
+                ]
+              },
+              {
+                "group": "Reference",
                 "pages": [
                   "specification/0.1/basic/handshake-flow",
-                  "specification/0.1/basic/handshake-flow.zh"
-                ]
-              },
-              {
-                "group": "Client",
-                "pages": [
-                  "specification/0.1/client/handshake-flow",
-                  "specification/0.1/client/reference-implementation"
-                ]
-              },
-              {
-                "group": "Server",
-                "pages": [
+                  "specification/0.1/client/reference-implementation",
                   "specification/0.1/server/handshake-flow",
                   "specification/0.1/server/reference-implementation"
                 ]
@@ -199,16 +213,36 @@
               "zh/specification/0.1/index",
               "zh/specification/0.1/changelog",
               {
-                "group": "握手流程",
+                "group": "协议",
                 "pages": [
-                  "zh/specification/0.1/basic/handshake-flow",
+                  "zh/specification/0.1/client/overview",
+                  "zh/specification/0.1/client/identity",
+                  "zh/specification/0.1/client/discovery",
                   "zh/specification/0.1/client/handshake-flow",
-                  "zh/specification/0.1/client/reference-implementation"
+                  "zh/specification/0.1/client/scope-intersection"
                 ]
               },
               {
-                "group": "服务端",
+                "group": "API 端点",
                 "pages": [
+                  "zh/specification/0.1/server/registration",
+                  "zh/specification/0.1/server/authorization",
+                  "zh/specification/0.1/server/token",
+                  "zh/specification/0.1/server/proxy",
+                  "zh/specification/0.1/server/revocation"
+                ]
+              },
+              {
+                "group": "安全",
+                "pages": [
+                  "zh/specification/0.1/client/security"
+                ]
+              },
+              {
+                "group": "参考",
+                "pages": [
+                  "zh/specification/0.1/basic/handshake-flow",
+                  "zh/specification/0.1/client/reference-implementation",
                   "zh/specification/0.1/server/handshake-flow",
                   "zh/specification/0.1/server/reference-implementation"
                 ]
