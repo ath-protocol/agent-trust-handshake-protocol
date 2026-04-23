@@ -24,8 +24,8 @@ description: "POST /ath/revoke — 吊销 ATH 访问令牌。"
 
 | 字段 | 类型 | 必填 | 描述 |
 |-------|------|----------|-------------|
-| `client_id` | string | 是 | 代理的客户端 ID |
-| `client_secret` | string | 是 | 代理的客户端密钥（按照 [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009) 要求进行客户端认证） |
+| `client_id` | string | 有条件 | 代理的客户端 ID。当调用方为代理时必填 |
+| `client_secret` | string | 有条件 | 代理的客户端密钥。当调用方为代理时必填（按照 [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009) 要求进行客户端认证） |
 | `token` | string | 是 | 要吊销的 ATH 访问令牌 |
 
 ## 响应
@@ -34,8 +34,8 @@ description: "POST /ath/revoke — 吊销 ATH 访问令牌。"
 
 ## 行为
 
-- 实现者必须（MUST）验证 `client_id` 和 `client_secret` 匹配有效的代理注册
-- 实现者必须（MUST）验证 `client_id` 与令牌绑定的 `agent_id` 对应的注册匹配。代理只能吊销自己的令牌
+- 当调用方为代理时：实现者必须（MUST）要求提供 `client_id` 和 `client_secret`，验证其匹配有效的代理注册，并验证 `client_id` 与令牌绑定的 `agent_id` 对应。代理只能吊销自己的令牌
+- 当调用方为用户或管理员时：实现者必须（MUST）通过自身机制（例如会话 cookie、管理员 API 密钥）对调用方进行认证。未经认证的吊销请求必须（MUST）被拒绝
 - 令牌在吊销后立即不可用
 - 使用已吊销令牌的后续 API 调用必须（MUST）被拒绝
 - 无论令牌是否有效或存在，吊销端点建议（SHOULD）返回 `200 OK`（按照 [RFC 7009 §2.2](https://datatracker.ietf.org/doc/html/rfc7009#section-2.2)，不泄露令牌存在信息）

@@ -121,5 +121,5 @@ The verifier (gateway or service):
 - Implementers MAY cache agent identity documents to reduce fetch overhead
 - The maximum cache time-to-live MUST NOT exceed **5 minutes**
 - Agent identity documents SHOULD include a `Cache-Control: max-age=300` response header
-- When attestation verification fails, implementers MUST force a re-fetch of the identity document (bypassing cache) to support emergency key rotation
+- When attestation verification fails due to a signature mismatch (not expiry or audience errors), implementers SHOULD re-fetch the identity document (bypassing cache) to support emergency key rotation. To prevent abuse as a DoS amplifier, implementers MUST rate-limit re-fetches to at most once per `agent_id` per minute
 - Implementers SHOULD set connect and read timeouts when fetching agent identity documents

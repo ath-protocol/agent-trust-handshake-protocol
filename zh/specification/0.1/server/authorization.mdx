@@ -62,7 +62,7 @@ description: "POST /ath/authorize — 发起用户端 OAuth 授权流程。"
 - 对应的 `code_verifier` 存储在服务端，在令牌交换时发送
 - 代理将用户引导至 `authorization_url`
 - 授权同意后，OAuth 回调由 ATH 实现者处理
-- 实现者必须（MUST）将 `ath_session_id` 绑定到发起同意的用户浏览器会话（例如，通过 HTTP-only cookie）。在回调时，实现者必须（MUST）验证完成同意的浏览器会话与创建该会话的浏览器会话匹配
+- 当实现者将用户重定向到上游 `authorization_url` 时，必须（MUST）同时建立浏览器端会话绑定（例如设置 HTTP-only cookie），将用户的浏览器与 `ath_session_id` 关联。在 OAuth 回调时，实现者必须（MUST）验证呈现回调的浏览器与被重定向到同意页面的浏览器匹配
 - `ath_session_id` 必须（MUST）在创建后 10 分钟内过期
 - `ath_session_id` 必须（MUST）为一次性使用——在令牌交换成功消费后作废
 - 实现者必须（MUST）验证证明 JWT 的 `sub` 声明与 `client_id` 注册的 `agent_id` 匹配

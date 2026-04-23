@@ -369,8 +369,7 @@
         },
         "state": {
           "description": "Opaque state parameter for CSRF protection. MUST be generated from a CSPRNG with at least 128 bits of entropy. The implementor MUST validate state on the OAuth callback and reject mismatches.",
-          "type": "string",
-          "minLength": 16
+          "type": "string"
         },
         "resource": {
           "description": "Target resource server URI. Optional, per RFC 8707 (Resource Indicators).",
@@ -498,16 +497,16 @@
       }
     },
     "TokenRevocationRequest": {
-      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token. Requires client authentication per RFC 7009.",
+      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token. When called by an agent, client_secret is required for authentication per RFC 7009. Users and administrators authenticate through the implementor's own mechanism (e.g., session cookie, admin API key) and are not required to provide client_secret.",
       "type": "object",
-      "required": ["client_id", "client_secret", "token"],
+      "required": ["token"],
       "properties": {
         "client_id": {
-          "description": "The agent's client_id.",
+          "description": "The agent's client_id. Required when the caller is the agent.",
           "type": "string"
         },
         "client_secret": {
-          "description": "The agent's client_secret. Required for client authentication.",
+          "description": "The agent's client_secret. Required when the caller is the agent, for client authentication per RFC 7009.",
           "type": "string"
         },
         "token": {
