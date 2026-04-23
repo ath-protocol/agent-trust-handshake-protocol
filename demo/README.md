@@ -1,102 +1,100 @@
-[中文版 / Chinese Version](../zh/demo-README.md)
-
-# ATH Protocol Demo
-## ✨ V2 New Features
-1. 🎮 **Interactive Authorization**: Two user interaction confirmations (pre-authorization + server-side secondary confirmation), fully compliant with the protocol specification
-2. 🎬 **Cool Loading Effects**: Each step has loading animations and progress indicators for a better demo experience
-3. 🧩 **Logic Separation**: Client and server are implemented completely independently with clear code structure, and can be extracted for standalone use
-4. 📊 **Friendlier Interface**: Role differentiation, dividers, and color-coded labels make the workflow easier to understand
-## How to Run
-### 1. Run Locally in Console (Simplest)
-Only requires Python 3.6+, no additional dependencies needed:
+# ATH协议演示Demo
+## ✨ V2版本新特性
+1. 🎮 **交互式授权**：两次用户交互确认（预授权+服务端二次确认），完全符合协议规范
+2. 🎬 **炫酷加载效果**：每个步骤都有加载动画和进度提示，演示效果更好
+3. 🧩 **逻辑分离**：客户端和服务端完全独立实现，代码结构清晰，可以单独提取使用
+4. 📊 **更友好的界面**：角色区分、分隔线、彩色标识，更容易理解流程
+## 运行方式
+### 1. 本地控制台运行（最简单）
+只需要安装Python 3.6+，不需要任何额外依赖：
 ```bash
-# Download the Demo file
+# 下载Demo文件
 wget https://raw.githubusercontent.com/ath-protocol/agent-trust-handshake-protocol/main/demo/ath_simple_demo.py
-# Run directly
+# 直接运行
 python ath_simple_demo.py
 ```
-### 2. Run Online via GitHub (No Local Environment Needed)
-You can run it online via GitHub Codespaces without any local environment:
-1. Open the repository: https://github.com/ath-protocol/agent-trust-handshake-protocol
-2. Click the green "Code" button and select "Codespaces"
-3. Click "Create codespace on main"
-4. Once the environment is ready, run in the terminal:
+### 2. GitHub在线运行（不需要本地环境）
+可以通过GitHub Codespaces在线运行，完全不需要本地环境：
+1. 打开仓库：https://github.com/ath-protocol/agent-trust-handshake-protocol
+2. 点击绿色的「Code」按钮，选择「Codespaces」
+3. 点击「Create codespace on main」
+4. 等待环境启动后，在终端运行：
 ```bash
 python demo/ath_simple_demo.py
 ```
-## ❓ FAQ
-### Q: The demo is in a single Python file — how does it implement both client and server?
-A: Although it runs in the same file, **the client and server are two completely independent classes** with no coupling:
-- 🔵 `Client` class: Fully implements all client logic, including identity management, handshake requests, permission requests, and business request sending
-- 🟢 `Server` class: Fully implements all server logic, including identity verification, authorization confirmation, permission approval, and token issuance
-The two interact only through agreed-upon JSON message formats, identical to how they would in a real network environment. In an actual deployment, these two classes would be deployed on different servers, communicating via HTTP/HTTPS.
-### Q: Can the client/server logic be extracted separately?
-A: Absolutely! The two classes are completely independent with no mutual dependencies. They can be directly copied out as a foundation for SDK and server middleware implementations.
-## Demo Content
-✅ Complete 9-step Trusted Handshake workflow demonstration:
-1. Client sends handshake request
-2. Server returns handshake response
-3. Client sends identity proof
-4. Server returns identity verification result
-5. Client sends permission request
-6. Server prompts user for authorization confirmation
-7. User approves authorization
-8. Server returns permission approval result
-9. Handshake complete, access token issued
-✅ Subsequent business request demonstrations:
-- Query products API call
-- Create order API call
-## Demo Output
+## ❓ 常见问题解答
+### Q: Demo在一个Python文件里，怎么同时实现客户端和服务端？
+A: 虽然在同一个文件中运行，但**客户端和服务端是完全独立的两个类**，没有任何耦合：
+- 🔵 `Client`类：完整实现客户端所有逻辑，包括身份管理、握手请求、权限申请、业务请求发送
+- 🟢 `Server`类：完整实现服务端所有逻辑，包括身份验证、授权确认、权限审批、令牌颁发
+两者之间只通过约定的JSON报文格式交互，和真实网络环境下的交互完全一致。实际部署时，这两个类会部署在不同的服务器上，通过HTTP/HTTPS通信。
+### Q: 可以把客户端/服务端逻辑单独提取出来吗？
+A: 完全可以！两个类是完全独立的，没有互相依赖，可以直接复制出来作为SDK和服务端中间件的基础实现。
+## 演示内容
+✅ 完整的9步可信握手流程演示：
+1. 客户端发送握手请求
+2. 服务端返回握手响应
+3. 客户端发送身份证明
+4. 服务端返回身份验证结果
+5. 客户端发送权限请求
+6. 服务端向用户确认授权
+7. 用户同意授权
+8. 服务端返回权限审批结果
+9. 完成握手，颁发访问令牌
+✅ 后续业务请求演示：
+- 查询商品接口调用
+- 创建订单接口调用
+## 运行效果
 ```
 🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆
-🎆                   ATH Trusted Handshake Protocol Interactive Demo               🎆
+🎆                          ATH可信握手协议交互式演示                          🎆
 🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆
-📖 This demo is fully implemented according to the ATH protocol spec. Client and server logic are completely independent.
-🤔 Show client and server implementation logic separately? (Y/N): Y
+📖 本Demo完全按照ATH协议规范实现，客户端和服务端逻辑完全独立
+🤔 是否分开展示客户端和服务端的实现逻辑？(Y/N): Y
 ================================================================================
-📌 Initialize Client
+📌 初始化客户端
 --------------------------------------------------------------------------------
-⏳ Generating client DID identity and key pair /
-✅ Generating client DID identity and key pair done!
-   Client DID: did:ath:ai_shopping_assistant_001
-   Client public key: client_public_key_ab...
+⏳ 生成客户端DID身份和公私钥对 /
+✅ 生成客户端DID身份和公私钥对 完成!
+   客户端DID: did:ath:ai_shopping_assistant_001
+   客户端公钥: client_public_key_ab...
 ================================================================================
-📌 Initialize Server
+📌 初始化服务端
 --------------------------------------------------------------------------------
-⏳ Loading server configuration and certificates ✅ Loading server configuration and certificates done!
-   Server DID: did:ath:ecommerce_platform_001
-   Server public key: server_public_key_fe...
-🟣 ============================== [User Interaction] ============================== 🟣
-📋 [Authorization Request] AI Shopping Assistant requests the following permissions:
+⏳ 加载服务端配置和证书 ✅ 加载服务端配置和证书 完成!
+   服务端DID: did:ath:ecommerce_platform_001
+   服务端公钥: server_public_key_fe...
+🟣 ============================== [用户交互] ============================== 🟣
+📋 【授权请求】AI购物助手请求以下权限：
    ✅ goods:read
    ✅ order:create
-🤔 Approve authorization? (Y/N): Y
-⏳ User signing authorization credential |
-✅ User signing authorization credential done!
-   Authorization credential: user_signature_7A3F2d...
+🤔 是否同意授权？(Y/N): Y
+⏳ 用户签署授权凭证 |
+✅ 用户签署授权凭证 完成!
+   授权凭证: user_signature_7A3F2d...
 ================================================================================
-📌 Begin 9-Step Trusted Handshake Workflow
+📌 开始9步可信握手流程
 --------------------------------------------------------------------------------
-🔵 ============================== [Client Logic] ============================== 🔵
-⏳ Generating handshake request message -
-✅ Generating handshake request message done!
-   Nonce: h00mGfW9tqkxEcQN
-📤 Client -> Server: Sending handshake request
-🟢 ============================== [Server Logic] ============================== 🟢
-⏳ Validating client request format, generating server nonce ✅ Validating client request format, generating server nonce done!
-⏳ Signing client nonce with private key |
-✅ Signing client nonce with private key done!
-   Server nonce: h9T68YWD0YnxwHUw
-   Signature: sig_8F2d7A...
-📤 Server -> Client: Returning handshake response
+🔵 ============================== [客户端逻辑] ============================== 🔵
+⏳ 生成握手请求报文 -
+✅ 生成握手请求报文 完成!
+   随机数: h00mGfW9tqkxEcQN
+📤 客户端 -> 服务端：发送握手请求
+🟢 ============================== [服务端逻辑] ============================== 🟢
+⏳ 验证客户端请求格式，生成服务端随机数 ✅ 验证客户端请求格式，生成服务端随机数 完成!
+⏳ 使用私钥对客户端随机数签名 |
+✅ 使用私钥对客户端随机数签名 完成!
+   服务端随机数: h9T68YWD0YnxwHUw
+   签名: sig_8F2d7A...
+📤 服务端 -> 客户端：返回握手响应
 ...
 🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
-🎉              Handshake Complete! Trusted Communication Channel Established      🎉
+🎉                      握手流程完成！已建立可信通信通道                      🎉
 🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
 ```
-## Features
-- 🚀 Zero Dependencies: Only requires the Python standard library, no third-party packages needed
-- 🎯 Minimalist: Clear code structure, explicit logic, easy to understand
-- 🎬 Intuitive: Each step has clear output and animations, perfectly demonstrating the protocol workflow
-- 🔗 Realistic: Fully implemented according to the ATH protocol specification, ready to run
-- 🧩 Extensible: Client and server logic are completely independent and can be extracted for standalone use
+## 特点
+- 🚀 零依赖：只需要Python标准库，不需要安装任何第三方包
+- 🎯 极简：代码结构清晰，逻辑明确，容易理解
+- 🎬 直观：每一步都有清晰的输出和动画，完美演示协议流程
+- 🔗 真实：完全按照ATH协议规范实现，可以直接运行
+- 🧩 可扩展：客户端和服务端逻辑完全独立，可以单独提取使用
