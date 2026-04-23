@@ -1,21 +1,21 @@
-# 场景示例：SDK原生集成模式（无网关）
-## 场景描述
-电商平台（服务端）提供商品查询和订单创建接口，用户使用AI购物助手（智能体/客户端）帮自己查询商品并下单。
-**模式特点**：电商平台服务端原生集成ATH协议，不需要额外部署网关，智能体直接与服务端交互。
-## 参与角色
-| 角色 | 描述 |
+# Scenario Example: SDK Native Integration Mode (No Gateway)
+## Scenario Description
+An e-commerce platform (server) provides product query and order creation APIs. A user uses an AI Shopping Assistant (agent/client) to query products and place orders on their behalf.
+**Mode Characteristics**: The e-commerce platform server natively integrates the ATH protocol, requiring no additional gateway deployment. The agent interacts directly with the server.
+## Participating Roles
+| Role | Description |
 |------|------|
-| 用户 | 电商平台的消费者，使用AI购物助手 |
-| 智能体 | AI购物助手，代表用户完成购物操作 |
-| 电商平台 | 提供商品查询、订单创建等API服务，原生集成ATH协议 |
-## 流程说明
-### 前置步骤：用户预授权
-1. 用户打开AI购物助手，授权助手可以代表自己查询商品、创建订单
-2. 用户签署授权凭证，授权范围：`goods:read`, `order:create`，有效期2小时
-3. AI助手安全存储用户授权凭证
-### 完整9步握手流程
-#### 步骤1：智能体发起握手请求
-AI助手向电商平台发送握手请求：
+| User | A consumer on the e-commerce platform, using the AI Shopping Assistant |
+| Agent | AI Shopping Assistant, completing shopping operations on behalf of the user |
+| E-commerce Platform | Provides API services such as product query and order creation, with native ATH protocol integration |
+## Process Description
+### Prerequisite: User Pre-Authorization
+1. The user opens the AI Shopping Assistant and authorizes it to query products and create orders on their behalf
+2. The user signs an authorization credential with scope: `goods:read`, `order:create`, valid for 2 hours
+3. The AI assistant securely stores the user's authorization credential
+### Complete 9-Step Handshake Process
+#### Step 1: Agent Initiates Handshake Request
+The AI assistant sends a handshake request to the e-commerce platform:
 ```json
 {
   "type": "handshake_request",
@@ -27,8 +27,8 @@ AI助手向电商平台发送握手请求：
   "timestamp": 1717200000
 }
 ```
-#### 步骤2：电商平台返回握手响应
-电商平台验证请求格式，返回自身身份信息：
+#### Step 2: E-commerce Platform Returns Handshake Response
+The e-commerce platform validates the request format and returns its identity information:
 ```json
 {
   "type": "handshake_response",
@@ -41,8 +41,8 @@ AI助手向电商平台发送握手请求：
   "timestamp": 1717200001
 }
 ```
-#### 步骤3：智能体发送身份证明
-AI助手使用自身私钥对`random_654321`签名，发送身份证明：
+#### Step 3: Agent Sends Identity Proof
+The AI assistant signs `random_654321` with its private key and sends the identity proof:
 ```json
 {
   "type": "identity_proof",
@@ -50,8 +50,8 @@ AI助手使用自身私钥对`random_654321`签名，发送身份证明：
   "timestamp": 1717200002
 }
 ```
-#### 步骤4：电商平台返回身份验证结果
-电商平台验证签名通过，返回支持的权限列表：
+#### Step 4: E-commerce Platform Returns Identity Verification Result
+The e-commerce platform verifies the signature successfully and returns the list of supported scopes:
 ```json
 {
   "type": "identity_result",
@@ -63,8 +63,8 @@ AI助手使用自身私钥对`random_654321`签名，发送身份证明：
   "timestamp": 1717200003
 }
 ```
-#### 步骤5：智能体发送权限请求
-AI助手请求查询商品和创建订单权限，附带用户授权凭证：
+#### Step 5: Agent Sends Scope Request
+The AI assistant requests product query and order creation permissions, attaching the user's authorization credential:
 ```json
 {
   "type": "scope_request",
@@ -78,16 +78,16 @@ AI助手请求查询商品和创建订单权限，附带用户授权凭证：
   "timestamp": 1717200004
 }
 ```
-#### 步骤6：电商平台向用户确认授权
-电商平台通过APP推送向用户确认授权：
+#### Step 6: E-commerce Platform Confirms Authorization with User
+The e-commerce platform sends an authorization confirmation to the user via app push notification:
 ```
-【授权确认】AI购物助手请求访问您的电商账号，权限：查询商品、创建订单
-是否同意？[同意/拒绝]
+[Authorization Confirmation] The AI Shopping Assistant is requesting access to your e-commerce account. Permissions: query products, create orders.
+Do you approve? [Approve/Deny]
 ```
-#### 步骤7：用户返回授权确认结果
-用户点击「同意」，电商平台收到用户确认结果。
-#### 步骤8：电商平台返回权限审批结果
-电商平台同意授权请求，返回权限信息：
+#### Step 7: User Returns Authorization Confirmation Result
+The user taps "Approve", and the e-commerce platform receives the user's confirmation result.
+#### Step 8: E-commerce Platform Returns Scope Approval Result
+The e-commerce platform approves the authorization request and returns the scope information:
 ```json
 {
   "type": "scope_result",
@@ -100,26 +100,26 @@ AI助手请求查询商品和创建订单权限，附带用户授权凭证：
   "timestamp": 1717200007
 }
 ```
-#### 步骤9：完成握手建立会话
-双方完成密钥协商，电商平台颁发访问令牌，AI助手可以开始访问API：
+#### Step 9: Handshake Complete, Session Established
+Both parties complete key negotiation. The e-commerce platform issues an access token, and the AI assistant can begin accessing the APIs:
 ```python
-# 查询商品
+# Query products
 response = ai_assistant.request(
   "GET /api/goods?keyword=手机",
   headers={"Authorization": "Bearer <access_token>"}
 )
-# 创建订单
+# Create an order
 response = ai_assistant.request(
   "POST /api/order",
   json={"goods_id": "123", "quantity": 1},
   headers={"Authorization": "Bearer <access_token>"}
 )
 ```
-## 模式优势
-1. **性能更高**：没有网关转发，延迟更低
-2. **功能更完整**：可以充分利用ATH协议的所有特性
-3. **安全性更好**：端到端加密，没有中间节点
-## 适用场景
-- 自身开发的服务端，有能力修改代码集成ATH协议
-- 对性能要求较高的场景
-- 需要完整协议功能的场景
+## Mode Advantages
+1. **Higher Performance**: No gateway forwarding, resulting in lower latency
+2. **More Complete Functionality**: Can fully leverage all features of the ATH protocol
+3. **Better Security**: End-to-end encryption with no intermediate nodes
+## Applicable Scenarios
+- Self-developed servers where you have the ability to modify code and integrate the ATH protocol
+- Scenarios with high performance requirements
+- Scenarios requiring the full protocol feature set
