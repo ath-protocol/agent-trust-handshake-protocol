@@ -1,384 +1,399 @@
-[中文版 / Chinese Version](./zh/README.md)
-
-# Agent Trust Handshake (ATH) Protocol
-> 🛡️ Making AI-to-AI interactions as trustworthy, secure, and transparent as a handshake between people
-## 📋 Table of Contents
-- [Project Overview](#project-overview)
-- [What Problems Does It Solve](#what-problems-does-it-solve)
-- [Core Design Principles](#core-design-principles)
-- [Handshake Flow](#handshake-flow)
-  - [9-Step Handshake Flow Overview](#9-step-handshake-flow-overview)
-  - [Detailed Step Descriptions](#detailed-step-descriptions)
-  - [Security Features](#security-features)
-- [Use Cases](#use-cases)
-- [Why Choose ATH](#why-choose-ath)
-- [Core Technical Specifications](#core-technical-specifications)
-- [Chinese Protocol Documentation](#chinese-protocol-documentation)
-- [Deployment Modes](#deployment-modes)
-- [Ecosystem Components](#ecosystem-components)
-- [Quick Start](#quick-start)
-- [Repository Directory Structure](#repository-directory-structure)
-- [Core Handshake and Authentication Logic Locations](#core-handshake-and-authentication-logic-locations)
-- [Developer Quick Navigation](#developer-quick-navigation)
-- [Ecosystem Implementation Guide](#ecosystem-implementation-guide)
-- [License](#license)
-- [Contributing](#contributing)
+# Agent Trust Handshake (ATH) 可信握手协议
+> 🛡️ 让AI之间的交互像人与人握手一样可信、安全、透明
+## 📋 目录
+- [项目简介](#项目简介)
+- [解决什么问题](#解决什么问题)
+- [核心设计理念](#核心设计理念)
+- [协议工作流程](#协议工作流程)
+- [核心握手流程](#核心握手流程)
+  - [9步握手流程概览](#9步握手流程概览)
+  - [详细步骤说明](#详细步骤说明)
+  - [安全特性](#安全特性)
+- [应用场景](#应用场景)
+- [为什么选择ATH](#为什么选择ATH)
+- [核心技术规范](#核心技术规范)
+- [中文协议文档](#中文协议文档)
+- [部署模式](#部署模式)
+- [生态系统组成](#生态系统组成)
+- [快速开始](#快速开始)
+- [仓库目录结构说明](#仓库目录结构说明)
+- [核心握手、鉴权逻辑位置](#核心握手鉴权逻辑位置)
+- [开发者快速导航](#开发者快速导航)
+- [生态系统实现指引](#生态系统实现指引)
+- [开源协议](#开源协议)
+- [参与贡献](#参与贡献)
 ---
-## 🎯 Project Overview
-ATH (Agent Trust Handshake) is the world's first open-source trusted interaction protocol standard designed specifically for AI agents, featuring **three-party participation and trusted handshake** mechanisms.
-In simple terms, it is the "trusted access gatekeeper" of the AI world, perfectly solving the authorization problem when agents access services:
-- ✅ **User Authorization**: Users are the owners of resources; all access to user resources must receive explicit user consent
-- ✅ **Service Authorization**: Services are the providers of resources and have the right to decide whether to allow agents to access their services
-- ✅ **Trusted Handshake**: Only when both user and service trusted handshakes are obtained can an agent successfully access resources
-- ✅ **Full Traceability**: All interactions leave tamper-proof records, enabling clear accountability when issues arise
-ATH innovatively adds "independent user roles" and "bidirectional trusted handshake" mechanisms on top of the traditional OAuth 2.0 authorization protocol, fundamentally solving the trust problem in AI interactions.
+## 🎯 项目简介
+ATH（Agent Trust Handshake）是全球首个专门为AI代理设计的**三方参与、可信握手**开源可信交互协议标准。
+简单来说，它就是AI世界的"可信访问守门人"，完美解决智能体访问服务时的授权问题：
+- ✅ **用户授权**：用户是资源的所有者，所有对用户资源的访问必须获得用户明确同意
+- ✅ **服务授权**：服务是资源的提供者，有权决定是否允许智能体访问自身服务
+- ✅ **可信握手**：只有同时获得用户和服务的可信握手，智能体才能成功访问资源
+- ✅ **全程可追溯**：所有交互都会留下不可篡改的记录，出了问题可以明确责任
+ATH在传统OAuth 2.0授权协议的基础上，创新性地加入了"用户独立角色"和"双向可信握手"机制，从根本上解决了AI交互的信任问题。
 ---
-## ❓ What Problems Does It Solve
-In today's AI explosion, we face an unprecedented trust crisis:
-| Pain Point | ATH's Solution |
+## ❓ 解决什么问题
+在AI大爆发的今天，我们遇到了前所未有的信任危机：
+| 痛点问题 | ATH的解决方案 |
 |---------|-------------|
-| 🤖 AI agents freely access user data without the user's knowledge | Users participate as independent parties; all access must receive explicit user authorization |
-| 🔍 Access authorization is unclear — when issues arise, it's impossible to determine whether the AI, the service, or the user is responsible | All three parties have clear responsibility boundaries; all operations are signed and recorded for clear accountability |
-| 🚫 Malicious AI impersonates legitimate systems to steal data | Bidirectional identity verification — agents and services mutually verify each other's identity, making impersonation impossible |
-| 📝 No records of interactions, making dispute resolution impossible | All operations have tamper-proof audit records supporting auditing and traceability |
-| 🔌 Different vendors' AI systems follow different standards and cannot interoperate | Unified protocol standard — any ATH-compliant system can seamlessly connect |
-A real-life analogy:
-Previously, AI accessing services was like a delivery person walking into your home to take things — no consent needed, the property management doesn't intervene, and you have no idea what was taken.
-With ATH, it's like having a complete access control system:
-1. You (user) tell the delivery person (agent) in advance that they can pick up your package and give them a pickup code (user authorization credential)
-2. The delivery person arrives at the gate and presents their work ID (agent identity) and your pickup code (user authorization) to the property management (service)
-3. The property management verifies the delivery person's identity is authentic and can optionally call you to confirm (optional secondary verification)
-4. You confirm that you did indeed order the delivery (user confirmation)
-5. The property management grants access and the delivery person can enter (service authorization)
-6. The entire process is recorded on camera (audit trail)
-The entire process is secure, transparent, and has clear accountability — the rights of all three roles are protected.
+| 🤖 AI代理随便访问用户数据，用户不知情 | 用户作为独立参与方，所有访问都必须获得用户明确授权 |
+| 🔍 访问授权不清晰，出了问题分不清是AI的问题、服务的问题还是用户的问题 | 三方都有明确的职责边界，所有操作都有签名存证，责任清晰 |
+| 🚫 恶意AI伪装成合法系统窃取数据 | 双向身份验证，智能体和服务端互相验证身份，无法伪造 |
+| 📝 交互过程没有记录，出现纠纷无法追溯 | 所有操作都有不可篡改的存证记录，支持审计和溯源 |
+| 🔌 不同厂商的AI系统标准不统一，无法互联互通 | 统一协议标准，任何符合ATH标准的系统都可以无缝对接 |
+举个生活化的例子：
+以前AI访问服务就像外卖员随便进你家拿东西，不需要你同意，物业也不管，拿了什么你也不知道。
+有了ATH之后，就像有了完善的门禁系统：
+1. 你（用户）提前告诉外卖员（智能体）可以帮你拿外卖，给他一个取件码（用户授权凭证）
+2. 外卖员到小区门口，向物业（服务端）出示自己的工作证（智能体身份）和你的取件码（用户授权）
+3. 物业验证外卖员身份是真实的，同时可以选择给你打个电话确认（可选二次验证）
+4. 你确认确实是你叫的外卖（用户确认）
+5. 物业放行，外卖员可以进入小区（服务授权）
+6. 整个过程都有监控记录（存证）
+整个过程安全、透明、责任清晰，三个角色的权利都得到了保障。
 ---
-## 💡 Core Design Principles
-ATH's design consistently revolves around six core principles:
-### 1. User Sovereignty Principle
-> Users are the absolute owners of resources and hold the ultimate decision-making power
-- All access to user resources must receive explicit user authorization
-- Users can grant, modify, or revoke authorization at any time
-- User authorization intent supersedes all else — no organization or individual can override it
-### 2. Three-Party Participation Principle
-> A complete interaction involves three independent roles: user, agent, and service
-- User: Resource owner, authorization decision-maker
-- Agent: User's executor, accesses services on behalf of the user
-- Service: Resource provider, service decision-maker
-- All three parties have clear responsibilities, defined boundaries, and do not interfere with each other
-### 3. Trusted Handshake Principle
-> Agents must obtain trusted handshakes from both the user and the service to access resources
-- User authorization: The user agrees to let the agent access specified resources on their behalf
-- Service authorization: The service agrees to let the agent access its services
-- Both are indispensable — access cannot be completed if either party has not authorized it
-### 4. Decentralized Principle
-> No reliance on any centralized authority; supports any agent connecting to any service
-- Identity verification is based on asymmetric cryptography, requiring no central authority
-- Authorization decisions are made independently by users and services, without any third-party authorization body
-- Supports free interconnection across platforms and ecosystems with no single point of failure
-### 5. Least Privilege Principle
-> Only grant agents the minimum permissions needed, and revoke them when done
-- Each agent request can only obtain the minimum permissions required for the current task
-- Permissions have time limits and automatically expire
-- Supports fine-grained permission control, down to specific endpoints or individual data records
-### 6. Full Traceability Principle
-> All operations are recorded; when issues arise, they can be thoroughly investigated
-- Every handshake, every access, and every authorization has encrypted audit records
-- Records are tamper-proof and cannot be deleted
-- Supports auditing and traceability for troubleshooting and dispute resolution
+## ❓ 解决什么问题
+在AI大爆发的今天，我们遇到了前所未有的信任危机：
+| 痛点问题 | ATH的解决方案 |
+|---------|-------------|
+| 🤖 两个AI系统互不认识，不敢随便交互 | 统一身份认证体系，所有AI都有可信身份 |
+| 🔍 AI访问用户数据没有明确授权，出了问题说不清 | 双向握手机制，每一次访问都需要用户和服务双方明确同意 |
+| 🚫 恶意AI伪装成合法系统窃取数据 | 加密身份验证，无法伪造身份 |
+| 📝 交互过程没有记录，出现纠纷无法追溯 | 所有操作都有不可篡改的存证记录 |
+| 🔌 不同厂商的AI系统标准不统一，无法互联互通 | 统一协议标准，任何符合ATH标准的系统都可以无缝对接 |
+举个生活化的例子：
+以前AI交互就像陌生人随便进你家拿东西，没有门禁，没有登记，拿了什么你也不知道。
+有了ATH之后，就像小区有了门禁系统：
+1. 访客（AI）要出示身份证（可信身份）
+2. 业主（用户）确认同意访客进入
+3. 物业（服务端）确认访客有权限
+4. 进门时间、去了哪里、做了什么都有记录
+5. 离开时还有出门登记
+整个过程安全、透明、可追溯。
 ---
-# Handshake Flow
-The core of the ATH protocol is a 9-step trusted handshake flow with three-party participation, involving three independent roles: **Agent (Client)**, **Application (Server)**, and **User**. It implements a "User + Service" trusted handshake mechanism without any centralized authority.
-## 9-Step Handshake Flow Overview
+## 💡 核心设计理念
+ATH的设计始终围绕五个核心原则：
+### 1. 「用户主权」原则
+> 用户是资源的绝对所有者，拥有最终决定权
+- 所有对用户资源的访问都必须获得用户的明确授权
+- 用户可以随时授予、修改或吊销授权
+- 用户的授权意愿高于一切，任何机构和个人都不能违背
+### 2. 「三方参与」原则
+> 完整的交互包含用户、智能体、服务三个独立角色
+- 用户：资源所有者，授权决策者
+- 智能体：用户的执行者，代表用户访问服务
+- 服务：资源提供者，服务决策者
+- 三方职责清晰，边界明确，互不干涉
+### 3. 「可信握手」原则
+> 智能体访问资源必须同时获得用户和服务的可信握手
+- 用户授权：用户同意智能体代表其访问指定资源
+- 服务授权：服务同意智能体访问自身提供的服务
+- 两者缺一不可，任何一方未授权都无法完成访问
+### 4. 「去中心化」原则
+> 不依赖任何中心化机构，支持任意智能体连接任意服务
+- 身份验证基于非对称加密算法，无需中央
+- 授权决策由用户和服务自主完成，无需第三方授权机构
+- 支持跨平台、跨生态的自由互联，没有单点故障
+### 5. 「最小权限」原则
+> 只给智能体刚好够用的权限，用完就收回
+- 智能体每次请求只能获得当前任务需要的最小权限
+- 权限有时间限制，到期自动失效
+- 支持细粒度权限控制，可以精确到某个接口、某条数据
+### 6. 「全程可追溯」原则
+> 所有操作都有记录，出了问题可以查清楚
+- 每一次握手、每一次访问、每一次授权都有加密存证
+- 记录不可篡改、不可删除
+- 支持审计和溯源，方便排查问题和处理纠纷
+---
+# 握手流程
+ATH协议的核心是三方参与的9步可信握手流程，包含**智能体(客户端)**、**应用(服务端)**、**用户**三个独立角色，实现"用户+服务"可信握手机制，无需任何中心化。
+## 9步握手流程概览
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant C as Client (Agent)
-    participant S as Server (Application)
+    participant U as 用户
+    participant C as 客户端(智能体)
+    participant S as 服务端(应用)
     
-    Note over U,S: Preliminary Step: User Pre-Authorization
-    U->>C: Step 0: User grants delegated permissions to agent (pre-authorization)
+    Note over U,S: 前置步骤：用户预授权
+    U->>C: 步骤0: 用户向智能体授予委托权限（预授权）
     
-    Note over C,S: Phase 1: Bidirectional Identity Verification (4 Steps)
-    C->>S: Step 1: Client handshake request (DID + public key + capability list + nonce A)
-    S->>C: Step 2: Server handshake response (own DID + public key + capability list + nonce B + signature of nonce A)
-    C->>S: Step 3: Client identity proof (signature of nonce B + optional identity credential)
-    S->>C: Step 4: Identity verification result (pass/fail + server metadata)
+    Note over C,S: 第一阶段：双向身份验证（4步）
+    C->>S: 步骤1: 客户端握手请求（DID + 公钥 + 能力清单 + 随机数A）
+    S->>C: 步骤2: 服务端握手响应（自身DID + 公钥 + 能力清单 + 随机数B + 对随机数A的签名）
+    C->>S: 步骤3: 客户端身份证明（对随机数B的签名 + 身份凭证可选）
+    S->>C: 步骤4: 身份验证结果（验证通过/失败 + 服务端元数据）
     
-    Note over U,S: Phase 2: Trusted Handshake Negotiation (3 Steps)
-    C->>S: Step 5: Permission request (requested scopes + user authorization credential)
-    S->>U: Step 6: Server requests authorization confirmation from user
-    U->>S: Step 7: User returns authorization confirmation result
-    S->>C: Step 8: Server confirms request, returns approval result (approved scopes + access restrictions + validity period)
+    Note over U,S: 第二阶段：可信握手协商（3步）
+    C->>S: 步骤5: 权限请求（请求的作用域 + 用户授权凭证）
+    S->>U: 步骤6: 服务端向用户确认授权
+    U->>S: 步骤7: 用户返回授权确认结果
+    S->>C: 步骤8: 权限审批结果（同意的作用域 + 访问限制 + 有效期）
     
-    Note over C,S: Phase 3: Session Establishment (1 Step)
-    C->>S: Step 9: Handshake complete (session key negotiation + access token acquisition)
+    Note over C,S: 第三阶段：会话建立（1步）
+    C->>S: 步骤9: 握手完成（会话密钥协商 + 访问令牌获取）
 ```
-## Core Design Philosophy: Three-Party Participation, Trusted Handshake
-The ATH protocol is a three-party protocol; a complete trusted handshake requires the participation of all three roles:
-| Role | Responsibility | Core Rights |
+## 核心设计理念：三方参与，可信握手
+ATH协议是三方协议，完整的可信握手需要三个角色共同参与：
+| 角色 | 职责 | 核心权利 |
 |------|------|----------|
-| **User** | Resource owner | Ultimate decision-making power; all access to user resources must receive explicit user authorization |
-| **Agent (Client)** | User's executor | Accesses services on behalf of the user, executes specific tasks |
-| **Application (Server)** | Resource provider | Decides whether to allow the agent to access its services |
-> ✅ **Trusted Handshake Mechanism**: For an agent to successfully access a service, it must obtain two authorizations — both are indispensable:
-> 1. **User-Side Permission**: The user agrees to let the agent access specified resources on their behalf
-> 2. **Service-Side Permission**: The server agrees to let the agent access its services
-## Detailed Step Descriptions
-### Preliminary Step: User Pre-Authorization
-#### Step 0: User Grants Delegated Permissions to Agent
-Before using an agent, the user pre-authorizes it with delegated permissions, clearly defining the scope within which the agent can act on their behalf:
-- The user signs an authorization credential specifying the authorized resource scope, validity period, operation restrictions, etc.
-- The agent obtains the user authorization credential to use as proof of user authorization when subsequently accessing services
-- Pre-authorization can be one-time, short-term, or long-term; the user can revoke it at any time
-### Phase 1: Bidirectional Identity Verification (4 Steps)
-#### Step 1: Client Identity Announcement
-The agent (client) initiates a connection request to the server, announcing its identity information:
-- **Client DID**: Decentralized Identifier that uniquely identifies the agent
-- **Client Public Key**: Public key used for identity verification
-- **Supported Protocol Version List**: ATH protocol versions supported by the client
-- **Client Capability Set**: Supported encryption algorithms, signature algorithms, and other capabilities
-- **Nonce A**: Random challenge string generated by the client to prevent replay attacks
-#### Step 2: Server Identity Response
-The server returns its own identity information, completing initial verification of the client:
-- **Server DID**: The server's Decentralized Identifier
-- **Server Public Key**: Public key used for identity verification
-- **Negotiated Protocol Version**: The highest protocol version supported by both parties
-- **Server Capability Set**: Supported encryption algorithms, signature algorithms, and other capabilities
-- **Nonce B**: Random challenge string generated by the server
-- **Signature of Nonce A**: Signed with the server's private key to prove identity legitimacy
-#### Step 3: Client Identity Proof
-After verifying the server's identity, the agent provides its own identity proof:
-- **Signature of Nonce B**: Signed with the client's private key to prove identity legitimacy
-- **Optional Identity Credential**: May provide a third-party-issued identity credential to enhance trustworthiness
-#### Step 4: Identity Verification Result
-After verifying the client's signature, the server returns the verification result:
-- **Verification Result**: Pass/Fail
-- **Server Metadata**: Includes service endpoints, supported scope list, token validity period, etc.
-- **Failure Reason**: If verification fails, a clear failure reason is returned
-### Phase 2: Trusted Handshake Negotiation (3 Steps)
-#### Step 5: Scope Request
-The agent requests access permissions from the server while submitting the user's pre-authorization credential:
-- **Requested Permission List**: In the format `resource:action` (e.g., `user:read`, `data:write`)
-- **Access Validity Period**: Requested access credential validity period
-- **User Authorization Credential**: The authorization credential pre-signed by the user, proving the user has consented to the access
-- **Request Context**: Optional business scenario description for authorization decision-making
-#### Step 6: Server Requests Authorization Confirmation from User
-The server sends an authorization confirmation request to the user to ensure the user authorization is genuine and valid:
-- The server sends an authorization confirmation request to the user, including the agent's identity and the requested permission scope
-
-#### Step 7: User Returns Authorization Confirmation Result
-The user confirms the authorization request and returns the confirmation result:
-- The user can choose to approve, reject, or modify the authorization scope
-- The confirmation result is signed by the user and is legally binding
-#### Step 8: Scope Negotiation Result
-The server combines the user's authorization result with its own security policies to make a final approval:
-- **Approved Scope List**: The final granted permission scope
-- **Rejected Scopes and Reasons**: Rejected permissions with clear reasons
-- **Access Restriction Conditions**: IP restrictions, rate limits, and other additional restrictions
-- **Authorization Validity Period**: The final granted access credential validity period
-### Phase 3: Session Establishment (1 Step)
-#### Step 9: Handshake Complete
-Both parties complete key negotiation and establish an encrypted communication channel:
-- The agent and server complete session key negotiation
-- The server issues a short-lived access token to the agent
-- Both parties formally establish an end-to-end encrypted communication channel
-- The agent can begin using the token to access service resources
-## Security Features
-- **Three-Party Participation Mechanism**: Users participate as independent roles with ultimate decision-making power
-- **Trusted Handshake Mechanism**: Requires both user authorization and service authorization — both are indispensable
-- **Fully Decentralized**: No centralized or authorization authority required
-- **Bidirectional Identity Authentication**: Directly verifies the other party's identity through asymmetric cryptography, preventing man-in-the-middle attacks
-- **Least Privilege Principle**: Only grants the minimum permissions necessary for the current task
-- **Short-Lived Credentials**: Access credentials have short validity periods, reducing the risk of leakage
-- **Non-Repudiation**: All interactions are digitally signed, enabling auditing and traceability
+| **用户** | 资源的所有者 | 最终决定权，所有对用户资源的访问都必须获得用户明确授权 |
+| **智能体(客户端)** | 用户的执行者 | 代表用户访问服务，执行具体任务 |
+| **应用(服务端)** | 资源的提供者 | 决定是否允许智能体访问自身服务 |
+> ✅ **可信握手机制**：智能体要成功访问服务，必须同时获得两个授权，缺一不可：
+> 1. **用户侧许可**：用户同意该智能体代表其访问指定资源
+> 2. **服务侧许可**：服务端同意该智能体访问自身提供的服务
+## 详细步骤说明
+### 前置步骤：用户预授权
+#### 步骤0：用户向智能体授予委托权限
+用户在使用智能体前，预先向智能体授予委托权限，明确智能体可以代表自己行事的范围：
+- 用户签署授权凭证，明确授权的资源范围、有效期、操作限制等
+- 智能体获得用户授权凭证，作为后续访问服务时的用户授权证明
+- 预授权可以是一次性的、短期的或长期的，用户可以随时吊销
+### 第一阶段：双向身份验证阶段（4步）
+#### 步骤1：客户端身份宣告 (Client Identity Announcement)
+智能体（客户端）向服务端发起连接请求，宣告自身身份信息：
+- **客户端DID**：去中心化身份标识，唯一标识智能体身份
+- **客户端公钥**：用于身份验证的公钥
+- **支持的协议版本列表**：客户端支持的ATH协议版本号
+- **客户端能力集**：支持的加密算法、签名算法等能力
+- **随机数A**：客户端生成的随机挑战字符串，防止重放攻击
+#### 步骤2：服务端身份回应 (Server Identity Response)
+服务端返回自身身份信息，完成对客户端的首次验证：
+- **服务端DID**：服务端的去中心化身份标识
+- **服务端公钥**：用于身份验证的公钥
+- **协商后的协议版本**：双方都支持的最高协议版本
+- **服务端能力集**：支持的加密算法、签名算法等能力
+- **随机数B**：服务端生成的随机挑战字符串
+- **对随机数A的签名**：服务端用自身私钥签名，证明身份合法性
+#### 步骤3：客户端身份证明 (Client Identity Proof)
+智能体验证服务端身份后，提供自身身份证明：
+- **对随机数B的签名**：客户端用自身私钥签名，证明身份合法性
+- **可选身份凭证**：可提供第三方颁发的身份凭证，增强可信度
+#### 步骤4：身份验证结果 (Identity Verification Result)
+服务端验证客户端签名后，返回验证结果：
+- **验证结果**：通过/失败
+- **服务端元数据**：包含服务端点、支持的作用域列表、令牌有效期等
+- **失败原因**：如果验证失败，返回明确的失败原因
+### 第二阶段：可信握手协商阶段（3步）
+#### 步骤5：权限请求 (Scope Request)
+智能体向服务端请求访问权限，同时提交用户预授权凭证：
+- **请求的权限列表**：格式为`资源:操作`（如`user:read`, `data:write`）
+- **访问有效期**：请求的访问凭证有效期
+- **用户授权凭证**：用户预先签署的授权凭证，证明用户已同意该访问
+- **请求上下文**：可选的业务场景说明，用于授权决策
+#### 步骤6：服务端向用户确认授权
+服务端向用户发起授权确认请求，确保用户授权真实有效：
+- 服务端向用户发送授权确认请求，包含智能体身份、请求的权限范围
+- 
+#### 步骤7：用户返回授权确认结果
+用户确认授权请求，返回确认结果：
+- 用户可以选择同意、拒绝或修改授权范围
+- 确认结果由用户签名，具有法律效力
+#### 步骤8：权限审批结果 (Scope Negotiation Result)
+服务端结合用户授权结果和自身安全策略，作出最终审批：
+- **同意的作用域列表**：最终授予的权限范围
+- **拒绝的作用域及原因**：拒绝的权限和明确原因
+- **访问限制条件**：IP限制、速率限制等附加限制
+- **授权有效期**：最终授予的访问凭证有效期
+### 第三阶段：会话建立阶段（1步）
+#### 步骤9：握手完成 (Handshake Complete)
+双方完成密钥协商，建立加密通信通道：
+- 智能体和服务端完成会话密钥协商
+- 服务端向智能体颁发短期访问令牌
+- 双方正式建立端到端加密通信通道
+- 智能体可以开始使用令牌访问服务资源
+## 安全特性
+- **三方参与机制**：用户作为独立角色参与，拥有最终决定权
+- **可信握手机制**：需要用户授权和服务授权双重确认，缺一不可
+- **完全去中心化**：无需任何中心化或授权机构
+- **双向身份认证**：通过非对称加密直接验证对方身份，防止中间人攻击
+- **最小权限原则**：只授予当前任务必需的最小权限
+- **短期凭证**：访问凭证有效期短，降低泄露风险
+- **不可抵赖性**：所有交互都有数字签名，可审计可追溯
 ---
-## 🎯 Use Cases
-ATH can be used in virtually any scenario requiring AI interactions:
-### 1. 🤖 Multi-Agent Collaboration
-Multiple AI agents from different vendors work together on complex tasks, interacting securely and trustworthily with each other.
-### 2. 🔒 Sensitive Data Processing
-When AI needs to access users' private data (e.g., medical records, financial data), all access has explicit authorization and records.
-### 3. 🌐 Cross-Platform Service Integration
-AI services on different platforms can connect following a unified standard, eliminating the need to develop custom adapters.
-### 4. 🏢 Enterprise AI Applications
-Unified management and control of AI systems within an enterprise, with full audit records for all access to meet compliance requirements.
-### 5. 💰 AI Service Marketplace
-Buyers and sellers of AI services complete transactions through the ATH protocol, with automated settlement and full traceability.
+## 🎯 应用场景
+ATH几乎可以用在所有需要AI交互的场景：
+### 1. 🤖 多AI代理协同
+多个不同厂商的AI代理一起完成复杂任务，互相之间可以安全可信地交互。
+### 2. 🔒 敏感数据处理
+AI需要访问用户的隐私数据（如医疗数据、财务数据），所有访问都有明确授权和记录。
+### 3. 🌐 跨平台服务对接
+不同平台的AI服务可以按照统一标准对接，不需要重复开发适配层。
+### 4. 🏢 企业级AI应用
+企业内部的AI系统统一管控，所有访问都有审计记录，满足合规要求。
+### 5. 💰 AI服务交易
+AI服务的买卖双方通过ATH协议完成交易，自动结算，全程可追溯。
 
 ---
-## ✨ Why Choose ATH
-| Comparison | Traditional Authorization | ATH Protocol |
+## ✨ 为什么选择ATH
+| 对比项 | 传统授权方案 | ATH协议 |
 |--------|-------------|--------|
-| Trust Model | Unidirectional trust (only verifies the client) | Bidirectional trust (client and server mutually verify each other) |
-| Authorization Mechanism | One-time authorization with excessive permissions | Least privilege, on-demand authorization, auto-expiry |
-| Traceability | Incomplete logs, easily tampered with | Full encrypted audit trail, tamper-proof |
-| AI Friendliness | Designed for humans, not suited for AI scenarios | Purpose-built for AI agents, aligned with AI interaction patterns |
-| Interoperability | Different vendors follow different standards | Unified standard — any compliant system can connect |
-| Ease of Use | Complex integration requiring extensive development | Multi-language SDKs available, integrate in 5 minutes |
+| 信任模式 | 单向信任（只验证客户端） | 双向信任（客户端和服务端互相验证） |
+| 授权机制 | 一次性授权，权限过大 | 最小权限，按需授权，到期自动失效 |
+| 可追溯性 | 日志不全，容易被篡改 | 全程加密存证，不可篡改 |
+| AI友好性 | 是为人设计的，不适合AI场景 | 专门为AI代理设计，符合AI交互特点 |
+| 互联互通 | 不同厂商标准不统一 | 统一标准，任何符合标准的系统都可以对接 |
+| 易用性 | 集成复杂，需要大量开发工作 | 提供多语言SDK，5分钟完成集成 |
 ---
-## 📜 Core Technical Specifications
-### 1. Identity Authentication Specification
-- Uses asymmetric cryptography; each AI agent has a unique public-private key pair
-- Identity certificates include basic AI information, public key, issuing authority, validity period, etc.
-- Supports cross-platform, cross-organization identity mutual recognition
-### 2. Handshake Protocol Specification
-- Uses TLS 1.3 encrypted transport to prevent eavesdropping and tampering
-- Handshake messages follow a unified format specification containing identity information, permission requests, context information, etc.
-- Supports multiple signature algorithms to accommodate different security level requirements
-### 3. Permission Control Specification
-- Supports Role-Based Access Control (RBAC)
-- Supports fine-grained permission declarations down to the API endpoint level
-- Permission validity periods are configurable, supporting both temporary and permanent permissions
-### 4. Audit Trail Specification
-- All interaction records are stored using a Merkle tree structure, making them tamper-proof
-- Supports encrypted audit records to protect user privacy
-- Provides standardized audit interfaces for easy integration with third-party audit systems
+## 📜 核心技术规范
+### 1. 身份认证规范
+- 采用非对称加密算法，每个AI代理有唯一的公私钥对
+- 身份证书包含AI的基本信息、公钥、颁发机构、有效期等
+- 支持跨平台、跨机构的身份互认
+### 2. 握手协议规范
+- 采用TLS 1.3加密传输，防止数据被窃听和篡改
+- 握手报文有统一的格式规范，包含身份信息、权限请求、上下文信息等
+- 支持多种签名算法，兼容不同安全级别的需求
+### 3. 权限控制规范
+- 支持基于角色的权限控制（RBAC）
+- 支持细粒度的权限声明，可以精确到接口级别
+- 权限有效期可配置，支持临时权限和永久权限
+### 4. 存证审计规范
+- 所有交互记录采用默克尔树结构存储，不可篡改
+- 支持加密存证，保护用户隐私
+- 提供标准化的审计接口，方便对接第三方审计系统
 ---
-## 📚 Chinese Protocol Documentation
-To help Chinese-speaking developers and non-technical readers understand the protocol, we provide a fully annotated Chinese version:
-📄 [ATH Protocol Standard - Chinese Annotated Version](./specification/0.1/basic/handshake-flow.zh.mdx)
+## 📚 中文协议文档
+为了方便国内开发者和非技术人员理解，我们提供了完整的中文注释版协议：
+📄 [ATH协议标准-中文注释版](./specification/ath-protocol-chinese-commented.md)
 ---
-## 🚀 Deployment Modes
-ATH supports two deployment modes; choose based on your actual needs:
-### Mode 1: Gateway Mode (Recommended)
+## 🚀 部署模式
+ATH支持两种部署模式，可以根据实际需求选择：
+### 模式一：网关模式（推荐）
 ```
-AI Agent → ATH Gateway → Backend Service
+AI代理 → ATH网关 → 后端服务
 ```
-- **Features**: All requests pass through the ATH gateway for unified verification and processing
-- **Advantages**: Simple deployment; no need to modify existing service code
-- **Use Cases**: Enterprise applications, multi-service scenarios, scenarios requiring unified management
-### Mode 2: Native Mode
+- **特点**：所有请求都经过ATH网关统一验证和处理
+- **优势**：部署简单，不需要修改原有服务代码
+- **适用场景**：企业级应用、多服务场景、需要统一管控的场景
+### 模式二：原生模式
 ```
-AI Agent ↔ ATH Native Service
+AI代理 ↔ ATH原生服务
 ```
-- **Features**: The service itself implements the ATH protocol and directly handshakes with AI agents
-- **Advantages**: Higher performance, lower latency
-- **Use Cases**: High-performance scenarios, lightweight applications, embedded devices
+- **特点**：服务本身就实现了ATH协议，直接和AI代理握手
+- **优势**：性能更高，延迟更低
+- **适用场景**：高性能需求场景、轻量级应用、嵌入式设备
 ---
-## 🌐 Ecosystem Components
-ATH is a complete ecosystem consisting of five core components:
-| Component | Purpose | Target Audience |
+## 🌐 生态系统组成
+ATH是一个完整的生态系统，由五个核心部分组成：
+| 组件 | 作用 | 适用人群 |
 |------|------|----------|
-| [agent-trust-handshake-protocol](https://github.com/ath-protocol/agent-trust-handshake-protocol) | Core protocol standard (this repository) | Protocol researchers, standards developers, SDK developers |
-| [typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript/JavaScript SDK | Frontend developers, Node.js developers |
-| [python-sdk](https://github.com/ath-protocol/python-sdk) | Python SDK | AI developers, data scientists, backend developers |
-| [athx](https://github.com/ath-protocol/athx) | ATH core engine handling handshake and authentication logic | Operations engineers, architects |
-| [gateway](https://github.com/ath-protocol/gateway) | ATH gateway service, unified access entry point | Operations engineers, architects |
+| [agent-trust-handshake-protocol](https://github.com/ath-protocol/agent-trust-handshake-protocol) | 核心协议标准（就是本仓库） | 协议研究者、标准制定者、SDK开发者 |
+| [typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript/JavaScript开发工具包 | 前端开发者、Node.js开发者 |
+| [python-sdk](https://github.com/ath-protocol/python-sdk) | Python开发工具包 | AI开发者、数据科学家、后端开发者 |
+| [athx](https://github.com/ath-protocol/athx) | ATH核心引擎，处理握手和认证逻辑 | 运维人员、架构师 |
+| [gateway](https://github.com/ath-protocol/gateway) | ATH网关服务，统一接入入口 | 运维人员、架构师 |
 ---
-## 📄 License
-This project is licensed under the **OpenATH License**. You are free to use, modify, and distribute it. Please see the LICENSE file for full terms.
-## 🤝 Contributing
-We welcome all developers interested in trustworthy AI to contribute! Whether it's improving the protocol specification, submitting bugs, writing documentation, or suggesting improvements — every contribution makes the ATH ecosystem better.
-> 💡 ATH's Vision: Making every AI interaction trustworthy!
+## 📄 开源协议
+本项目采用 **OpenATH License** 开源协议，您可以自由使用、修改和分发，具体条款请查看LICENSE文件。
+## 🤝 参与贡献
+我们欢迎所有对可信AI感兴趣的开发者参与贡献！无论是完善协议规范、提交Bug、编写文档，还是提出改进建议，都能让ATH生态变得更好。
+> 💡 ATH的愿景：让每一次AI交互都值得信任！
 ---
-## 📁 Repository Directory Structure
-This repository is the ATH protocol's standard definition repository. It contains only the protocol specification and documentation; all concrete implementations reside in separate repositories.
+## 📁 仓库目录结构说明
+本仓库是ATH协议的标准定义仓库，只包含协议规范和文档，所有具体实现都在独立的仓库中。
 ```
 agent-trust-handshake-protocol/
-├── 📄 Root Files
-│   ├── README.md                   # Project documentation (this file)
-│   ├── LICENSE                     # OpenATH License
-│   ├── CODE_OF_CONDUCT.md          # Community Code of Conduct
-│   ├── CONTRIBUTING.md             # Contribution Guide
-│   └── SECURITY.md                 # Security Vulnerability Reporting Process
+├── 📄 根目录文件
+│   ├── README.md                   # 项目说明文档（就是本文件）
+│   ├── LICENSE                     # OpenATH开源协议
+│   ├── CODE_OF_CONDUCT.md          # 社区参与行为准则
+│   ├── CONTRIBUTING.md             # 协议贡献指南
+│   └── SECURITY.md                 # 安全漏洞上报流程
 │
-├── 📚 docs/                        # Official Technical Documentation
-│   ├── getting-started/            # Quick start guide — get up to speed with ATH in 5 minutes
-│   ├── learn/                      # In-depth core concepts including architecture, flow, and security principles
-│   ├── develop/                    # Development guide — how to implement the ATH protocol
-│   └── tutorials/                  # Step-by-step tutorials including security best practices and audit configuration
+├── 📚 docs/                        # 官方技术文档
+│   ├── getting-started/            # 快速入门指南，新手5分钟了解ATH
+│   ├── learn/                      # 核心概念深度讲解，包含架构、流程、安全原理
+│   ├── develop/                    # 开发指南，教你如何实现ATH协议
+│   └── tutorials/                  # 分步教程，包含安全最佳实践、审计配置等
 │
-├── 📝 example/                     # Real-World Application Scenario Examples
-│   ├── shopping-scenario.mdx       # Complete e-commerce shopping scenario example
-│   └── gateway-scenario.mdx        # Complete API gateway scenario example
+├── 📝 example/                     # 真实应用场景示例
+│   ├── shopping-scenario.mdx       # 电商购物场景完整示例
+│   └── gateway-scenario.mdx        # API网关场景完整示例
 │
-├── 📜 specification/               # Core Protocol Specification (the most authoritative standard definitions)
-│   ├── 0.1/                        # v0.1 Protocol
-│   │   ├── basic/                  # Basic protocol specification
-│   │   │   ├── handshake-flow.mdx  # [Core] 9-step trusted handshake flow specification
-│   │   │   └── handshake-flow.zh.mdx # Chinese version of the handshake flow specification
-│   │   ├── client/                 # Client protocol specification
-│   │   │   ├── handshake-flow.mdx  # Client handshake flow implementation specification
-│   │   │   └── reference-implementation.mdx # Client reference implementation
-│   │   └── server/                 # Server protocol specification
-│   │       ├── handshake-flow.mdx  # Server handshake flow implementation specification
-│   │       └── reference-implementation.mdx # Server reference implementation
+├── 📜 specification/               # 核心协议规范（最权威的标准定义）
+│   ├── 0.1/                        # v0.1版本协议
+│   │   ├── basic/                  # 基础协议规范
+│   │   │   ├── handshake-flow.mdx  # 【核心】可信握手12步流程详细定义
+│   │   │   └── handshake-flow.zh.mdx # 中文版握手流程规范
+│   │   ├── client/                 # 客户端协议规范
+│   │   │   ├── handshake-flow.mdx  # 客户端握手流程实现规范
+│   │   │   └── reference-implementation.mdx # 客户端参考实现
+│   │   └── server/                 # 服务端协议规范
+│   │       ├── handshake-flow.mdx  # 服务端握手流程实现规范
+│   │       └── reference-implementation.mdx # 服务端参考实现
+│   └── ath-protocol-chinese-commented.md # 中文注释版协议（通俗易懂）
 │
-├── 🏗️ schema/                      # Machine-Readable Data Structure Definitions
+├── 🏗️ schema/                      # 机器可读数据结构定义
 │   └── 0.1/
-│       ├── schema.json             # JSON Schema format — can be used directly for code generation and parameter validation
-│       └── meta.json               # Protocol metadata definition
+│       ├── schema.json             # JSON Schema格式，可直接用于代码生成、参数校验
+│       └── meta.json               # 协议元数据定义
 │
-├── 🎬 demo/                        # Interactive Protocol Demo
-│   ├── ath_simple_demo.py          # English demo — 9-step handshake with loading animations
-│   └── ath_simple_demo_zh.py       # Chinese demo
+├── 🌐 zh/                          # 中文文档专区（和英文内容100%同步）
+│   ├── docs/                       # 中文版技术文档
+│   └── specification/              # 中文版协议规范
 │
-├── 🌐 zh/                          # Chinese Documentation Section
-│   ├── docs/                       # Chinese technical documentation
-│   └── specification/              # Chinese protocol specification
-│
-├── 🎨 logo/                        # Project Logo Assets (free to use)
-└── 👥 community/                   # Community Content
-    ├── roadmap.mdx                 # Project roadmap
-    ├── comparison.mdx              # Comparison with OAuth, JWT, and other protocols
-    ├── glossary.mdx                # Glossary of terms
-    └── contributing.mdx            # Contributor guide
+├── 🎨 logo/                        # 项目Logo资源（可自由使用）
+└── 👥 community/                   # 社区相关内容
+    ├── roadmap.mdx                 # 项目发展路线图
+    ├── comparison.mdx              # 与OAuth、JWT等其他协议的对比
+    ├── glossary.mdx                # 术语表
+    └── contributing.mdx            # 贡献者指南
 ```
 ---
-## 🎯 Core Handshake and Authentication Logic Locations
-All core protocol specifications are located in the `specification/` directory:
-### 🔑 Core File List
-| File Path | Description | Importance |
+## 🎯 核心握手、鉴权逻辑位置
+所有核心的协议规范都在`specification/`目录下：
+### 🔑 核心文件清单
+| 文件路径 | 内容说明 | 重要程度 |
 |---------|----------|----------|
-| 📄 `specification/0.1/basic/handshake-flow.mdx` | **Core handshake flow specification** — the 9-step trusted handshake with message formats and security requirements | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/client/handshake-flow.mdx` | **Client handshake flow** — client-side implementation specification for the 9-step handshake | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/server/handshake-flow.mdx` | **Server handshake flow** — server-side implementation including authorization and token issuance | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/client/reference-implementation.mdx` | Client reference implementation — Python code examples for identity, authorization, and handshake modules | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/server/reference-implementation.mdx` | Server reference implementation — Python code examples for verification, permission, and token modules | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/openapi.mdx` | OpenAPI interface definitions — all protocol HTTP interface formats; SDKs and server implementations must follow this standard | ⭐⭐⭐⭐ |
-| 📄 `schema/0.1/schema.json` | Data structure JSON Schema definitions — validation standards for all message formats | ⭐⭐⭐ |
-### 💡 Quick Lookup Tips
-- To **implement protocol logic**: Start with `specification/0.1/openapi.mdx` and `schema/0.1/schema.json` — these are machine-readable specifications that can be directly parsed by code
-- To **understand protocol principles**: Start with `docs/learn/trusted-handshake.mdx` for illustrated explanations, then dive into the detailed specifications under `specification/`
-- For **Chinese readers**: Go directly to the `zh/` directory for the Chinese version, which is fully synchronized with the English content
+| 📄 `specification/0.1/client/handshake-flow.mdx` | **最核心的握手流程规范**，详细定义了从发起请求到完成握手的12步完整流程，包括每一步的报文格式、交互逻辑、错误处理等 | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/server/authorization.mdx` | **鉴权逻辑规范**，定义了权限验证、授权决策、最小权限原则的具体实现标准 | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/client/identity.mdx` | 身份认证规范，定义了AI代理和服务的数字身份格式、生成方式、验证逻辑 | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/server/token.mdx` | 令牌规范，定义了访问令牌的格式、生成算法、有效期管理、验证方式 | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/client/security.mdx` | 安全规范，定义了加密算法、签名算法、防攻击要求等安全相关标准 | ⭐⭐⭐⭐ |
+| 📄 `spec/openapi.yaml` | OpenAPI接口定义，所有协议的HTTP接口格式都在这里，SDK和服务端实现都要遵循这个标准 | ⭐⭐⭐⭐ |
+| 📄 `schema/0.1/schema.json` | 数据结构JSON Schema定义，所有报文格式的校验标准 | ⭐⭐⭐ |
+### 💡 快速查找技巧
+- 如果要**实现协议逻辑**：先看`spec/openapi.yaml`和`schema/0.1/schema.json`，这两个是可以直接用代码解析的机器可读规范
+- 如果要**理解协议原理**：先看`docs/learn/trusted-handshake.mdx`，有图文并茂的讲解，然后再看`specification/`下的详细规范
+- 如果是**中文使用者**：直接看`zh/`目录下的中文版本，内容和英文完全同步
 ---
-## 🏁 Quick Start
-### If you are a general user:
-1. By reading this far, you already understand what ATH does!
-2. If you'd like to try it out, visit our [Online Demo](https://demo.ath-protocol.org) to experience the handshake flow
-3. If interested, continue reading the technical content below
-### If you are a protocol researcher:
-1. Review the `specification/` directory in this repository for detailed protocol specifications
-2. Review the `example/` directory for real-world usage examples
-3. Submit Issues or PRs to participate in protocol improvement and discussion
-### If you are an application developer:
-1. Choose the SDK for your language (TypeScript/Python)
-2. Follow the SDK documentation — integrate in 3 steps
-3. Your application now has trusted interaction capabilities
-### If you are an operations engineer:
-1. Deploy the ATH core engine (athx) and gateway service (gateway)
-2. Configure services and permission rules
-3. Connect your AI applications and backend services
+## 🏁 快速开始
+### 如果你是普通用户：
+1. 看到这里你已经懂ATH是干什么的了！
+2. 想体验的话可以去我们的[在线Demo](https://demo.ath-protocol.org)感受一下握手流程
+3. 有兴趣的话可以继续看下面的技术内容
+### 如果你是协议研究者：
+1. 查看本仓库的`specs/`目录，了解详细的协议规范
+2. 查看`examples/`目录，了解协议的实际使用示例
+3. 提交Issue或PR参与协议的改进和讨论
+### 如果你是应用开发者：
+1. 选择对应语言的SDK（TypeScript/Python）
+2. 按照SDK文档的指引，3步完成集成
+3. 你的应用就拥有了可信交互能力
+### 如果你是运维人员：
+1. 部署ATH核心引擎（athx）和网关服务（gateway）
+2. 配置服务和权限规则
+3. 接入你的AI应用和后端服务
 ---
-## 🚀 Developer Quick Navigation
-| Role | Recommended Reading Order |
+## 🚀 开发者快速导航
+| 角色 | 推荐阅读顺序 |
 |------|--------------|
-| 👨‍💻 SDK Developer | 1. `docs/getting-started/quickstart.mdx` → 2. `specification/0.1/openapi.mdx` → 3. `schema/0.1/schema.json` |
-| 👷‍♂️ Server Developer | 1. `docs/develop/build-gateway.mdx` → 2. All files under `specification/0.1/server/` |
-| 📝 Protocol Researcher | 1. `docs/learn/architecture.mdx` → 2. All files under `specification/0.1/client/` → 3. Community `roadmap.mdx` |
-| 🎯 Business Developer | 1. `docs/getting-started/intro.mdx` → 2. `example/shopping-scenario.mdx` → 3. Corresponding language SDK documentation |
+| 👨‍💻 SDK开发者 | 1. `docs/getting-started/quickstart.mdx` → 2. `spec/openapi.yaml` → 3. `schema/0.1/schema.json` |
+| 👷‍♂️ 服务端开发者 | 1. `docs/develop/build-gateway.mdx` → 2. `specification/0.1/server/`目录下所有文件 |
+| 📝 协议研究者 | 1. `docs/learn/architecture.mdx` → 2. `specification/0.1/client/`目录下所有文件 → 3. 社区`roadmap.mdx` |
+| 🎯 业务开发者 | 1. `docs/getting-started/intro.mdx` → 2. `docs/examples/scenario.mdx` → 3. 对应语言的SDK文档 |
 ---
-## 🌱 Ecosystem Implementation Guide
-This repository only defines the protocol standard. All concrete implementation code resides in separate repositories, which you can use directly as needed:
-### 📦 Official Implementation Repositories
-| Repository | Function | Target Audience | Description |
+## 🌱 生态系统实现指引
+本仓库只定义协议标准，具体的实现代码都在独立的仓库中，你可以根据需要直接使用：
+### 📦 官方实现仓库
+| 仓库 | 功能 | 适用人群 | 地址 |
 |------|------|----------|------|
-| 🐍 [python-sdk](https://github.com/ath-protocol/python-sdk) | Python SDK | AI developers, backend engineers | Integrates ATH capabilities into Python applications and AI agents |
-| 🔌 [typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript/JavaScript SDK | Frontend engineers, Node.js developers | Integrates ATH capabilities into web apps, mini-programs, and Node.js applications |
-| ⚡ [athx](https://github.com/ath-protocol/athx) | ATH core engine implementation | Operations engineers, architects | Core service handling handshake, authentication, authorization, and token management |
-| 🚪 [gateway](https://github.com/ath-protocol/gateway) | ATH gateway service implementation | Operations engineers, architects | Unified access entry point providing security protection, load balancing, and traffic control |
-### 💡 Quick Guide for Implementers
-- To **develop an SDK**: Refer to `specification/0.1/openapi.mdx` and `schema/0.1/schema.json` in this repository and implement according to the interface standards
-- To **develop a gateway/server**: Refer to all specifications under the `specification/0.1/server/` directory
-- To **develop an AI agent**: Simply use the corresponding language SDK — integrate in 5 minutes
+| 🐍 [python-sdk](https://github.com/ath-protocol/python-sdk) | Python语言SDK | AI开发者、后端工程师 | 用于给Python应用、AI代理集成ATH能力 |
+| 🔌 [typescript-sdk](https://github.com/ath-protocol/typescript-sdk) | TypeScript/JavaScript语言SDK | 前端工程师、Node.js开发者 | 用于给网页、小程序、Node.js应用集成ATH能力 |
+| ⚡ [athx](https://github.com/ath-protocol/athx) | ATH核心引擎实现 | 运维工程师、架构师 | 处理握手、认证、授权、令牌管理的核心服务 |
+| 🚪 [gateway](https://github.com/ath-protocol/gateway) | ATH网关服务实现 | 运维工程师、架构师 | 统一接入入口，提供安全防护、负载均衡、流量控制 |
+### 💡 实现者快速指引
+- 如果你要**开发SDK**：参考本仓库的`spec/openapi.yaml`和`schema/0.1/schema.json`，按照接口标准实现即可
+- 如果你要**开发网关/服务端**：参考`specification/0.1/server/`目录下的所有规范
+- 如果你要**开发AI代理**：直接使用对应语言的SDK，5分钟就能完成集成
