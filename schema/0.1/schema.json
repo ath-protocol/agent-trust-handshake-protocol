@@ -217,7 +217,7 @@
           "examples": ["https://travel-agent.example.com/.well-known/agent.json"]
         },
         "agent_attestation": {
-          "description": "Signed JWT (ES256) proving agent identity. Must include exp, aud, iss, sub claims.",
+          "description": "Signed JWT (ES256) proving agent identity. MUST include iss, sub, aud, iat, exp, and jti claims. The jti MUST be unique per attestation and implementors MUST reject replayed jti values.",
           "type": "string"
         },
         "developer": {
@@ -237,7 +237,7 @@
           "examples": ["Travel planning assistant"]
         },
         "redirect_uris": {
-          "description": "OAuth callback URIs for this agent.",
+          "description": "OAuth callback URIs for this agent. If provided, the implementor MUST validate user_redirect_uri against this list using exact-match comparison during authorization. If omitted (e.g., for local agents without a public endpoint), the implementor MUST reject any authorization request that includes a user_redirect_uri, and the OAuth callback MUST be handled entirely by the implementor without redirecting to the agent.",
           "type": "array",
           "items": {
             "type": "string",
@@ -341,7 +341,7 @@
     "AuthorizationRequest": {
       "description": "Request body for POST /ath/authorize. Initiates the user-side OAuth authorization flow (Phase B). The implementor generates PKCE parameters (RFC 7636) server-side.",
       "type": "object",
-      "required": ["client_id", "agent_attestation", "provider_id", "scopes"],
+      "required": ["client_id", "agent_attestation", "provider_id", "scopes", "state"],
       "properties": {
         "client_id": {
           "description": "The agent's client_id from registration.",
@@ -368,7 +368,7 @@
           "format": "uri"
         },
         "state": {
-          "description": "Opaque state parameter for CSRF protection.",
+          "description": "Opaque state parameter for CSRF protection. MUST be generated from a CSPRNG with at least 128 bits of entropy. The implementor MUST validate state on the OAuth callback and reject mismatches.",
           "type": "string"
         },
         "resource": {
@@ -398,7 +398,7 @@
     "TokenExchangeRequest": {
       "description": "Request body for POST /ath/token. Exchanges an OAuth authorization code for an ATH access token after user consent.",
       "type": "object",
-      "required": ["grant_type", "client_id", "client_secret", "code", "ath_session_id"],
+      "required": ["grant_type", "client_id", "client_secret", "agent_attestation", "code", "ath_session_id"],
       "properties": {
         "grant_type": {
           "description": "Must be 'authorization_code'.",
@@ -411,6 +411,10 @@
         },
         "client_secret": {
           "description": "The agent's client_secret.",
+          "type": "string"
+        },
+        "agent_attestation": {
+          "description": "Fresh signed JWT proving current possession of the agent's private key. The attestation sub claim MUST match the client_id's registered agent_id. The aud claim MUST be set to the token endpoint URL.",
           "type": "string"
         },
         "code": {
@@ -493,12 +497,16 @@
       }
     },
     "TokenRevocationRequest": {
-      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token.",
+      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token. When called by an agent, client_secret is required for authentication per RFC 7009. Users and administrators authenticate through the implementor's own mechanism (e.g., session cookie, admin API key) and are not required to provide client_secret.",
       "type": "object",
-      "required": ["client_id", "token"],
+      "required": ["token"],
       "properties": {
         "client_id": {
-          "description": "The agent's client_id.",
+          "description": "The agent's client_id. Required when the caller is the agent.",
+          "type": "string"
+        },
+        "client_secret": {
+          "description": "The agent's client_secret. Required when the caller is the agent, for client authentication per RFC 7009.",
           "type": "string"
         },
         "token": {

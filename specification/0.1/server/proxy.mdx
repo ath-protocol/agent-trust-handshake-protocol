@@ -37,10 +37,11 @@ X-ATH-Agent-ID: https://travel-agent.example.com/.well-known/agent.json
 The implementer:
 
 1. **Validates** the ATH access token
-2. **Verifies** that the agent identity matches the token binding
-3. **Checks** that the requested operation is within the granted scopes
-4. **Forwards** the request to the actual service using the stored OAuth token
-5. **Returns** the service's response to the agent
+2. **Verifies** that the agent identity matches the token binding (`X-ATH-Agent-ID` header MUST match the token's bound `agent_id`)
+3. **Verifies** that the `{provider_id}` in the URL path matches the token's bound `provider_id`. If they do not match, MUST return a `PROVIDER_MISMATCH` error
+4. **Checks** that the requested operation is within the granted scopes. The implementer MUST maintain a mapping from scope strings to allowed HTTP methods and API paths. Requests without a matching scope mapping MUST be rejected
+5. **Forwards** the request to the actual service. The implementer SHOULD use an upstream OAuth token scoped only to the ATH token's effective scopes. When using a shared upstream token with broader scopes, the implementer MUST ensure the forwarded request does not exceed the ATH token's effective scopes
+6. **Returns** the service's response to the agent
 
 ## Response
 

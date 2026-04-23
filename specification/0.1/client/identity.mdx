@@ -89,6 +89,7 @@ Agents use signed JWTs (agent attestation tokens) to prove their identity.
   "aud": "<target-service-or-gateway>",
   "iat": 1720000000,
   "exp": 1720003600,
+  "jti": "<unique-token-id>",
   "capabilities": ["flight-search"]
 }
 ```
@@ -100,8 +101,9 @@ Agents use signed JWTs (agent attestation tokens) to prove their identity.
 | `iss` | Issuer — the agent's domain |
 | `sub` | Subject — the full `agent_id` URI |
 | `aud` | Audience — the target service or gateway URL |
-| `iat` | Issued At — timestamp |
+| `iat` | Issued At — timestamp. Implementers MUST verify that `iat` is within 5 minutes of the current time |
 | `exp` | Expiration Time — MUST be present |
+| `jti` | JWT ID — MUST be unique per attestation. Implementers MUST maintain a replay cache of seen `jti` values (retained until `exp`) and reject duplicates |
 
 ### Verification
 
@@ -110,4 +112,14 @@ The verifier (gateway or service):
 2. Extracts the public key
 3. Verifies the JWT signature using the public key
 4. Validates `exp` (not expired) and `aud` (matches the verifier's URL)
-5. Implementers MUST reject attestations that are expired or have mismatched audiences
+5. Verifies that `jti` has not been seen before (checks against replay cache)
+6. Verifies that `iat` is within 5 minutes of the current time
+7. Implementers MUST reject attestations that are expired, have mismatched audiences, or have duplicate `jti` values
+
+### Identity Document Caching
+
+- Implementers MAY cache agent identity documents to reduce fetch overhead
+- The maximum cache time-to-live MUST NOT exceed **5 minutes**
+- Agent identity documents SHOULD include a `Cache-Control: max-age=300` response header
+- When attestation verification fails due to a signature mismatch (not expiry or audience errors), implementers SHOULD re-fetch the identity document (bypassing cache) to support emergency key rotation. To prevent abuse as a DoS amplifier, implementers MUST rate-limit re-fetches to at most once per `agent_id` per minute
+- Implementers SHOULD set connect and read timeouts when fetching agent identity documents
