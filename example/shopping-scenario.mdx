@@ -74,7 +74,7 @@ The AI assistant requests product query and order creation permissions, attachin
     "credential": "jwt_token_signed_by_user",
     "signature": "signature_by_ai_assistant"
   },
-  "context": "用户需要查询商品并下单",
+  "context": "User needs to search products and place an order",
   "timestamp": 1717200004
 }
 ```
@@ -105,7 +105,7 @@ Both parties complete key negotiation. The e-commerce platform issues an access 
 ```python
 # Query products
 response = ai_assistant.request(
-  "GET /api/goods?keyword=手机",
+  "GET /api/goods?keyword=phone",
   headers={"Authorization": "Bearer <access_token>"}
 )
 # Create an order

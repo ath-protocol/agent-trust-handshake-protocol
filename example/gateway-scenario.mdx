@@ -82,7 +82,7 @@ The AI assistant requests OA read and CRM write permissions, attaching the user'
     "credential": "jwt_token_signed_by_user",
     "signature": "signature_by_ai_assistant"
   },
-  "context": "用户需要查询OA审批和更新CRM客户信息",
+  "context": "User needs to query OA approvals and update CRM customer information",
   "timestamp": 1717200004
 }
 ```
@@ -119,7 +119,7 @@ response = ai_assistant.request(
 # Update CRM customer info (gateway automatically forwards to CRM system)
 response = ai_assistant.request(
   "POST /crm/api/customer/123",
-  json={"status": "跟进中"},
+  json={"status": "following_up"},
   headers={"Authorization": "Bearer <access_token>"}
 )
 ```
