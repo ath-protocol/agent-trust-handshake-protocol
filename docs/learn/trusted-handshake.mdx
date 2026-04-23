@@ -1,0 +1,42 @@
+---
+title: Trusted Handshake Protocol
+sidebar_label: Trusted Handshake
+---
+# ATH Trusted Handshake Protocol
+## What is ATH Protocol?
+Agent Trust Handshake Protocol (ATH Protocol) is a decentralized trust establishment and secure communication standard for heterogeneous AI agents. It defines the complete process specification for identity authentication, permission negotiation, and secure communication between agents, solving the problem of trusted interoperability between AI agents from different vendors, architectures, and functions.
+## Core Goals
+1. **Verifiable Identity**: All participating agents' identities can be verified through encryption algorithms to prevent identity forgery
+2. **Negotiable Permissions**: Both parties can negotiate data access scope and function call permissions through a standardized process
+3. **Traceable Communication**: All interaction behaviors are auditable and traceable, clarifying responsibility boundaries
+4. **Cross-platform Compatibility**: Supports seamless docking of agents with different technology stacks and operating environments
+5. **Security Guarantee**: Built-in multi-layer security mechanisms to prevent security risks such as data leakage and unauthorized access
+## Complete 12-Step Handshake Process
+The ATH protocol handshake process is divided into 3 core phases:
+### Phase 1: Identity Verification (Steps 1-6)
+1. Agent A sends handshake request to Agent B (including DID, capability list)
+2. Agent B verifies Agent A's identity with Identity Registry
+3. Identity Registry returns verification result to Agent B
+4. Agent B returns handshake response to Agent A (including its own DID, capability list)
+5. Agent A verifies Agent B's identity with Identity Registry
+6. Identity Registry returns verification result to Agent A
+### Phase 2: Permission Negotiation (Steps 7-9)
+7. Agent A sends permission request list to Agent B
+8. Agent B returns permission approval result (approve/deny/partial approve)
+9. Agent A confirms permission scope with Agent B
+### Phase 3: Session Establishment (Steps 10-12)
+10. Agent A sends session key negotiation request
+11. Agent B returns session key negotiation response
+12. Both parties establish encrypted communication session
+## Key Features
+- **Decentralized Identity**: Uses DID (Decentralized Identifier) as unique identity
+- **Mutual Authentication**: Both parties verify each other's identity independently
+- **Fine-grained Permission Control**: Supports interface-level, data-level, and time-level authorization
+- **End-to-end Encryption**: TLS 1.3 based encrypted communication
+- **Auditability**: All processes are recorded for audit and compliance
+## Protocol Architecture
+ATH protocol adopts layered architecture design:
+1. **Identity Layer**: Responsible for identity generation, verification, and management
+2. **Permission Layer**: Responsible for permission negotiation, approval, and control
+3. **Session Layer**: Responsible for encrypted session establishment and management
+4. **Application Layer**: Responsible for business data transmission and processing

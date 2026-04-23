@@ -1,0 +1,106 @@
+---
+title: "Quickstart"
+description: "Get up and running with ATH in 5 minutes using the reference implementation."
+---
+
+This guide walks you through running the ATH reference implementation locally. You'll start a gateway, run a demo agent, and see the full trusted handshake flow in action.
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 18+
+- [pnpm](https://pnpm.io/) 9+
+
+## Step 1: Clone and Install
+
+Clone the reference gateway repository:
+
+```bash
+git clone https://github.com/ath-protocol/gateway.git
+cd gateway
+pnpm install
+```
+
+{/* TODO: Update clone URL once gateway repo is published */}
+
+## Step 2: Start the Gateway
+
+Start the ATH gateway in mock mode (no external OAuth provider required):
+
+```bash
+pnpm dev
+```
+
+The gateway starts at `http://localhost:3000`. Open `http://localhost:3000/ui/dashboard` to see the web dashboard.
+
+<Note>
+Mock mode uses a built-in OAuth server for testing. No external accounts or API keys needed.
+</Note>
+
+## Step 3: Run the Demo Agent
+
+In a second terminal, run the demo agent:
+
+```bash
+pnpm demo
+```
+
+This exercises the full protocol flow:
+
+1. **Discovery** — The agent queries `/.well-known/ath.json` to find available providers
+2. **Registration** — The agent registers with the gateway (Phase A: app-side authorization)
+3. **Authorization** — The agent initiates an OAuth flow for the user (Phase B: user-side authorization)
+4. **Token Exchange** — After user consent, the agent receives an ATH token with scope intersection
+5. **API Call** — The agent makes a proxied API call using the ATH token
+
+## Step 4: Verify the Dashboard
+
+Go back to `http://localhost:3000/ui/dashboard` — you should see the registered agent with its approved scopes.
+
+## What Just Happened?
+
+The demo exercised the ATH **trusted handshake**:
+
+```
+Agent Developer                    ATH Gateway
+      │                                │
+      │  1. Register agent             │
+      ├───────────────────────────────►│
+      │                                │  Verify identity
+      │                                │  Evaluate policy
+      │  2. Approved (client_id)       │
+      │◄───────────────────────────────┤
+      │                                │
+      │  3. Request authorization      │
+      ├───────────────────────────────►│
+      │                                │  Check approval
+      │                                │  Start OAuth flow
+      │  4. Authorization URL          │
+      │◄───────────────────────────────┤
+      │                                │
+      │  [User consents via OAuth]     │
+      │                                │
+      │  5. Exchange for ATH token     │
+      ├───────────────────────────────►│
+      │                                │  Scope intersection
+      │  6. ATH token (scoped)         │
+      │◄───────────────────────────────┤
+```
+
+Both the **service** (via the gateway's approval policy) and the **user** (via OAuth consent) had to approve before the agent received any access.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Connect a Real Provider" icon="github" href="/docs/develop/build-gateway">
+    Set up the gateway with GitHub, Google, or any OAuth provider
+  </Card>
+  <Card title="Build Your Own Agent" icon="robot" href="/docs/develop/build-agent">
+    Use the ATH Client SDK in your own agent
+  </Card>
+  <Card title="Understand the Architecture" icon="sitemap" href="/docs/learn/architecture">
+    Learn about gateway mode vs native mode
+  </Card>
+  <Card title="Read the Spec" icon="file-lines" href="/specification/0.1">
+    Dive into the full protocol specification
+  </Card>
+</CardGroup>

@@ -1,0 +1,46 @@
+---
+title: "Versioning"
+description: "How ATH protocol versions work."
+---
+
+The Agent Trust Handshake Protocol uses **semantic version identifiers** following the format `MAJOR.MINOR` (e.g., `0.1`, `0.2`, `1.0`).
+
+## Version Scheme
+
+| Component | Meaning |
+|-----------|---------|
+| **Major** (e.g., `1.x`) | Breaking changes to the protocol interface |
+| **Minor** (e.g., `0.2`) | New features, backward-compatible additions |
+
+<Info>
+The protocol version will _not_ be incremented for backward-compatible changes. This allows incremental improvements while preserving interoperability between implementations targeting the same major version.
+</Info>
+
+## Current Version
+
+The current protocol version is **v0.1**, which covers:
+
+- Agent identity model (URI-based Agent_ID + signed JWT attestation)
+- Three discovery modes (manual, gateway catalog, service-side `.well-known`)
+- Trusted handshake flow (Phase A: agent registration, Phase B: user OAuth consent)
+- PKCE ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) and Resource Indicators ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707))
+- Scope intersection enforcement
+- API endpoints (register, authorize, token, proxy, revoke)
+- Security considerations
+
+## Discovery Document Versioning
+
+The `ath_version` field in discovery documents (`/.well-known/ath.json` and `/.well-known/ath-app.json`) indicates which protocol version the implementation supports:
+
+```json
+{
+  "ath_version": "0.1",
+  ...
+}
+```
+
+Agents SHOULD check this field to ensure compatibility before proceeding with registration.
+
+## Planned Versions
+
+See the [Roadmap](/community/roadmap) for details on planned protocol versions.
