@@ -1,0 +1,38 @@
+---
+title: "Token Revocation"
+sidebarTitle: "Revocation"
+description: "POST /ath/revoke — Revoke an ATH access token."
+---
+
+## Token Revocation
+
+**`POST /ath/revoke`**
+
+Revoke an ATH access token, rendering it immediately unusable.
+
+## Request
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "token": "ath_tk_xxxxxxxx"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `client_id` | string | Yes | The agent's client ID |
+| `token` | string | Yes | The ATH access token to revoke |
+
+## Response
+
+Returns `200 OK` upon successful revocation.
+
+## Behavior
+
+- The token becomes unusable immediately after revocation
+- Subsequent API calls using a revoked token MUST be rejected
+- Agents, users (via the management interface), or administrators can all revoke tokens
+- Revocation operations SHOULD be recorded in an audit log

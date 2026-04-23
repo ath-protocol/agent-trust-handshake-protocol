@@ -1,0 +1,51 @@
+---
+title: "API Proxy Forwarding"
+sidebarTitle: "Proxy Forwarding"
+description: "ANY /ath/proxy/{provider_id}/{path} — Proxy API calls through the gateway."
+---
+
+## API Proxy Forwarding (Runtime, Gateway Mode Only)
+
+**`ANY /ath/proxy/{provider_id}/{path}`**
+
+Proxy-forwards API calls to the upstream service provider. Available only in gateway mode.
+
+## Request
+
+```
+GET /ath/proxy/example-mail/v1/messages
+Authorization: Bearer ath_tk_xxxxxxxx
+X-ATH-Agent-ID: https://travel-agent.example.com/.well-known/agent.json
+```
+
+### Request Headers
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer <ath_access_token>` |
+| `X-ATH-Agent-ID` | Yes | The agent's canonical URI |
+
+### Path Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `provider_id` | The service provider to proxy the request to |
+| `path` | The upstream service's API path |
+
+## Behavior
+
+The implementer:
+
+1. **Validates** the ATH access token
+2. **Verifies** that the agent identity matches the token binding
+3. **Checks** that the requested operation is within the granted scopes
+4. **Forwards** the request to the actual service using the stored OAuth token
+5. **Returns** the service's response to the agent
+
+## Response
+
+The response is passed through from the upstream service provider. The gateway does not modify the response body.
+
+<Note>
+In native mode, the service handles requests directly rather than through proxy forwarding. The proxy forwarding endpoint is only applicable to gateway mode deployments.
+</Note>

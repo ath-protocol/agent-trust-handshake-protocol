@@ -1,0 +1,64 @@
+---
+title: "Authorization Request"
+sidebarTitle: "Authorization"
+description: "POST /ath/authorize — Initiate a user-side OAuth authorization flow."
+---
+
+## Authorization Request (Phase B)
+
+**`POST /ath/authorize`**
+
+Initiate a user-side authorization flow. The implementer verifies that the agent is registered and approved, then initiates an OAuth consent flow for the user.
+
+## Request
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "agent_attestation": "<signed JWT>",
+  "provider_id": "example-mail",
+  "scopes": ["mail:read"],
+  "user_redirect_uri": "https://travel-agent.example.com/callback",
+  "state": "<random-state-string>",
+  "resource": "https://api.example.com/v1"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `client_id` | string | Yes | The agent's client ID obtained during registration |
+| `agent_attestation` | string | Yes | A fresh signed JWT attesting to the agent's identity |
+| `provider_id` | string | Yes | The service provider to authorize |
+| `scopes` | string[] | Yes | Scopes to request (must be within approved scopes) |
+| `user_redirect_uri` | string | No | Redirect URL after OAuth consent |
+| `state` | string | No | Opaque state value for CSRF protection |
+| `resource` | string | No | Target resource server URI ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) |
+
+## Response
+
+```json
+{
+  "authorization_url": "https://example.com/oauth/authorize?client_id=...&scope=mail:read&code_challenge=...&code_challenge_method=S256&state=...",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authorization_url` | string | The OAuth consent URL the user should be directed to |
+| `ath_session_id` | string | Session identifier for the token exchange step |
+
+## Behavior
+
+- The implementer MUST verify that the agent is registered and `agent_status` is `"approved"`
+- The implementer MUST verify that the attestation JWT is valid
+- The implementer MUST check that the agent has been approved for the requested service provider
+- The requested scopes MUST be within the agent's approved scopes for that service provider
+- The `authorization_url` MUST include PKCE parameters ([RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)) — `code_challenge` and `code_challenge_method=S256`
+- The corresponding `code_verifier` is stored on the server side and sent during token exchange
+- The agent directs the user to the `authorization_url`
+- After consent, the OAuth callback is handled by the ATH implementer

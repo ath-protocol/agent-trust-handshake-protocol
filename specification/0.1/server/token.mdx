@@ -1,0 +1,72 @@
+---
+title: "Token Exchange"
+sidebarTitle: "Token"
+description: "POST /ath/token — Exchange an authorization code for an ATH access token."
+---
+
+## Token Exchange (Phase B, after user consent)
+
+**`POST /ath/token`**
+
+After the user completes the OAuth consent flow, the agent exchanges the authorization code for an ATH access token. The implementer computes the scope intersection and binds the token.
+
+## Request
+
+```json
+{
+  "grant_type": "authorization_code",
+  "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
+  "code": "<oauth-authorization-code>",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `grant_type` | string | Yes | Must be `"authorization_code"` |
+| `client_id` | string | Yes | The agent's client ID |
+| `client_secret` | string | Yes | The agent's client secret |
+| `code` | string | Yes | The OAuth authorization code received in the callback |
+| `ath_session_id` | string | Yes | The session ID returned from the authorization step |
+
+## Response
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "provider_id": "example-mail",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `access_token` | string | The ATH access token |
+| `token_type` | string | Always `"Bearer"` |
+| `expires_in` | number | Token validity period in seconds |
+| `effective_scopes` | string[] | The computed effective scopes |
+| `provider_id` | string | The service provider this token corresponds to |
+| `agent_id` | string | The agent this token is bound to |
+| `scope_intersection` | object | Full breakdown of the scope intersection |
+| `scope_intersection.agent_approved` | string[] | Scopes approved by the service for this agent |
+| `scope_intersection.user_consented` | string[] | Scopes consented to by the user |
+| `scope_intersection.effective` | string[] | The intersection (effective permissions) |
+
+## Behavior
+
+- The response MUST include the `scope_intersection` breakdown
+- The token MUST be bound to a specific `(agent_id, user_id, provider_id, scopes)` tuple
+- If the scope intersection is empty, the implementer MUST NOT issue a token
