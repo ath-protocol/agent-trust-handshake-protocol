@@ -1,0 +1,125 @@
+# 场景示例：SDK原生集成模式（无网关）
+## 场景描述
+电商平台（服务端）提供商品查询和订单创建接口，用户使用AI购物助手（智能体/客户端）帮自己查询商品并下单。
+**模式特点**：电商平台服务端原生集成ATH协议，不需要额外部署网关，智能体直接与服务端交互。
+## 参与角色
+| 角色 | 描述 |
+|------|------|
+| 用户 | 电商平台的消费者，使用AI购物助手 |
+| 智能体 | AI购物助手，代表用户完成购物操作 |
+| 电商平台 | 提供商品查询、订单创建等API服务，原生集成ATH协议 |
+## 流程说明
+### 前置步骤：用户预授权
+1. 用户打开AI购物助手，授权助手可以代表自己查询商品、创建订单
+2. 用户签署授权凭证，授权范围：`goods:read`, `order:create`，有效期2小时
+3. AI助手安全存储用户授权凭证
+### 完整9步握手流程
+#### 步骤1：智能体发起握手请求
+AI助手向电商平台发送握手请求：
+```json
+{
+  "type": "handshake_request",
+  "client_did": "did:ath:ai_shopping_assistant_001",
+  "client_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "versions": ["0.1"],
+  "capabilities": ["ES256", "TLS1.3"],
+  "nonce": "random_123456",
+  "timestamp": 1717200000
+}
+```
+#### 步骤2：电商平台返回握手响应
+电商平台验证请求格式，返回自身身份信息：
+```json
+{
+  "type": "handshake_response",
+  "server_did": "did:ath:ecommerce_platform_001",
+  "server_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "version": "0.1",
+  "capabilities": ["ES256", "TLS1.3"],
+  "nonce": "random_654321",
+  "signature": "signature_of_random_123456",
+  "timestamp": 1717200001
+}
+```
+#### 步骤3：智能体发送身份证明
+AI助手使用自身私钥对`random_654321`签名，发送身份证明：
+```json
+{
+  "type": "identity_proof",
+  "signature": "signature_of_random_654321",
+  "timestamp": 1717200002
+}
+```
+#### 步骤4：电商平台返回身份验证结果
+电商平台验证签名通过，返回支持的权限列表：
+```json
+{
+  "type": "identity_result",
+  "success": true,
+  "metadata": {
+    "scopes_supported": ["goods:read", "order:create", "user:profile"],
+    "token_max_ttl": 7200
+  },
+  "timestamp": 1717200003
+}
+```
+#### 步骤5：智能体发送权限请求
+AI助手请求查询商品和创建订单权限，附带用户授权凭证：
+```json
+{
+  "type": "scope_request",
+  "scopes": ["goods:read", "order:create"],
+  "ttl": 7200,
+  "user_authorization": {
+    "credential": "jwt_token_signed_by_user",
+    "signature": "signature_by_ai_assistant"
+  },
+  "context": "用户需要查询商品并下单",
+  "timestamp": 1717200004
+}
+```
+#### 步骤6：电商平台向用户确认授权
+电商平台通过APP推送向用户确认授权：
+```
+【授权确认】AI购物助手请求访问您的电商账号，权限：查询商品、创建订单
+是否同意？[同意/拒绝]
+```
+#### 步骤7：用户返回授权确认结果
+用户点击「同意」，电商平台收到用户确认结果。
+#### 步骤8：电商平台返回权限审批结果
+电商平台同意授权请求，返回权限信息：
+```json
+{
+  "type": "scope_result",
+  "scopes_granted": ["goods:read", "order:create"],
+  "ttl_granted": 7200,
+  "restrictions": {
+    "rate_limit": "100/minute",
+    "order_amount_limit": 5000
+  },
+  "timestamp": 1717200007
+}
+```
+#### 步骤9：完成握手建立会话
+双方完成密钥协商，电商平台颁发访问令牌，AI助手可以开始访问API：
+```python
+# 查询商品
+response = ai_assistant.request(
+  "GET /api/goods?keyword=手机",
+  headers={"Authorization": "Bearer <access_token>"}
+)
+# 创建订单
+response = ai_assistant.request(
+  "POST /api/order",
+  json={"goods_id": "123", "quantity": 1},
+  headers={"Authorization": "Bearer <access_token>"}
+)
+```
+## 模式优势
+1. **性能更高**：没有网关转发，延迟更低
+2. **功能更完整**：可以充分利用ATH协议的所有特性
+3. **安全性更好**：端到端加密，没有中间节点
+## 适用场景
+- 自身开发的服务端，有能力修改代码集成ATH协议
+- 对性能要求较高的场景
+- 需要完整协议功能的场景
