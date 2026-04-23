@@ -9,9 +9,9 @@
 只需要安装Python 3.6+，不需要任何额外依赖：
 ```bash
 # 下载Demo文件
-wget https://raw.githubusercontent.com/ath-protocol/agent-trust-handshake-protocol/main/demo/ath_simple_demo.py
+wget https://raw.githubusercontent.com/ath-protocol/agent-trust-handshake-protocol/main/demo/ath_simple_demo_zh.py
 # 直接运行
-python ath_simple_demo.py
+python ath_simple_demo_zh.py
 ```
 ### 2. GitHub在线运行（不需要本地环境）
 可以通过GitHub Codespaces在线运行，完全不需要本地环境：
@@ -20,7 +20,7 @@ python ath_simple_demo.py
 3. 点击「Create codespace on main」
 4. 等待环境启动后，在终端运行：
 ```bash
-python demo/ath_simple_demo.py
+python demo/ath_simple_demo_zh.py
 ```
 ## ❓ 常见问题解答
 ### Q: Demo在一个Python文件里，怎么同时实现客户端和服务端？
