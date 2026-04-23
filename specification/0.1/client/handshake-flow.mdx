@@ -1,49 +1,87 @@
----
-title: "Trusted Handshake Flow"
-sidebarTitle: "Handshake Flow"
-description: "The 8-step trusted handshake protocol specification, aligned with README."
----
-<div id="enable-section-numbers" />
-The protocol follows an 8-step flow for end-to-end trusted authorization, aligned with the project README.
-## 8-Step Trusted Handshake Flow
+# 客户端握手流程规范
+## 概述
+本文档定义了ATH协议客户端（智能体）的握手流程实现规范。
+## 客户端职责
+1. 管理自身DID身份和公私钥对
+2. 存储和管理用户授权凭证
+3. 发起握手请求，完成双向身份验证
+4. 协商访问权限，获取访问令牌
+5. 维护与服务端的加密通信会话
+## 完整握手流程（客户端视角）
+### 前置步骤：获取用户预授权
+客户端在发起握手前，必须先获得用户的预授权凭证：
+1. 向用户请求授权，说明需要访问的资源范围
+2. 用户签署授权凭证，包含授权范围、有效期等信息
+3. 客户端安全存储用户授权凭证
+### 步骤1：发起握手请求
+客户端向服务端发送握手请求报文：
+```json
+{
+  "type": "handshake_request",
+  "client_did": "did:ath:client_xxxxxx",
+  "client_pubkey": "-----BEGIN PUBLIC KEY-----...",
+  "versions": ["0.1", "0.2"],
+  "capabilities": ["ES256", "EdDSA", "TLS1.3"],
+  "nonce": "random_string_a",
+  "timestamp": 1234567890
+}
 ```
-User         Agent        ATH Implementor      Service
- │             │                  │                │
- │  "Do X"    │                  │                │
- ├────────────►│                  │                │
- │             │                  │                │
- │  1. Request access            │                │
- │             ├─────────────────►│                │
- │             │                  │                │
- │             │  2. Verify agent identity & approval  │
- │             │                  │                │
- │             │  3. Initiate OAuth flow          │
- │             │                  ├───────────────►│
- │             │                  │                │
- │  4. OAuth consent page         │                │
- │◄───────────────────────────────────────────────┤
- │                                │                │
- │  5. User approves consent      │                │
- ├───────────────────────────────────────────────►│
- │             │                  │                │
- │             │  6. Scope intersection & token binding  │
- │             │                  │                │
- │             │  7. Issue ATH access token       │
- │             │◄─────────────────┤                │
- │             │                  │                │
- │             │  8. Authenticated API call & response  │
- │             ├─────────────────►│                │
- │             │                  ├───────────────►│
- │             │                  │◄───────────────┤
- │  Result     │                  │                │
- │◄────────────┤                  │                │
+### 步骤2：处理服务端握手响应
+客户端收到服务端响应后：
+1. 验证服务端DID和公钥的有效性
+2. 验证服务端对随机数A的签名是否正确
+3. 协商确定协议版本和加密算法
+4. 保存服务端公钥和元数据
+### 步骤3：发送身份证明
+客户端使用自身私钥对服务端生成的随机数B进行签名，发送身份证明报文：
+```json
+{
+  "type": "identity_proof",
+  "signature": "signature_of_nonce_b",
+  "credentials": [/* 可选的身份凭证 */],
+  "timestamp": 1234567892
+}
 ```
-<Note>
-In Gateway Mode, "ATH Implementor" is the gateway and "Service" is the upstream provider. In Native Mode, "ATH Implementor" and "Service" are the same entity.
-</Note>
-## Scope Intersection (Step 6)
-The effective scope of any access token is the **intersection** of three sets:
+### 步骤4：处理身份验证结果
+客户端收到身份验证结果：
+1. 验证身份是否通过
+2. 读取服务端支持的作用域列表和配置信息
+3. 如果验证失败，终止握手流程
+### 步骤5：发送权限请求
+客户端向服务端发送权限请求，附带用户预授权凭证：
+```json
+{
+  "type": "scope_request",
+  "scopes": ["user:read", "data:write"],
+  "ttl": 1800,
+  "user_authorization": {
+    "credential": "jwt_token_signed_by_user",
+    "signature": "signature_by_client"
+  },
+  "context": "用于生成用户月度报告",
+  "timestamp": 1234567894
+}
 ```
-Effective Scope = Agent Approved Scopes ∩ User Consented Scopes ∩ Requested Scopes
-```
-See [Scope Intersection](/specification/0.1/client/scope-intersection) for details.
+### 步骤6-7：等待用户授权确认
+客户端等待服务端完成用户授权确认流程，此过程由服务端和用户直接交互，客户端无需参与。
+### 步骤8：处理权限审批结果
+客户端收到权限审批结果：
+1. 检查授予的权限范围是否满足需求
+2. 记录访问限制条件和有效期
+3. 如果权限被拒绝，终止握手流程
+### 步骤9：完成握手，建立会话
+客户端与服务端完成密钥协商：
+1. 生成密钥交换参数，发送给服务端
+2. 接收服务端密钥交换参数，生成共享会话密钥
+3. 验证服务端颁发的访问令牌有效性
+4. 使用会话密钥加密后续所有业务请求
+## 错误处理
+| 错误码 | 描述 | 处理方式 |
+|--------|------|----------|
+| 401 | 身份验证失败 | 检查自身身份配置，重新发起握手 |
+| 403 | 权限被拒绝 | 提示用户重新授权，调整权限范围 |
+| 408 | 握手超时 | 重试握手流程，最多重试3次 |
+## 安全要求
+- 用户授权凭证必须加密存储，防止泄露
+- 私钥必须安全存储，不得明文传输
+- 会话密钥定期轮换，有效期不超过24小时
