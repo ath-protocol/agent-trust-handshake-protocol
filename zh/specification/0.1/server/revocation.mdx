@@ -1,0 +1,38 @@
+---
+title: "令牌吊销"
+sidebarTitle: "吊销"
+description: "POST /ath/revoke — 吊销 ATH 访问令牌。"
+---
+
+## 令牌吊销
+
+**`POST /ath/revoke`**
+
+吊销一个 ATH 访问令牌，使其立即不可用。
+
+## 请求
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "token": "ath_tk_xxxxxxxx"
+}
+```
+
+### 请求字段
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `client_id` | string | 是 | 代理的客户端 ID |
+| `token` | string | 是 | 要吊销的 ATH 访问令牌 |
+
+## 响应
+
+成功吊销后返回 `200 OK`。
+
+## 行为
+
+- 令牌在吊销后立即不可用
+- 使用已吊销令牌的后续 API 调用必须（MUST）被拒绝
+- 代理、用户（通过管理界面）或管理员均可吊销令牌
+- 吊销操作建议（SHOULD）记录审计日志

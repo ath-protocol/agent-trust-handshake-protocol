@@ -1,0 +1,57 @@
+---
+title: "范围交集规范"
+sidebarTitle: "范围交集"
+description: "范围交集执行机制的正式规范。"
+---
+
+<div id="enable-section-numbers" />
+
+## 定义
+
+任何 ATH 访问令牌的有效范围必须（MUST）按以下方式计算：
+
+```
+有效范围 = 代理已批准的范围 ∩ 用户已同意的范围 ∩ 请求的范围
+```
+
+其中：
+- **代理已批准的范围**：ATH 实现者在阶段 A 注册期间为代理批准的范围集合
+- **用户已同意的范围**：用户在阶段 B OAuth 授权同意流程中授予的范围集合
+- **请求的范围**：代理在授权请求中请求的范围集合
+
+## 示例
+
+```
+代理已批准的范围：     mail:read, mail:send
+用户已同意的范围：     mail:read, mail:send, mail:delete
+代理请求的范围：       mail:read
+────────────────────────────────────────────────
+有效范围：             mail:read
+```
+
+## 要求
+
+1. 实现者在签发任何 ATH 访问令牌之前，必须（MUST）计算范围交集
+2. 令牌响应必须（MUST）包含 `scope_intersection` 分解信息
+3. 实现者禁止（MUST NOT）签发包含计算交集之外范围的令牌
+4. 如果交集为空，实现者禁止（MUST NOT）签发令牌
+
+## 令牌响应格式
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "provider_id": "example-mail",
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+`scope_intersection` 字段提供了有效范围如何推导出来的完全透明信息。

@@ -1,0 +1,64 @@
+---
+title: "授权请求"
+sidebarTitle: "授权"
+description: "POST /ath/authorize — 发起用户端 OAuth 授权流程。"
+---
+
+## 授权请求（阶段 B）
+
+**`POST /ath/authorize`**
+
+发起用户端授权流程。实现者验证代理已注册且已获批准，然后为用户发起 OAuth 授权同意流程。
+
+## 请求
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "agent_attestation": "<signed JWT>",
+  "provider_id": "example-mail",
+  "scopes": ["mail:read"],
+  "user_redirect_uri": "https://travel-agent.example.com/callback",
+  "state": "<random-state-string>",
+  "resource": "https://api.example.com/v1"
+}
+```
+
+### 请求字段
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `client_id` | string | 是 | 注册时获取的代理客户端 ID |
+| `agent_attestation` | string | 是 | 新鲜的签名 JWT，用于证明代理身份 |
+| `provider_id` | string | 是 | 要授权的服务提供方 |
+| `scopes` | string[] | 是 | 要请求的范围（必须在已批准范围内） |
+| `user_redirect_uri` | string | 否 | OAuth 授权同意后的重定向地址 |
+| `state` | string | 否 | 用于 CSRF 保护的不透明状态值 |
+| `resource` | string | 否 | 目标资源服务器 URI（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)） |
+
+## 响应
+
+```json
+{
+  "authorization_url": "https://example.com/oauth/authorize?client_id=...&scope=mail:read&code_challenge=...&code_challenge_method=S256&state=...",
+  "ath_session_id": "ath_sess_abc123"
+}
+```
+
+### 响应字段
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `authorization_url` | string | 用户应被引导至的 OAuth 授权同意 URL |
+| `ath_session_id` | string | 用于令牌交换步骤的会话标识符 |
+
+## 行为
+
+- 实现者必须（MUST）验证代理已注册且 `agent_status` 为 `"approved"`
+- 实现者必须（MUST）验证证明 JWT 有效
+- 实现者必须（MUST）检查代理已获得所请求服务提供方的批准
+- 请求的范围必须（MUST）在代理针对该服务提供方已批准的范围内
+- `authorization_url` 必须（MUST）包含 PKCE 参数（[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)）— `code_challenge` 和 `code_challenge_method=S256`
+- 对应的 `code_verifier` 存储在服务端，在令牌交换时发送
+- 代理将用户引导至 `authorization_url`
+- 授权同意后，OAuth 回调由 ATH 实现者处理

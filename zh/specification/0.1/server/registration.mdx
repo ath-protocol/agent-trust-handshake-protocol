@@ -1,0 +1,85 @@
+---
+title: "代理注册"
+sidebarTitle: "注册"
+description: "POST /ath/agents/register — 注册代理并请求能力审批。"
+---
+
+## 代理注册（阶段 A）
+
+**`POST /ath/agents/register`**
+
+向 ATH 实现者注册一个新代理。实现者验证代理的身份，并根据其审批策略评估请求的能力。
+
+## 请求
+
+```json
+{
+  "agent_id": "https://travel-agent.example.com/.well-known/agent.json",
+  "agent_attestation": "<signed JWT>",
+  "developer": {
+    "name": "Example Corp",
+    "id": "dev-example-12345"
+  },
+  "requested_providers": [
+    {
+      "provider_id": "example-mail",
+      "scopes": ["mail:read", "mail:send"]
+    }
+  ],
+  "purpose": "Travel planning assistant",
+  "redirect_uris": ["https://travel-agent.example.com/callback"]
+}
+```
+
+### 请求字段
+
+| 字段 | 类型 | 必填 | 描述 |
+|-------|------|----------|-------------|
+| `agent_id` | string | 是 | 代理的规范 URI |
+| `agent_attestation` | string | 是 | 证明代理身份的签名 JWT |
+| `developer` | object | 是 | 开发者信息 |
+| `developer.name` | string | 是 | 开发者或组织名称 |
+| `developer.id` | string | 是 | 开发者标识符 |
+| `requested_providers` | array | 是 | 请求的服务提供方和范围 |
+| `requested_providers[].provider_id` | string | 是 | 服务提供方标识符 |
+| `requested_providers[].scopes` | string[] | 是 | 该服务提供方请求的范围 |
+| `purpose` | string | 否 | 代理用途的人类可读描述 |
+| `redirect_uris` | string[] | 否 | OAuth 回调 URI |
+
+## 响应（成功）
+
+```json
+{
+  "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
+  "agent_status": "approved",
+  "approved_providers": [
+    {
+      "provider_id": "example-mail",
+      "approved_scopes": ["mail:read"],
+      "denied_scopes": ["mail:send"],
+      "denial_reason": "Send capability requires additional review"
+    }
+  ],
+  "approval_expires": "2027-01-01T00:00:00Z"
+}
+```
+
+### 响应字段
+
+| 字段 | 类型 | 描述 |
+|-------|------|-------------|
+| `client_id` | string | 此次注册的唯一标识符 |
+| `client_secret` | string | 用于认证令牌交换请求的密钥 |
+| `agent_status` | string | `"approved"`、`"pending"` 或 `"denied"` |
+| `approved_providers` | array | 各服务提供方的审批结果 |
+| `approved_providers[].approved_scopes` | string[] | 已批准的范围 |
+| `approved_providers[].denied_scopes` | string[] | 被拒绝的范围 |
+| `approved_providers[].denial_reason` | string | 拒绝原因（如有） |
+| `approval_expires` | string | ISO 8601 格式的过期时间戳 |
+
+## 行为
+
+- 实现者可以（MAY）批准请求能力的**子集**
+- 代理必须（MUST）遵守已批准的范围限制
+- 对同一 `agent_id` 的重复注册建议（SHOULD）返回 `409 Conflict`

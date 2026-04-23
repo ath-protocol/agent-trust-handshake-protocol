@@ -1,0 +1,60 @@
+---
+title: "范围交集"
+description: "ATH 如何根据代理批准、用户同意和代理请求计算有效权限。"
+---
+
+范围交集是可信握手的执行机制。它确保任何访问令牌的有效权限是所有参与方批准内容的**最小集合**。
+
+## 公式
+
+```
+Effective Scope = Agent Approved Scopes ∩ User Consented Scopes ∩ Requested Scopes
+```
+
+三个集合取交集：
+
+1. **代理批准范围** — 服务运营商为该代理批准的范围（阶段 A）
+2. **用户同意范围** — 用户在 OAuth 同意流程中同意的范围（阶段 B）
+3. **请求范围** — 代理在此次特定请求中实际请求的范围
+
+## 示例
+
+```
+代理批准范围：         mail:read, mail:send
+用户同意范围：         mail:read, mail:send, mail:delete
+代理请求范围：         mail:read
+────────────────────────────────────────────────
+有效范围：             mail:read
+```
+
+即使用户同意了 `mail:delete`，代理也无法获得该范围，因为服务方从未为该代理批准过它。同样，即使代理被批准了 `mail:send`，它也只能获得 `mail:read`，因为这是它实际请求的全部范围。
+
+## 令牌响应
+
+ATH 令牌响应必须包含完整的 `scope_intersection` 分解信息：
+
+```json
+{
+  "access_token": "ath_tk_xxxxxxxx",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "effective_scopes": ["mail:read"],
+  "scope_intersection": {
+    "agent_approved": ["mail:read"],
+    "user_consented": ["mail:read", "mail:send"],
+    "effective": ["mail:read"]
+  }
+}
+```
+
+这种透明性让代理能够准确了解自己拥有哪些权限，以及为什么某些范围可能被排除。
+
+## 为什么范围交集很重要
+
+| 场景 | 没有 ATH | 使用 ATH |
+|------|---------|---------|
+| 用户同意了 `mail:delete` 但服务方未为该代理批准 | 代理获得 `mail:delete` | 代理**不会**获得 `mail:delete` |
+| 代理被批准了 `mail:send` 但用户拒绝 | 不适用（无应用侧检查） | 代理**不会**获得 `mail:send` |
+| 代理请求的范围超出已批准范围 | 代理获得用户同意的所有范围 | 代理只获得交集部分 |
+
+范围交集在所有授权边界上执行**最小权限原则**。
