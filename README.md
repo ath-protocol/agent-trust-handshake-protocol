@@ -296,7 +296,7 @@ agent-trust-handshake-protocol/
 ├── 📜 specification/               # Core Protocol Specification (the most authoritative standard definitions)
 │   ├── 0.1/                        # v0.1 Protocol
 │   │   ├── basic/                  # Basic protocol specification
-│   │   │   ├── handshake-flow.mdx  # [Core] Detailed definition of the 12-step trusted handshake flow
+│   │   │   ├── handshake-flow.mdx  # [Core] 9-step trusted handshake flow specification
 │   │   │   └── handshake-flow.zh.mdx # Chinese version of the handshake flow specification
 │   │   ├── client/                 # Client protocol specification
 │   │   │   ├── handshake-flow.mdx  # Client handshake flow implementation specification
@@ -304,14 +304,17 @@ agent-trust-handshake-protocol/
 │   │   └── server/                 # Server protocol specification
 │   │       ├── handshake-flow.mdx  # Server handshake flow implementation specification
 │   │       └── reference-implementation.mdx # Server reference implementation
-│   └── ath-protocol-chinese-commented.md # Chinese annotated protocol (easy to understand)
 │
 ├── 🏗️ schema/                      # Machine-Readable Data Structure Definitions
 │   └── 0.1/
 │       ├── schema.json             # JSON Schema format — can be used directly for code generation and parameter validation
 │       └── meta.json               # Protocol metadata definition
 │
-├── 🌐 zh/                          # Chinese Documentation Section (100% synchronized with English content)
+├── 🎬 demo/                        # Interactive Protocol Demo
+│   ├── ath_simple_demo.py          # English demo — 9-step handshake with loading animations
+│   └── ath_simple_demo_zh.py       # Chinese demo
+│
+├── 🌐 zh/                          # Chinese Documentation Section
 │   ├── docs/                       # Chinese technical documentation
 │   └── specification/              # Chinese protocol specification
 │
@@ -328,12 +331,12 @@ All core protocol specifications are located in the `specification/` directory:
 ### 🔑 Core File List
 | File Path | Description | Importance |
 |---------|----------|----------|
-| 📄 `specification/0.1/client/handshake-flow.mdx` | **The most critical handshake flow specification** — detailed definition of the complete 12-step flow from request initiation to handshake completion, including message formats, interaction logic, error handling, etc. | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/server/handshake-flow.mdx` | **Authentication logic specification** — defines permission verification, authorization decision-making, and the concrete implementation standards for the least privilege principle | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/client/handshake-flow.mdx` | Identity authentication specification — defines digital identity formats, generation methods, and verification logic for AI agents and services | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/server/handshake-flow.mdx` | Token specification — defines access token formats, generation algorithms, validity period management, and verification methods | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/client/handshake-flow.mdx` | Security specification — defines encryption algorithms, signature algorithms, anti-attack requirements, and other security-related standards | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/openapi.mdx` | OpenAPI interface definitions — all protocol HTTP interface formats are defined here; SDKs and server implementations must follow this standard | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/basic/handshake-flow.mdx` | **Core handshake flow specification** — the 9-step trusted handshake with message formats and security requirements | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/client/handshake-flow.mdx` | **Client handshake flow** — client-side implementation specification for the 9-step handshake | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/server/handshake-flow.mdx` | **Server handshake flow** — server-side implementation including authorization and token issuance | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/client/reference-implementation.mdx` | Client reference implementation — Python code examples for identity, authorization, and handshake modules | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/server/reference-implementation.mdx` | Server reference implementation — Python code examples for verification, permission, and token modules | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/openapi.mdx` | OpenAPI interface definitions — all protocol HTTP interface formats; SDKs and server implementations must follow this standard | ⭐⭐⭐⭐ |
 | 📄 `schema/0.1/schema.json` | Data structure JSON Schema definitions — validation standards for all message formats | ⭐⭐⭐ |
 ### 💡 Quick Lookup Tips
 - To **implement protocol logic**: Start with `specification/0.1/openapi.mdx` and `schema/0.1/schema.json` — these are machine-readable specifications that can be directly parsed by code

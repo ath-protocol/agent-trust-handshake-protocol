@@ -255,7 +255,7 @@ AI服务的买卖双方通过ATH协议完成交易，自动结算，全程可追
 ---
 ## 📚 中文协议文档
 为了方便国内开发者和非技术人员理解，我们提供了完整的中文注释版协议：
-📄 [ATH协议标准-中文注释版](./specification/ath-protocol-chinese-commented.md)
+📄 [ATH协议标准-中文版](../specification/0.1/basic/handshake-flow.zh.mdx)
 ---
 ## 🚀 部署模式
 ATH支持两种部署模式，可以根据实际需求选择：
@@ -314,7 +314,7 @@ agent-trust-handshake-protocol/
 ├── 📜 specification/               # 核心协议规范（最权威的标准定义）
 │   ├── 0.1/                        # v0.1版本协议
 │   │   ├── basic/                  # 基础协议规范
-│   │   │   ├── handshake-flow.mdx  # 【核心】可信握手12步流程详细定义
+│   │   │   ├── handshake-flow.mdx  # 【核心】9步可信握手流程规范
 │   │   │   └── handshake-flow.zh.mdx # 中文版握手流程规范
 │   │   ├── client/                 # 客户端协议规范
 │   │   │   ├── handshake-flow.mdx  # 客户端握手流程实现规范
@@ -322,14 +322,17 @@ agent-trust-handshake-protocol/
 │   │   └── server/                 # 服务端协议规范
 │   │       ├── handshake-flow.mdx  # 服务端握手流程实现规范
 │   │       └── reference-implementation.mdx # 服务端参考实现
-│   └── ath-protocol-chinese-commented.md # 中文注释版协议（通俗易懂）
 │
 ├── 🏗️ schema/                      # 机器可读数据结构定义
 │   └── 0.1/
 │       ├── schema.json             # JSON Schema格式，可直接用于代码生成、参数校验
 │       └── meta.json               # 协议元数据定义
 │
-├── 🌐 zh/                          # 中文文档专区（和英文内容100%同步）
+├── 🎬 demo/                        # 交互式协议演示
+│   ├── ath_simple_demo.py          # 英文版Demo
+│   └── ath_simple_demo_zh.py       # 中文版Demo
+│
+├── 🌐 zh/                          # 中文文档专区
 │   ├── docs/                       # 中文版技术文档
 │   └── specification/              # 中文版协议规范
 │
@@ -346,15 +349,15 @@ agent-trust-handshake-protocol/
 ### 🔑 核心文件清单
 | 文件路径 | 内容说明 | 重要程度 |
 |---------|----------|----------|
-| 📄 `specification/0.1/client/handshake-flow.mdx` | **最核心的握手流程规范**，详细定义了从发起请求到完成握手的12步完整流程，包括每一步的报文格式、交互逻辑、错误处理等 | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/server/authorization.mdx` | **鉴权逻辑规范**，定义了权限验证、授权决策、最小权限原则的具体实现标准 | ⭐⭐⭐⭐⭐ |
-| 📄 `specification/0.1/client/identity.mdx` | 身份认证规范，定义了AI代理和服务的数字身份格式、生成方式、验证逻辑 | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/server/token.mdx` | 令牌规范，定义了访问令牌的格式、生成算法、有效期管理、验证方式 | ⭐⭐⭐⭐ |
-| 📄 `specification/0.1/client/security.mdx` | 安全规范，定义了加密算法、签名算法、防攻击要求等安全相关标准 | ⭐⭐⭐⭐ |
-| 📄 `spec/openapi.yaml` | OpenAPI接口定义，所有协议的HTTP接口格式都在这里，SDK和服务端实现都要遵循这个标准 | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/basic/handshake-flow.mdx` | **核心握手流程规范**，定义了9步可信握手的完整流程、报文格式和安全要求 | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/client/handshake-flow.mdx` | **客户端握手流程**，客户端侧9步握手的实现规范 | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/server/handshake-flow.mdx` | **服务端握手流程**，服务端侧实现规范，包括授权和令牌颁发 | ⭐⭐⭐⭐⭐ |
+| 📄 `specification/0.1/client/reference-implementation.mdx` | 客户端参考实现，身份、授权、握手模块的Python代码示例 | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/server/reference-implementation.mdx` | 服务端参考实现，验证、权限、令牌模块的Python代码示例 | ⭐⭐⭐⭐ |
+| 📄 `specification/0.1/openapi.mdx` | OpenAPI接口定义，所有协议的HTTP接口格式都在这里 | ⭐⭐⭐⭐ |
 | 📄 `schema/0.1/schema.json` | 数据结构JSON Schema定义，所有报文格式的校验标准 | ⭐⭐⭐ |
 ### 💡 快速查找技巧
-- 如果要**实现协议逻辑**：先看`spec/openapi.yaml`和`schema/0.1/schema.json`，这两个是可以直接用代码解析的机器可读规范
+- 如果要**实现协议逻辑**：先看`specification/0.1/openapi.mdx`和`schema/0.1/schema.json`，这两个是可以直接用代码解析的机器可读规范
 - 如果要**理解协议原理**：先看`docs/learn/trusted-handshake.mdx`，有图文并茂的讲解，然后再看`specification/`下的详细规范
 - 如果是**中文使用者**：直接看`zh/`目录下的中文版本，内容和英文完全同步
 ---
@@ -379,10 +382,10 @@ agent-trust-handshake-protocol/
 ## 🚀 开发者快速导航
 | 角色 | 推荐阅读顺序 |
 |------|--------------|
-| 👨‍💻 SDK开发者 | 1. `docs/getting-started/quickstart.mdx` → 2. `spec/openapi.yaml` → 3. `schema/0.1/schema.json` |
+| 👨‍💻 SDK开发者 | 1. `docs/getting-started/quickstart.mdx` → 2. `specification/0.1/openapi.mdx` → 3. `schema/0.1/schema.json` |
 | 👷‍♂️ 服务端开发者 | 1. `docs/develop/build-gateway.mdx` → 2. `specification/0.1/server/`目录下所有文件 |
 | 📝 协议研究者 | 1. `docs/learn/architecture.mdx` → 2. `specification/0.1/client/`目录下所有文件 → 3. 社区`roadmap.mdx` |
-| 🎯 业务开发者 | 1. `docs/getting-started/intro.mdx` → 2. `docs/examples/scenario.mdx` → 3. 对应语言的SDK文档 |
+| 🎯 业务开发者 | 1. `docs/getting-started/intro.mdx` → 2. `example/shopping-scenario.mdx` → 3. 对应语言的SDK文档 |
 ---
 ## 🌱 生态系统实现指引
 本仓库只定义协议标准，具体的实现代码都在独立的仓库中，你可以根据需要直接使用：
@@ -394,6 +397,6 @@ agent-trust-handshake-protocol/
 | ⚡ [athx](https://github.com/ath-protocol/athx) | ATH核心引擎实现 | 运维工程师、架构师 | 处理握手、认证、授权、令牌管理的核心服务 |
 | 🚪 [gateway](https://github.com/ath-protocol/gateway) | ATH网关服务实现 | 运维工程师、架构师 | 统一接入入口，提供安全防护、负载均衡、流量控制 |
 ### 💡 实现者快速指引
-- 如果你要**开发SDK**：参考本仓库的`spec/openapi.yaml`和`schema/0.1/schema.json`，按照接口标准实现即可
+- 如果你要**开发SDK**：参考本仓库的`specification/0.1/openapi.mdx`和`schema/0.1/schema.json`，按照接口标准实现即可
 - 如果你要**开发网关/服务端**：参考`specification/0.1/server/`目录下的所有规范
 - 如果你要**开发AI代理**：直接使用对应语言的SDK，5分钟就能完成集成
