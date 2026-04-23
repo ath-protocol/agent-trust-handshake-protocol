@@ -1,29 +1,29 @@
-# 场景示例：网关代理模式
-## 场景描述
-企业内部有多个legacy系统（无ATH协议支持），员工使用AI办公助手（智能体/客户端）访问这些系统。部署ATH网关作为统一接入层，所有智能体请求都经过网关转发到后端服务。
-**模式特点**：后端服务不需要修改代码，通过ATH网关提供ATH协议支持，实现零侵入接入。
-## 参与角色
-| 角色 | 描述 |
+# Scenario Example: Gateway Proxy Mode
+## Scenario Description
+An enterprise has multiple legacy systems (without ATH protocol support). Employees use an AI Office Assistant (agent/client) to access these systems. An ATH Gateway is deployed as a unified access layer, and all agent requests are forwarded through the gateway to backend services.
+**Mode Characteristics**: Backend services require no code modifications. The ATH Gateway provides ATH protocol support, enabling zero-intrusion integration.
+## Participating Roles
+| Role | Description |
 |------|------|
-| 用户 | 企业员工，使用AI办公助手 |
-| 智能体 | AI办公助手，代表员工访问企业内部系统 |
-| ATH网关 | 统一接入层，代理所有请求，实现ATH协议逻辑 |
-| 后端服务 | 企业内部legacy系统（如OA、CRM、财务系统等），无ATH支持 |
-## 架构图
+| User | An enterprise employee, using the AI Office Assistant |
+| Agent | AI Office Assistant, accessing internal enterprise systems on behalf of the employee |
+| ATH Gateway | Unified access layer that proxies all requests and implements ATH protocol logic |
+| Backend Services | Internal enterprise legacy systems (e.g., OA, CRM, financial systems, etc.), without ATH support |
+## Architecture Diagram
 ```
 ┌──────────┐     ┌──────────┐     ┌─────────────┐
-│ 智能体   │────▶│ ATH网关  │────▶│ 后端服务     │
-│ (客户端) │     │ (代理)   │     │ (无ATH支持)  │
+│  Agent   │────▶│   ATH    │────▶│   Backend   │
+│ (Client) │     │ (Gateway)│     │  (No ATH)   │
 └──────────┘     └──────────┘     └─────────────┘
 ```
-## 流程说明
-### 前置步骤：用户预授权
-1. 用户打开AI办公助手，授权助手可以代表自己访问OA、CRM系统
-2. 用户签署授权凭证，授权范围：`oa:read`, `crm:write`，有效期8小时
-3. AI助手安全存储用户授权凭证
-### 完整9步握手流程
-#### 步骤1：智能体发起握手请求
-AI助手向ATH网关发送握手请求：
+## Process Description
+### Prerequisite: User Pre-Authorization
+1. The user opens the AI Office Assistant and authorizes it to access OA and CRM systems on their behalf
+2. The user signs an authorization credential with scope: `oa:read`, `crm:write`, valid for 8 hours
+3. The AI assistant securely stores the user's authorization credential
+### Complete 9-Step Handshake Process
+#### Step 1: Agent Initiates Handshake Request
+The AI assistant sends a handshake request to the ATH Gateway:
 ```json
 {
   "type": "handshake_request",
@@ -35,8 +35,8 @@ AI助手向ATH网关发送握手请求：
   "timestamp": 1717200000
 }
 ```
-#### 步骤2：ATH网关返回握手响应
-网关验证请求格式，返回自身身份信息：
+#### Step 2: ATH Gateway Returns Handshake Response
+The gateway validates the request format and returns its identity information:
 ```json
 {
   "type": "handshake_response",
@@ -49,8 +49,8 @@ AI助手向ATH网关发送握手请求：
   "timestamp": 1717200001
 }
 ```
-#### 步骤3：智能体发送身份证明
-AI助手使用自身私钥对`random_def456`签名，发送身份证明：
+#### Step 3: Agent Sends Identity Proof
+The AI assistant signs `random_def456` with its private key and sends the identity proof:
 ```json
 {
   "type": "identity_proof",
@@ -58,8 +58,8 @@ AI助手使用自身私钥对`random_def456`签名，发送身份证明：
   "timestamp": 1717200002
 }
 ```
-#### 步骤4：ATH网关返回身份验证结果
-网关验证签名通过，返回支持的权限列表：
+#### Step 4: ATH Gateway Returns Identity Verification Result
+The gateway verifies the signature successfully and returns the list of supported scopes:
 ```json
 {
   "type": "identity_result",
@@ -71,8 +71,8 @@ AI助手使用自身私钥对`random_def456`签名，发送身份证明：
   "timestamp": 1717200003
 }
 ```
-#### 步骤5：智能体发送权限请求
-AI助手请求OA读取和CRM写入权限，附带用户授权凭证：
+#### Step 5: Agent Sends Scope Request
+The AI assistant requests OA read and CRM write permissions, attaching the user's authorization credential:
 ```json
 {
   "type": "scope_request",
@@ -82,20 +82,20 @@ AI助手请求OA读取和CRM写入权限，附带用户授权凭证：
     "credential": "jwt_token_signed_by_user",
     "signature": "signature_by_ai_assistant"
   },
-  "context": "用户需要查询OA审批和更新CRM客户信息",
+  "context": "User needs to query OA approvals and update CRM customer information",
   "timestamp": 1717200004
 }
 ```
-#### 步骤6：ATH网关向用户确认授权
-网关通过企业微信向用户发送授权确认：
+#### Step 6: ATH Gateway Confirms Authorization with User
+The gateway sends an authorization confirmation to the user via enterprise messaging:
 ```
-【授权确认】AI办公助手请求访问您的企业账号，权限：读取OA、写入CRM
-是否同意？[同意/拒绝]
+[Authorization Confirmation] The AI Office Assistant is requesting access to your enterprise account. Permissions: read OA, write CRM.
+Do you approve? [Approve/Deny]
 ```
-#### 步骤7：用户返回授权确认结果
-用户回复「同意」，网关收到用户确认结果。
-#### 步骤8：ATH网关返回权限审批结果
-网关根据权限策略审批通过，返回权限信息：
+#### Step 7: User Returns Authorization Confirmation Result
+The user replies "Approve", and the gateway receives the user's confirmation result.
+#### Step 8: ATH Gateway Returns Scope Approval Result
+The gateway approves the request based on its permission policies and returns the scope information:
 ```json
 {
   "type": "scope_result",
@@ -108,33 +108,33 @@ AI助手请求OA读取和CRM写入权限，附带用户授权凭证：
   "timestamp": 1717200007
 }
 ```
-#### 步骤9：完成握手建立会话
-双方完成密钥协商，网关颁发访问令牌，AI助手开始访问API：
+#### Step 9: Handshake Complete, Session Established
+Both parties complete key negotiation. The gateway issues an access token, and the AI assistant begins accessing the APIs:
 ```python
-# 查询OA审批（网关自动转发到OA系统）
+# Query OA approvals (gateway automatically forwards to OA system)
 response = ai_assistant.request(
   "GET /oa/api/approval/list",
   headers={"Authorization": "Bearer <access_token>"}
 )
-# 更新CRM客户信息（网关自动转发到CRM系统）
+# Update CRM customer info (gateway automatically forwards to CRM system)
 response = ai_assistant.request(
   "POST /crm/api/customer/123",
-  json={"status": "跟进中"},
+  json={"status": "following_up"},
   headers={"Authorization": "Bearer <access_token>"}
 )
 ```
-## 网关核心功能
-1. **协议转换**：将ATH协议请求转换为后端服务支持的协议格式
-2. **权限控制**：统一管理所有后端服务的访问权限
-3. **审计日志**：记录所有智能体的访问行为，支持安全审计
-4. **流量控制**：统一实现限流、熔断等流量治理功能
-## 模式优势
-1. **零侵入**：后端服务不需要修改任何代码，即可支持ATH协议
-2. **统一管理**：所有接入和权限控制在网关层统一配置
-3. **快速落地**：不需要改造现有系统，短时间内即可实现全系统ATH支持
-4. **兼容legacy系统**：对老旧系统非常友好
-## 适用场景
-- 已有大量legacy系统，改造代价大
-- 需要统一管理所有服务的访问权限
-- 快速落地ATH协议的场景
-- 多系统统一接入的场景
+## Gateway Core Functions
+1. **Protocol Translation**: Converts ATH protocol requests into the protocol formats supported by backend services
+2. **Access Control**: Centrally manages access permissions for all backend services
+3. **Audit Logging**: Records all agent access activity, supporting security audits
+4. **Traffic Management**: Centrally implements rate limiting, circuit breaking, and other traffic governance features
+## Mode Advantages
+1. **Zero Intrusion**: Backend services require no code modifications to support the ATH protocol
+2. **Unified Management**: All access and permission controls are configured centrally at the gateway layer
+3. **Rapid Deployment**: No need to modify existing systems; full ATH support across all systems can be achieved in a short time
+4. **Legacy System Compatible**: Very friendly to older systems
+## Applicable Scenarios
+- Large number of existing legacy systems where refactoring costs are high
+- Need to centrally manage access permissions for all services
+- Scenarios requiring rapid ATH protocol deployment
+- Scenarios requiring unified multi-system integration

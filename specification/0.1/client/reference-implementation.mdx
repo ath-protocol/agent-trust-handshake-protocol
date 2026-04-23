@@ -1,9 +1,9 @@
-# 客户端参考实现
-## 概述
-本文档提供ATH协议客户端的参考实现指南，开发者可以基于此实现完整的客户端功能。
-## 核心模块
-### 1. 身份管理模块
-负责管理客户端DID身份和公私钥对：
+# Client Reference Implementation
+## Overview
+This document provides a reference implementation guide for ATH protocol clients. Developers can use this as a basis to implement complete client functionality.
+## Core Modules
+### 1. Identity Management Module
+Responsible for managing the client DID identity and public/private key pairs:
 ```python
 class IdentityManager:
     def __init__(self):
@@ -12,38 +12,38 @@ class IdentityManager:
         self.public_key = None
     
     def generate_identity(self):
-        # 生成新的DID和公私钥对
+        # Generate a new DID and public/private key pair
         pass
     
     def load_identity(self, file_path):
-        # 从文件加载身份信息
+        # Load identity information from a file
         pass
     
     def sign(self, data):
-        # 使用私钥对数据签名
+        # Sign data using the private key
         pass
 ```
-### 2. 授权管理模块
-负责管理用户授权凭证：
+### 2. Authorization Management Module
+Responsible for managing user authorization credentials:
 ```python
 class AuthorizationManager:
     def __init__(self):
         self.user_credentials = {}
     
     def request_user_authorization(self, scopes):
-        # 向用户请求授权
+        # Request authorization from the user
         pass
     
     def get_credential(self, scopes):
-        # 获取对应权限的授权凭证
+        # Retrieve the authorization credential for the specified scopes
         pass
     
     def store_credential(self, credential):
-        # 安全存储授权凭证
+        # Securely store the authorization credential
         pass
 ```
-### 3. 握手客户端模块
-负责实现完整的握手流程：
+### 3. Handshake Client Module
+Responsible for implementing the complete handshake flow:
 ```python
 class HandshakeClient:
     def __init__(self, identity_manager, auth_manager):
@@ -52,37 +52,37 @@ class HandshakeClient:
         self.session = None
     
     def initiate_handshake(self, server_url, scopes):
-        # 1. 发送握手请求
-        # 2. 处理服务端响应
-        # 3. 发送身份证明
-        # 4. 处理身份验证结果
-        # 5. 发送权限请求
-        # 6. 等待权限审批结果
-        # 7. 完成密钥协商
-        # 8. 建立会话
+        # 1. Send handshake request
+        # 2. Process server response
+        # 3. Send identity proof
+        # 4. Process identity verification result
+        # 5. Send permission request
+        # 6. Wait for permission approval result
+        # 7. Complete key negotiation
+        # 8. Establish session
         pass
     
     def send_request(self, path, data):
-        # 使用会话密钥加密发送业务请求
+        # Encrypt and send business requests using the session key
         pass
 ```
-## 握手流程实现示例
+## Handshake Flow Implementation Example
 ```python
-# 初始化客户端
+# Initialize the client
 identity_manager = IdentityManager()
 identity_manager.load_identity("client_identity.json")
 auth_manager = AuthorizationManager()
 client = HandshakeClient(identity_manager, auth_manager)
-# 发起握手
+# Initiate the handshake
 session = client.initiate_handshake(
     "https://api.example.com/ath/handshake",
     scopes=["user:read", "data:write"]
 )
-# 使用会话发送业务请求
+# Send business requests using the session
 response = client.send_request("/api/user/data", {"param": "value"})
 ```
-## 安全最佳实践
-1. 私钥必须使用硬件安全模块（HSM）或安全存储
-2. 用户授权凭证必须加密存储，使用用户密码作为加密密钥
-3. 会话密钥每次握手重新生成，不重用
-4. 定期轮换DID和公私钥对，降低泄露风险
+## Security Best Practices
+1. Private keys must be stored using a Hardware Security Module (HSM) or secure storage
+2. User authorization credentials must be stored encrypted, using the user's password as the encryption key
+3. Session keys must be regenerated for each handshake and must not be reused
+4. Regularly rotate DID and public/private key pairs to reduce the risk of leakage

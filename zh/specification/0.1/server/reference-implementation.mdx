@@ -1,9 +1,9 @@
-# Server Reference Implementation
-## Overview
-This document provides a reference implementation guide for ATH protocol servers. Developers can use this as a basis to implement complete server functionality.
-## Core Modules
-### 1. Identity Management Module
-Responsible for managing the server DID identity and public/private key pairs:
+# 服务端参考实现
+## 概述
+本文档提供ATH协议服务端的参考实现指南，开发者可以基于此实现完整的服务端功能。
+## 核心模块
+### 1. 身份管理模块
+负责管理服务端DID身份和公私钥对：
 ```python
 class IdentityManager:
     def __init__(self):
@@ -12,57 +12,57 @@ class IdentityManager:
         self.public_key = None
     
     def load_identity(self, file_path):
-        # Load identity information from a file
+        # 从文件加载身份信息
         pass
     
     def sign(self, data):
-        # Sign data using the private key
+        # 使用私钥对数据签名
         pass
     
     def verify_signature(self, public_key, data, signature):
-        # Verify client signature
+        # 验证客户端签名
         pass
 ```
-### 2. Authorization Confirmation Module
-Responsible for confirming authorization requests with the user:
+### 2. 授权确认模块
+负责向用户确认授权请求：
 ```python
 class AuthorizationConfirmation:
     def __init__(self):
         self.notification_channels = ["sms", "email", "app_push"]
     
     def send_confirmation_request(self, user_id, client_info, scopes):
-        # Send an authorization confirmation request to the user
+        # 向用户发送授权确认请求
         pass
     
     def verify_confirmation_response(self, response):
-        # Verify the signature of the user's confirmation response
+        # 验证用户确认响应的签名
         pass
     
     def get_authorization_result(self, request_id):
-        # Query the user authorization result
+        # 查询用户授权结果
         pass
 ```
-### 3. Permission Management Module
-Responsible for permission approval and access control:
+### 3. 权限管理模块
+负责权限审批和访问控制：
 ```python
 class PermissionManager:
     def __init__(self):
         self.permission_policies = {}
     
     def validate_scopes(self, requested_scopes, user_authorization):
-        # Verify that the requested scopes are within the user's authorization range
+        # 验证请求的权限是否在用户授权范围内
         pass
     
     def apply_policies(self, scopes, client_info):
-        # Apply security policies and adjust permission scope
+        # 应用安全策略，调整权限范围
         pass
     
     def generate_access_token(self, client_did, user_id, scopes, ttl):
-        # Generate a signed access token
+        # 生成签名的访问令牌
         pass
 ```
-### 4. Handshake Service Module
-Responsible for implementing the complete handshake flow:
+### 4. 握手服务模块
+负责实现完整的握手流程：
 ```python
 class HandshakeService:
     def __init__(self, identity_manager, auth_confirmation, permission_manager):
@@ -72,28 +72,28 @@ class HandshakeService:
         self.sessions = {}
     
     def handle_handshake_request(self, request):
-        # Handle client handshake request
+        # 处理客户端握手请求
         pass
     
     def handle_identity_proof(self, request):
-        # Handle client identity proof
+        # 处理客户端身份证明
         pass
     
     def handle_scope_request(self, request):
-        # Handle permission request
+        # 处理权限请求
         pass
     
     def handle_key_negotiation(self, request):
-        # Handle key negotiation
+        # 处理密钥协商
         pass
     
     def validate_access_token(self, token):
-        # Validate access token validity
+        # 验证访问令牌有效性
         pass
 ```
-## Handshake Flow Implementation Example
+## 握手流程实现示例
 ```python
-# Initialize the server
+# 初始化服务端
 identity_manager = IdentityManager()
 identity_manager.load_identity("server_identity.json")
 auth_confirmation = AuthorizationConfirmation()
@@ -103,23 +103,23 @@ handshake_service = HandshakeService(
     auth_confirmation, 
     permission_manager
 )
-# Handle handshake request
+# 处理握手请求
 @app.route('/ath/handshake', methods=['POST'])
 def handshake_endpoint():
     request_data = request.get_json()
     response = handshake_service.handle_handshake_request(request_data)
     return jsonify(response)
-# Handle business requests
+# 处理业务请求
 @app.route('/api/<path:path>', methods=['GET', 'POST'])
 def api_endpoint(path):
     token = request.headers.get('Authorization')
     if not handshake_service.validate_access_token(token):
         return jsonify({"error": "Invalid token"}), 401
-    # Handle business request
+    # 处理业务请求
     pass
 ```
-## Security Best Practices
-1. Server private keys must be stored offline and must not be exposed in public network environments
-2. User authorization confirmation must use multi-factor authentication (MFA)
-3. All handshake requests must be rate-limited to prevent brute-force attacks
-4. Regularly audit authorization logs and promptly address any anomalous behavior
+## 安全最佳实践
+1. 服务端私钥必须离线存储，不得暴露在公网环境
+2. 用户授权确认必须使用多因素认证（MFA）
+3. 所有握手请求必须进行速率限制，防止暴力攻击
+4. 定期审计授权日志，发现异常行为及时处理

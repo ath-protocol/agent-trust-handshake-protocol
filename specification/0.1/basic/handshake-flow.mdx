@@ -1,23 +1,23 @@
-# 基础握手流程规范
-## 概述
-本文档定义了ATH协议的基础握手流程，是所有ATH实现必须遵循的核心规范。
-## 核心角色
-ATH协议是三方协议，包含三个独立的参与角色：
-| 角色 | 英文名称 | 职责 |
-|------|----------|------|
-| 用户 | User | 资源的所有者，拥有最终授权决定权 |
-| 客户端 | Client | 即智能体，代表用户执行任务，访问服务资源 |
-| 服务端 | Server | 资源的提供者，提供API服务和数据资源 |
-## 核心原则
-### 可信握手原则
-客户端要成功访问服务端资源，必须同时满足两个条件：
-1. 获得用户的明确授权（User Authorization）
-2. 获得服务端的明确授权（Server Authorization）
-两者缺一不可。
-## 握手流程
-### 前置步骤：用户预授权
-用户在使用客户端前，预先向客户端授予委托权限：
-**用户授权凭证结构**：
+# Basic Handshake Flow Specification
+## Overview
+This document defines the basic handshake flow of the ATH protocol, which is the core specification that all ATH implementations must follow.
+## Core Roles
+The ATH protocol is a three-party protocol involving three independent participating roles:
+| Role | English Name | Responsibility |
+|------|-------------|----------------|
+| User | User | Owner of resources, holds ultimate authorization decision power |
+| Client | Client | The agent that acts on behalf of the user to execute tasks and access service resources |
+| Server | Server | Provider of resources, offering API services and data resources |
+## Core Principles
+### Trusted Handshake Principle
+For a client to successfully access server resources, two conditions must be met simultaneously:
+1. Obtain explicit authorization from the user (User Authorization)
+2. Obtain explicit authorization from the server (Server Authorization)
+Both are indispensable.
+## Handshake Flow
+### Preliminary Step: User Pre-Authorization
+Before using the client, the user pre-grants delegated permissions to the client:
+**User Authorization Credential Structure**:
 ```json
 {
   "user_did": "did:ath:user_xxxxxx",
@@ -27,8 +27,8 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "signature": "signature_signed_by_user_private_key"
 }
 ```
-### 步骤1：客户端身份宣告
-**报文结构**：
+### Step 1: Client Identity Declaration
+**Message Structure**:
 ```json
 {
   "type": "handshake_request",
@@ -40,8 +40,8 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "timestamp": 1234567890
 }
 ```
-### 步骤2：服务端身份回应
-**报文结构**：
+### Step 2: Server Identity Response
+**Message Structure**:
 ```json
 {
   "type": "handshake_response",
@@ -54,18 +54,18 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "timestamp": 1234567891
 }
 ```
-### 步骤3：客户端身份证明
-**报文结构**：
+### Step 3: Client Identity Proof
+**Message Structure**:
 ```json
 {
   "type": "identity_proof",
   "signature": "signature_of_nonce_b",
-  "credentials": [/* 可选的身份凭证 */],
+  "credentials": [/* Optional identity credentials */],
   "timestamp": 1234567892
 }
 ```
-### 步骤4：身份验证结果
-**报文结构**：
+### Step 4: Identity Verification Result
+**Message Structure**:
 ```json
 {
   "type": "identity_result",
@@ -79,8 +79,8 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "timestamp": 1234567893
 }
 ```
-### 步骤5：权限请求
-**报文结构**：
+### Step 5: Permission Request
+**Message Structure**:
 ```json
 {
   "type": "scope_request",
@@ -90,29 +90,29 @@ ATH协议是三方协议，包含三个独立的参与角色：
     "credential": "jwt_token_signed_by_user",
     "signature": "signature_by_client"
   },
-  "context": "用于生成用户月度报告",
+  "context": "For generating user monthly reports",
   "timestamp": 1234567894
 }
 ```
-### 步骤6：服务端向用户确认授权
+### Step 6: Server Requests Authorization Confirmation from User
 
-**报文结构（服务端→用户）**：
+**Message Structure (Server → User)**:
 ```json
 {
   "type": "authorization_confirmation_request",
   "request_id": "req_xxxxxx",
   "client_did": "did:ath:client_xxxxxx",
   "client_info": {
-    "name": "AI助手",
-    "developer": "某某公司"
+    "name": "AI Assistant",
+    "developer": "Example Company"
   },
   "requested_scopes": ["user:read", "data:write"],
   "expires_at": 1234567890,
   "timestamp": 1234567895
 }
 ```
-### 步骤7：用户返回授权确认结果
-**报文结构（用户→服务端）**：
+### Step 7: User Returns Authorization Confirmation Result
+**Message Structure (User → Server)**:
 ```json
 {
   "type": "authorization_confirmation_response",
@@ -124,8 +124,8 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "timestamp": 1234567896
 }
 ```
-### 步骤8：权限审批结果
-**报文结构**：
+### Step 8: Permission Approval Result
+**Message Structure**:
 ```json
 {
   "type": "scope_result",
@@ -133,7 +133,7 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "scopes_denied": [
     {
       "scope": "data:write",
-      "reason": "用户未授权该操作"
+      "reason": "User has not authorized this operation"
     }
   ],
   "ttl_granted": 1800,
@@ -144,8 +144,8 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "timestamp": 1234567897
 }
 ```
-### 步骤9：握手完成
-**报文结构**：
+### Step 9: Handshake Complete
+**Message Structure**:
 ```json
 {
   "type": "handshake_complete",
@@ -156,11 +156,11 @@ ATH协议是三方协议，包含三个独立的参与角色：
   "timestamp": 1234567898
 }
 ```
-## 错误处理
-详细错误码定义请参考错误规范文档。
-## 安全要求
-- 所有报文必须使用TLS 1.3加密传输
-- 所有签名必须使用至少256位安全强度的算法
-- 随机数必须使用密码学安全的随机生成器
-- 时间戳误差不能超过5分钟，防止重放攻击
-- 用户授权凭证必须由用户私钥签名，不可伪造
+## Error Handling
+For detailed error code definitions, please refer to the Error Specification document.
+## Security Requirements
+- All messages must be transmitted using TLS 1.3 encryption
+- All signatures must use algorithms with at least 256-bit security strength
+- Nonces must be generated using cryptographically secure random generators
+- Timestamp drift must not exceed 5 minutes to prevent replay attacks
+- User authorization credentials must be signed by the user's private key and cannot be forged
