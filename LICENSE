@@ -1,16 +1,43 @@
-# OpenATH Open Source License
-## Version 1.0
-### Copyright (c) 2026 ATH Protocol Community
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-1. **Copyright Notice**: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-2. **Attribution Requirement**: If you use this Software in your product, you must clearly mark "This product is developed based on OpenATH protocol" in your product documentation, about page or promotional materials, and provide the official link to this project.
-3. **License Compatibility**: Modified versions or derivative works of this Software may be released under the OpenATH license or other compatible open source licenses. If released under other licenses, the differences from this Agreement must be clearly stated.
-4. **Patent Grant**: This license grants you a perpetual, worldwide, free, non-exclusive patent license to make, use, sell, import the Software and the patented technology contained therein.
-5. **Disclaimer of Warranty**:
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-6. **Version Updates**: The ATH Protocol Community reserves the right to release updated versions of this license. After a new version is released, you may choose to continue using the old version or upgrade to the new version.
----
-### Terminology
-- **Software**: All code, documentation, specifications and related resources covered by this license.
-- **Derivative Work**: A new work formed by modifying, extending, or integrating based on this Software.
-- **Sublicense**: The act of including this Software in your work and releasing it under a different license.
+OpenATH 有限开源许可证（OpenATH Limited Open Source License）
+Version 1.0
+Copyright (c) 2026 ATH Protocol Community
+OpenATH 有限开源许可证是基于 ATH 协议社区有限运营模式形成的特色开源协议，协议分为定义、社区成员权益、非社区成员限制、免责声明等部分，同步提供中英双语版本。本协议旨在规范有限运营模式下的社区资源共享规则：社区资源仅在 ATH 协议社区注册成员间开源共享，充分保护社区内项目安全，保障社区成员权利，对社区商业模式建立有效保护，规范社区成员义务。
+本许可证仅对 ATH 协议社区注册成员及其关联实体进行授权；许可客体包括：本软件的开放模块、相关文档及社区授权的配套资源。
+一、术语定义
+有限运营模式：指本协议下的软件及相关资源，仅在 ATH 协议社区注册成员间开放共享的运营模式。
+社区成员：指完成 ATH 协议社区注册、签署社区成员协议并获得社区授权的个人或法律实体。
+关联实体：指直接或间接控制社区成员、被社区成员控制，或与社区成员共同受同一主体控制的法律实体。
+软件（Software）：本许可证覆盖的全部代码、文档、技术规范及相关配套资源，分为开放模块与核心模块两部分。
+开放模块：本协议下向社区成员开放使用许可的非核心功能模块。
+核心模块：本协议下不对外开源、由 ATH 协议社区主体掌控的技术核心部分。
+衍生作品（Derivative Work）：基于本软件的开放模块进行修改、功能扩展、整合集成后形成的全新成果，仅限社区内分发。
+分发（Distribution）：指以任何形式向社区内或社区外第三方提供本软件副本或衍生作品的行为。
+二、社区成员权益
+在遵守本协议全部条款的前提下，ATH 协议社区成员及其关联实体享有以下权益：
+版权许可：可永久、免费复制、使用、修改、分发本协议下的开放模块及相关贡献，分发行为仅限在 ATH 协议社区内部进行。
+专利许可：
+若贡献者对所贡献的开放模块内容拥有专利权，任何遵守本协议条件的社区成员，皆可获得贡献者的专利授权，在使用相关贡献时无需担心侵犯贡献者的专利权；
+若任何社区成员及其关联实体通过本协议获得相关贡献的使用权，且拥有本协议下贡献的专利权，当其向社区内或社区外其他用户主张该专利权时，则其基于本协议所获得的版权许可以及其他专利许可将即时终止，其后续使用相关贡献的行为也将构成侵权。
+署名要求：若社区成员在其产品中使用本软件的开放模块，须在产品文档、关于页面或相关材料中显著标注 “本产品基于 OpenATH 协议社区开放模块开发”，并附上 OpenATH 项目官方链接。
+无商标许可：任何社区成员及其关联实体，不得使用本协议下贡献者的商号、商品名称、商标、服务标志、产品名称进行商业推广，除非获得贡献者的书面授权许可。
+三、有限开源核心规则
+本协议通过三重限制实现对社区利益的保护，对应有限运营模式的核心要求：
+有限的人使用
+本协议下的软件及开放模块，仅向 ATH 协议社区注册成员开放使用权限，社区外非成员无权使用，保障开源方的商业利益与技术安全。
+有限的使用方式
+社区成员仅限将本软件的开放模块用于自身业务场景，不得未经社区授权向社区外第三方分发、转让或再授权，严格控制开源的传播范围。
+有限的开源方式
+本协议仅向社区成员开放部分非核心模块的使用许可，不涉及核心模块的开放源代码，保持开源方对核心技术的掌控力。
+四、非社区成员限制使用
+非社区成员及其关联实体，未经 ATH 协议社区的书面正式授权，不得实施以下行为：
+复制、使用、修改本协议下的任何程序、文档或资源；
+分发、传播本软件的开放模块、核心模块或任何衍生作品；
+基于本软件的任何部分开展商业活动或技术研发。
+五、衍生作品与许可证兼容性
+社区成员基于本软件开放模块创作的衍生作品，仅可在 ATH 协议社区内部分发，且需遵守以下要求：
+衍生作品可采用本 OpenATH 有限开源许可证发布，或采用与本协议兼容的其他开源许可证发布；
+若采用其他许可证发布衍生作品，须向社区提交书面说明，明确标注与本协议的条款差异，并不得违反本协议的有限运营规则。
+六、免责声明
+本软件按「现状」提供，不附带任何明示或暗示的保证，包括但不限于适销性、特定用途适用性及非侵权性保证。无论因合同、侵权或其他事由，作者与版权持有人不对任何索赔、损害赔偿或其他责任承担连带责任，亦不对因使用本软件所直接或间接产生的各类风险与损失负责。
+七、版本更新
+ATH 协议社区保留发布本许可证更新版本的权利。新版本发布后，社区成员可选择继续使用旧版本协议，或升级至新版本协议；非社区成员需获得社区针对新版本的书面授权，方可使用相关资源。
