@@ -44,7 +44,7 @@ Register a new agent with the ATH implementer. The implementer verifies the agen
 | `requested_providers[].provider_id` | string | Yes | Service provider identifier |
 | `requested_providers[].scopes` | string[] | Yes | Scopes requested for this service provider |
 | `purpose` | string | No | Human-readable description of the agent's purpose |
-| `redirect_uris` | string[] | Yes | OAuth callback URIs (validated by exact-match during authorization) |
+| `redirect_uris` | string[] | No | OAuth callback URIs. If provided, validated by exact-match during authorization. If omitted (e.g., local agents without a public endpoint), the implementer MUST reject any authorization request that includes a `user_redirect_uri` |
 
 ## Response (Success)
 

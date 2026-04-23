@@ -208,7 +208,7 @@
     "AgentRegistrationRequest": {
       "description": "Request body for POST /ath/agents/register. Registers a new agent with the ATH implementor (Phase A: app-side authorization).",
       "type": "object",
-      "required": ["agent_id", "agent_attestation", "developer", "requested_providers", "redirect_uris"],
+      "required": ["agent_id", "agent_attestation", "developer", "requested_providers"],
       "properties": {
         "agent_id": {
           "description": "The agent's canonical URI.",
@@ -237,7 +237,7 @@
           "examples": ["Travel planning assistant"]
         },
         "redirect_uris": {
-          "description": "OAuth callback URIs for this agent.",
+          "description": "OAuth callback URIs for this agent. If provided, the implementor MUST validate user_redirect_uri against this list using exact-match comparison during authorization. If omitted (e.g., for local agents without a public endpoint), the implementor MUST reject any authorization request that includes a user_redirect_uri, and the OAuth callback MUST be handled entirely by the implementor without redirecting to the agent.",
           "type": "array",
           "items": {
             "type": "string",

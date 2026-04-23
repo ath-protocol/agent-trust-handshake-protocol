@@ -88,7 +88,7 @@ description: "ATH 协议请求和响应对象的类型定义。"
 | `developer.id` | string | 是 | 开发者标识符 |
 | `requested_providers` | array | 是 | 请求的服务提供方和范围 |
 | `purpose` | string | 否 | 人类可读的用途说明 |
-| `redirect_uris` | string[] | 是 | OAuth 回调 URI（授权时通过精确匹配验证） |
+| `redirect_uris` | string[] | 否 | OAuth 回调 URI。如果提供，授权时通过精确匹配验证。如果省略，`user_redirect_uri` 必须（MUST）被拒绝 |
 
 ### AgentRegistrationResponse
 

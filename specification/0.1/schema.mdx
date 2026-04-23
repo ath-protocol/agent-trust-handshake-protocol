@@ -88,7 +88,7 @@ Sent to `POST /ath/agents/register`.
 | `developer.id` | string | Yes | Developer identifier |
 | `requested_providers` | array | Yes | Providers and scopes to request |
 | `purpose` | string | No | Human-readable purpose |
-| `redirect_uris` | string[] | Yes | OAuth callback URIs (validated by exact-match on authorization) |
+| `redirect_uris` | string[] | No | OAuth callback URIs. If provided, validated by exact-match on authorization. If omitted, `user_redirect_uri` MUST be rejected |
 
 ### AgentRegistrationResponse
 
