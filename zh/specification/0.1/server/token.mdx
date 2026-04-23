@@ -17,6 +17,7 @@ description: "POST /ath/token — 用授权码交换 ATH 访问令牌。"
   "grant_type": "authorization_code",
   "client_id": "ath_travelbot_001",
   "client_secret": "ath_secret_xxxxx",
+  "agent_attestation": "<signed JWT>",
   "code": "<oauth-authorization-code>",
   "ath_session_id": "ath_sess_abc123"
 }
@@ -29,6 +30,7 @@ description: "POST /ath/token — 用授权码交换 ATH 访问令牌。"
 | `grant_type` | string | 是 | 必须为 `"authorization_code"` |
 | `client_id` | string | 是 | 代理的客户端 ID |
 | `client_secret` | string | 是 | 代理的客户端密钥 |
+| `agent_attestation` | string | 是 | 新鲜的签名 JWT，证明当前持有代理私钥。`sub` 声明必须（MUST）匹配 `client_id` 注册的 `agent_id`，`aud` 声明必须（MUST）设置为令牌端点 URL |
 | `code` | string | 是 | 回调中收到的 OAuth 授权码 |
 | `ath_session_id` | string | 是 | 授权步骤返回的会话 ID |
 
@@ -67,6 +69,9 @@ description: "POST /ath/token — 用授权码交换 ATH 访问令牌。"
 
 ## 行为
 
+- 实现者必须（MUST）验证 `agent_attestation` JWT 有效，且 `sub` 声明与 `client_id` 注册的 `agent_id` 匹配
+- 实现者必须（MUST）验证 `ath_session_id` 有效且未过期（最大生命周期：10 分钟）
+- `ath_session_id` 必须（MUST）在成功令牌交换后消费（一次性使用）
 - 响应必须（MUST）包含 `scope_intersection` 分解信息
 - 令牌必须（MUST）绑定到特定的 `(agent_id, user_id, provider_id, scopes)` 元组
 - 如果范围交集为空，实现者禁止（MUST NOT）签发令牌

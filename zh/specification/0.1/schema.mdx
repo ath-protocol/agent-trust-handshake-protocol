@@ -88,7 +88,7 @@ description: "ATH 协议请求和响应对象的类型定义。"
 | `developer.id` | string | 是 | 开发者标识符 |
 | `requested_providers` | array | 是 | 请求的服务提供方和范围 |
 | `purpose` | string | 否 | 人类可读的用途说明 |
-| `redirect_uris` | string[] | 否 | OAuth 回调 URI |
+| `redirect_uris` | string[] | 是 | OAuth 回调 URI（授权时通过精确匹配验证） |
 
 ### AgentRegistrationResponse
 
@@ -146,7 +146,7 @@ description: "ATH 协议请求和响应对象的类型定义。"
 | `provider_id` | string | 是 | 要授权的服务提供方 |
 | `scopes` | string[] | 是 | 要请求的范围（需在已批准范围内） |
 | `user_redirect_uri` | string (URI) | 否 | 授权同意后的重定向地址 |
-| `state` | string | 否 | CSRF 保护状态值 |
+| `state` | string | 是 | CSRF 保护状态值（必须（MUST）使用 CSPRNG 生成，至少 128 位熵） |
 | `resource` | string (URI) | 否 | 目标资源服务器（[RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)） |
 
 ### AuthorizationResponse
@@ -167,13 +167,14 @@ description: "ATH 协议请求和响应对象的类型定义。"
 
 ### TokenExchangeRequest
 
-发送至 `POST /ath/token`。
+发送至 `POST /ath/token`。需要 `client_secret` 和新鲜的 `agent_attestation` 以证明持有代理私钥。
 
 ```json
 {
   "grant_type": "authorization_code",
   "client_id": "ath_travelbot_001",
   "client_secret": "ath_secret_xxxxx",
+  "agent_attestation": "<signed JWT>",
   "code": "<oauth-authorization-code>",
   "ath_session_id": "ath_sess_abc123"
 }
@@ -217,11 +218,12 @@ description: "ATH 协议请求和响应对象的类型定义。"
 
 ### TokenRevocationRequest
 
-发送至 `POST /ath/revoke`。
+发送至 `POST /ath/revoke`。需要客户端认证，按照 [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009)。
 
 ```json
 {
   "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
   "token": "ath_tk_xxxxxxxx"
 }
 ```

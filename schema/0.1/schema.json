@@ -208,7 +208,7 @@
     "AgentRegistrationRequest": {
       "description": "Request body for POST /ath/agents/register. Registers a new agent with the ATH implementor (Phase A: app-side authorization).",
       "type": "object",
-      "required": ["agent_id", "agent_attestation", "developer", "requested_providers"],
+      "required": ["agent_id", "agent_attestation", "developer", "requested_providers", "redirect_uris"],
       "properties": {
         "agent_id": {
           "description": "The agent's canonical URI.",
@@ -217,7 +217,7 @@
           "examples": ["https://travel-agent.example.com/.well-known/agent.json"]
         },
         "agent_attestation": {
-          "description": "Signed JWT (ES256) proving agent identity. Must include exp, aud, iss, sub claims.",
+          "description": "Signed JWT (ES256) proving agent identity. MUST include iss, sub, aud, iat, exp, and jti claims. The jti MUST be unique per attestation and implementors MUST reject replayed jti values.",
           "type": "string"
         },
         "developer": {
@@ -341,7 +341,7 @@
     "AuthorizationRequest": {
       "description": "Request body for POST /ath/authorize. Initiates the user-side OAuth authorization flow (Phase B). The implementor generates PKCE parameters (RFC 7636) server-side.",
       "type": "object",
-      "required": ["client_id", "agent_attestation", "provider_id", "scopes"],
+      "required": ["client_id", "agent_attestation", "provider_id", "scopes", "state"],
       "properties": {
         "client_id": {
           "description": "The agent's client_id from registration.",
@@ -368,8 +368,9 @@
           "format": "uri"
         },
         "state": {
-          "description": "Opaque state parameter for CSRF protection.",
-          "type": "string"
+          "description": "Opaque state parameter for CSRF protection. MUST be generated from a CSPRNG with at least 128 bits of entropy. The implementor MUST validate state on the OAuth callback and reject mismatches.",
+          "type": "string",
+          "minLength": 16
         },
         "resource": {
           "description": "Target resource server URI. Optional, per RFC 8707 (Resource Indicators).",
@@ -398,7 +399,7 @@
     "TokenExchangeRequest": {
       "description": "Request body for POST /ath/token. Exchanges an OAuth authorization code for an ATH access token after user consent.",
       "type": "object",
-      "required": ["grant_type", "client_id", "client_secret", "code", "ath_session_id"],
+      "required": ["grant_type", "client_id", "client_secret", "agent_attestation", "code", "ath_session_id"],
       "properties": {
         "grant_type": {
           "description": "Must be 'authorization_code'.",
@@ -411,6 +412,10 @@
         },
         "client_secret": {
           "description": "The agent's client_secret.",
+          "type": "string"
+        },
+        "agent_attestation": {
+          "description": "Fresh signed JWT proving current possession of the agent's private key. The attestation sub claim MUST match the client_id's registered agent_id. The aud claim MUST be set to the token endpoint URL.",
           "type": "string"
         },
         "code": {
@@ -493,12 +498,16 @@
       }
     },
     "TokenRevocationRequest": {
-      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token.",
+      "description": "Request body for POST /ath/revoke. Immediately invalidates an ATH access token. Requires client authentication per RFC 7009.",
       "type": "object",
-      "required": ["client_id", "token"],
+      "required": ["client_id", "client_secret", "token"],
       "properties": {
         "client_id": {
           "description": "The agent's client_id.",
+          "type": "string"
+        },
+        "client_secret": {
+          "description": "The agent's client_secret. Required for client authentication.",
           "type": "string"
         },
         "token": {

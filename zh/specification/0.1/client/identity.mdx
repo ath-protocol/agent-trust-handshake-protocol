@@ -89,6 +89,7 @@ https://coding-assistant.example.com/.well-known/agent.json
   "aud": "<target-service-or-gateway>",
   "iat": 1720000000,
   "exp": 1720003600,
+  "jti": "<unique-token-id>",
   "capabilities": ["flight-search"]
 }
 ```
@@ -100,8 +101,9 @@ https://coding-assistant.example.com/.well-known/agent.json
 | `iss` | 签发者 — 代理的域名 |
 | `sub` | 主体 — 完整的 `agent_id` URI |
 | `aud` | 受众 — 目标服务或网关 URL |
-| `iat` | 签发时间 — 时间戳 |
+| `iat` | 签发时间 — 时间戳。实现者必须（MUST）验证 `iat` 在当前时间 5 分钟以内 |
 | `exp` | 过期时间 — 必须（MUST）存在 |
+| `jti` | JWT ID — 每个证明必须（MUST）唯一。实现者必须（MUST）维护已见 `jti` 值的重放缓存（保留至 `exp`），并拒绝重复值 |
 
 ### 验证
 
@@ -110,4 +112,14 @@ https://coding-assistant.example.com/.well-known/agent.json
 2. 提取公钥
 3. 使用公钥验证 JWT 签名
 4. 验证 `exp`（未过期）和 `aud`（与验证方的 URL 匹配）
-5. 实现者必须（MUST）拒绝已过期或受众不匹配的证明
+5. 验证 `jti` 此前未被使用过（针对重放缓存检查）
+6. 验证 `iat` 在当前时间 5 分钟以内
+7. 实现者必须（MUST）拒绝已过期、受众不匹配或 `jti` 重复的证明
+
+### 身份文档缓存
+
+- 实现者可以（MAY）缓存代理身份文档以减少获取开销
+- 缓存的最大生存时间禁止（MUST NOT）超过 **5 分钟**
+- 代理身份文档建议（SHOULD）包含 `Cache-Control: max-age=300` 响应头
+- 当证明验证失败时，实现者必须（MUST）强制重新获取身份文档（绕过缓存），以支持紧急密钥轮换
+- 实现者建议（SHOULD）对获取代理身份文档设置连接和读取超时

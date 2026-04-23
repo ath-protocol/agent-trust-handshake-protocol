@@ -17,6 +17,7 @@ After the user completes the OAuth consent flow, the agent exchanges the authori
   "grant_type": "authorization_code",
   "client_id": "ath_travelbot_001",
   "client_secret": "ath_secret_xxxxx",
+  "agent_attestation": "<signed JWT>",
   "code": "<oauth-authorization-code>",
   "ath_session_id": "ath_sess_abc123"
 }
@@ -29,6 +30,7 @@ After the user completes the OAuth consent flow, the agent exchanges the authori
 | `grant_type` | string | Yes | Must be `"authorization_code"` |
 | `client_id` | string | Yes | The agent's client ID |
 | `client_secret` | string | Yes | The agent's client secret |
+| `agent_attestation` | string | Yes | A fresh signed JWT proving current possession of the agent's private key. The `sub` claim MUST match the `client_id`'s registered `agent_id`. The `aud` claim MUST be set to the token endpoint URL |
 | `code` | string | Yes | The OAuth authorization code received in the callback |
 | `ath_session_id` | string | Yes | The session ID returned from the authorization step |
 
@@ -67,6 +69,9 @@ After the user completes the OAuth consent flow, the agent exchanges the authori
 
 ## Behavior
 
+- The implementer MUST verify that the `agent_attestation` JWT is valid and that its `sub` claim matches the `client_id`'s registered `agent_id`
+- The implementer MUST verify that the `ath_session_id` is valid and has not expired (maximum lifetime: 10 minutes)
+- The `ath_session_id` MUST be consumed upon successful token exchange (single-use)
 - The response MUST include the `scope_intersection` breakdown
 - The token MUST be bound to a specific `(agent_id, user_id, provider_id, scopes)` tuple
 - If the scope intersection is empty, the implementer MUST NOT issue a token

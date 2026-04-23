@@ -15,6 +15,7 @@ Revoke an ATH access token, rendering it immediately unusable.
 ```json
 {
   "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
   "token": "ath_tk_xxxxxxxx"
 }
 ```
@@ -24,6 +25,7 @@ Revoke an ATH access token, rendering it immediately unusable.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `client_id` | string | Yes | The agent's client ID |
+| `client_secret` | string | Yes | The agent's client secret (required for client authentication per [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009)) |
 | `token` | string | Yes | The ATH access token to revoke |
 
 ## Response
@@ -32,7 +34,10 @@ Returns `200 OK` upon successful revocation.
 
 ## Behavior
 
+- The implementer MUST verify that `client_id` and `client_secret` match a valid agent registration
+- The implementer MUST verify that `client_id` corresponds to the registration matching the token's bound `agent_id`. Agents can only revoke their own tokens
 - The token becomes unusable immediately after revocation
 - Subsequent API calls using a revoked token MUST be rejected
+- The revocation endpoint SHOULD return `200 OK` regardless of whether the token was valid or existed (per [RFC 7009 §2.2](https://datatracker.ietf.org/doc/html/rfc7009#section-2.2), to avoid leaking token existence)
 - Agents, users (via the management interface), or administrators can all revoke tokens
 - Revocation operations SHOULD be recorded in an audit log

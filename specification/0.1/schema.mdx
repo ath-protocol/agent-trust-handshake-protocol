@@ -88,7 +88,7 @@ Sent to `POST /ath/agents/register`.
 | `developer.id` | string | Yes | Developer identifier |
 | `requested_providers` | array | Yes | Providers and scopes to request |
 | `purpose` | string | No | Human-readable purpose |
-| `redirect_uris` | string[] | No | OAuth callback URIs |
+| `redirect_uris` | string[] | Yes | OAuth callback URIs (validated by exact-match on authorization) |
 
 ### AgentRegistrationResponse
 
@@ -146,7 +146,7 @@ Sent to `POST /ath/authorize`.
 | `provider_id` | string | Yes | Provider to authorize |
 | `scopes` | string[] | Yes | Scopes to request (within approved set) |
 | `user_redirect_uri` | string (URI) | No | Post-consent redirect |
-| `state` | string | No | CSRF protection state |
+| `state` | string | Yes | CSRF protection state (MUST have ≥128 bits of entropy) |
 | `resource` | string (URI) | No | Target resource server ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) |
 
 ### AuthorizationResponse
@@ -167,13 +167,14 @@ Sent to `POST /ath/authorize`.
 
 ### TokenExchangeRequest
 
-Sent to `POST /ath/token`.
+Sent to `POST /ath/token`. Requires both `client_secret` and a fresh `agent_attestation` for proof-of-possession.
 
 ```json
 {
   "grant_type": "authorization_code",
   "client_id": "ath_travelbot_001",
   "client_secret": "ath_secret_xxxxx",
+  "agent_attestation": "<signed JWT>",
   "code": "<oauth-authorization-code>",
   "ath_session_id": "ath_sess_abc123"
 }
@@ -217,11 +218,12 @@ Sent to `POST /ath/token`.
 
 ### TokenRevocationRequest
 
-Sent to `POST /ath/revoke`.
+Sent to `POST /ath/revoke`. Requires client authentication per [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009).
 
 ```json
 {
   "client_id": "ath_travelbot_001",
+  "client_secret": "ath_secret_xxxxx",
   "token": "ath_tk_xxxxxxxx"
 }
 ```

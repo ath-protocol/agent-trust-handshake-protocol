@@ -33,7 +33,7 @@ Initiate a user-side authorization flow. The implementer verifies that the agent
 | `provider_id` | string | Yes | The service provider to authorize |
 | `scopes` | string[] | Yes | Scopes to request (must be within approved scopes) |
 | `user_redirect_uri` | string | No | Redirect URL after OAuth consent |
-| `state` | string | No | Opaque state value for CSRF protection |
+| `state` | string | Yes | Opaque state value for CSRF protection (MUST be generated from a CSPRNG with at least 128 bits of entropy) |
 | `resource` | string | No | Target resource server URI ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) |
 
 ## Response
@@ -62,3 +62,7 @@ Initiate a user-side authorization flow. The implementer verifies that the agent
 - The corresponding `code_verifier` is stored on the server side and sent during token exchange
 - The agent directs the user to the `authorization_url`
 - After consent, the OAuth callback is handled by the ATH implementer
+- The implementer MUST bind the `ath_session_id` to the user's browser session (e.g., via an HTTP-only cookie). At callback time, the implementer MUST verify that the browser session completing consent matches the one that created the session
+- The `ath_session_id` MUST expire within 10 minutes of creation
+- The `ath_session_id` MUST be single-use — consumed upon successful token exchange
+- The implementer MUST verify that the attestation JWT's `sub` claim matches the `client_id`'s registered `agent_id`

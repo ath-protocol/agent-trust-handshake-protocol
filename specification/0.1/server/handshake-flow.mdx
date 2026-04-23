@@ -7,6 +7,7 @@ This document defines the handshake flow implementation specification for ATH pr
 3. Confirm authorization requests with the user to ensure user authorization is genuine and valid
 4. Approve permission requests following the principle of least privilege
 5. Issue access tokens and maintain session state
+6. The `GET /ath/agents/{clientId}` endpoint MUST require authentication (e.g., `agent_attestation` or `client_secret`). Agents MUST only be able to query their own registration status. Unauthenticated access to agent registration details enables enumeration attacks
 ## Complete Handshake Flow (Server Perspective)
 ### Step 1: Receive and Process Handshake Request
 After receiving a client handshake request, the server:

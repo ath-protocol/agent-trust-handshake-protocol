@@ -44,7 +44,7 @@ description: "POST /ath/agents/register — 注册代理并请求能力审批。
 | `requested_providers[].provider_id` | string | 是 | 服务提供方标识符 |
 | `requested_providers[].scopes` | string[] | 是 | 该服务提供方请求的范围 |
 | `purpose` | string | 否 | 代理用途的人类可读描述 |
-| `redirect_uris` | string[] | 否 | OAuth 回调 URI |
+| `redirect_uris` | string[] | 是 | OAuth 回调 URI（授权时通过精确匹配验证） |
 
 ## 响应（成功）
 
