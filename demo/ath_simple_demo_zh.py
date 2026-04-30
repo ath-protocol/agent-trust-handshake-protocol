@@ -17,7 +17,7 @@ import sys
 show_code_separately = False
 def loading_animation(text: str, duration: float = 1.5):
     """显示加载动画"""
-    chars = "|/-\"
+    chars = "|/\\-"
     end_time = time.time() + duration
     i = 0
     while time.time() < end_time:
