@@ -1,7 +1,7 @@
 # Agent Trust Handshake (ATH) Protocol
 > 🛡️ Making AI-to-AI interactions as trustworthy, secure, and transparent as a handshake between people
 
-[中文](README.md)
+[中文](https://github.com/ath-protocol/agent-trust-handshake-protocol)
 ## 📋 Table of Contents
 - [Project Overview](#project-overview)
 - [What Problem Does It Solve](#what-problem-does-it-solve)
